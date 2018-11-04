@@ -37,13 +37,15 @@ public class ReadFile {
 //        return (String)props.get("project.basedir");
 //    }
 
+    //TODO: learn how to use maven: properties and on and on and on and on..
+
     public static void main(String[] args) {
         String baseDir = (String)System.getProperties().get("user.dir");
-        String filesPath =  baseDir + "/src/main/java/file.txt";
+        String filesPath =  baseDir + "/src/main/java/FB396001";
         try {
             // Create matcher on file
             //"^<TEXT>[\\w\\W]*</TEXT>$"
-            String regEx = "<TEXT>[\\w\\W]*</TEXT>";
+            String regEx = "<TEXT>[^<]*</TEXT>";
             Pattern pattern = Pattern.compile(regEx);
             Matcher matcher = pattern.matcher(fromFile(filesPath));
             // Find all matches
