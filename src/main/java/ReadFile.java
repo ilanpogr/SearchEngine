@@ -1,4 +1,6 @@
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -40,6 +42,7 @@ public class ReadFile {
     //TODO: learn how to use maven: properties and on and on and on and on..
 
     public static void main(String[] args) {
+        double reStart = System.currentTimeMillis();
         String baseDir = (String)System.getProperties().get("user.dir");
         String filesPath =  baseDir + "/src/main/java/FB396001";
         try {
@@ -49,12 +52,39 @@ public class ReadFile {
             Pattern pattern = Pattern.compile(regEx);
             Matcher matcher = pattern.matcher(fromFile(filesPath));
             // Find all matches
+            int i=0;
+            System.out.println();
             while (matcher.find()) {
                 if(matcher.group().length() != 0){
-                    System.out.println(matcher.group().trim());
+//                    System.out.println(matcher.group().trim());
+                    System.out.print((i++) + ",");
                 }
+//                 Get the matching string
+            }
+            System.out.println();
+            double reEnd = System.currentTimeMillis();
+            System.out.println("regex time: "+(reEnd-reStart));
+            double start = System.currentTimeMillis();
+            baseDir = (String)System.getProperties().get("user.dir");
+            filesPath =  baseDir + "/src/main/java/FB396001";
+            // Create matcher on file
+            //"^<TEXT>[\\w\\W]*</TEXT>$"
+            String s = fromFile(filesPath).toString();
+            i=0;
+            int j=2;
+            // Find all matches
+            System.out.println();
+            while (j<s.length()) {
+                if(s.charAt(j-2)=='<' && s.charAt(j-1)=='T' && s.charAt(j)=='E'){
+                    System.out.print((i++) + ",");
+                }
+                j++;
                 // Get the matching string
             }
+            System.out.println();
+            double end = System.currentTimeMillis();
+            System.out.println("string time: "+(end-start));
+
         } catch (IOException e) {
             e.getStackTrace();
         }
