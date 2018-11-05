@@ -1,5 +1,8 @@
 import javafx.util.Pair;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.*;
 
 public class Parse {
@@ -8,6 +11,35 @@ public class Parse {
     public static String testString = "just checking some of the rules, Ilan is a name so it sopposed to be capital letters November is a month and 11 NOV 2018 is a date. the number 1,203,453.22 should change and 99 percent that we will catch the numbers 1,243,535,238.3 without spending 2000 dollar. there are few more rules like NBA names and stuff.";
     public static HashSet<Character> specialCharSet = initSpecialSet();
     public static HashSet<String> monthSet = initMonthSet();
+    public static HashSet<String> stopWords = initStopWords();
+
+    public static HashMap<String, String> monthDictionary = initMonthMap();
+
+    private static HashSet<String> initStopWords() {
+        String baseDir = (String)System.getProperties().get("user.dir");
+        String filesPath =  baseDir + "/src/main/resources/stop_words.txt";
+        stopWords = new HashSet<String>();
+        Scanner s=null;
+        try {
+            s = new Scanner(new File(filesPath));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        while (s.hasNext()) stopWords.add(s.nextLine());
+        return stopWords;
+    }
+
+    private static HashMap<String, String> initMonthMap() {
+        monthDictionary = new HashMap<String, String>();
+        String[] months = {"JANUARY", "01", "JAN", "01", "FEBRUARY", "02", "FEB", "02", "MARCH", "03", "MAR", "03",
+                "APRIL", "04", "APR", "04", "MAY", "05", "JUNE", "06", "JUN", "06", "JULY", "07", "JUL", "07",
+                "AUGUST", "08", "AUG", "08", "SEPTEMBER", "09", "SEP", "09", "OCTOBER", "10", "OCT", "10",
+                "NOVEMBER", "11", "NOV", "11", "DECEMBER", "12", "DEC", "12"};
+        for (int i = 0; i < months.length - 1; i++) {
+            monthDictionary.put(months[i++], months[i]);
+        }
+        return monthDictionary;
+    }
 
     private static HashSet<String> initMonthSet() {
         monthSet = new HashSet<>();
@@ -228,20 +260,63 @@ public class Parse {
 
     private static void parseTokens(HashMap<String, String> termsDict, String[] str) {
         String[] s = str[0].split(" ");
-        for (int i=0, lastIndex = s.length - 1; i <= lastIndex; ++i) {
+        for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             String[] token = new String[]{s[i], "0,"};
             removeSuffix(token);                //removes the suffix from the token (prefix too)
-            if (monthSet.contains(token[0].toUpperCase())){
-                String [] nextToken = {"","0,"};
-                if (i<lastIndex) {
-                    nextToken[0] = s[i+1];
+            if (monthSet.contains(token[0].toUpperCase())) {                                                            // 1. if the token is a month (by name)
+                String[] nextToken = {"", "0,"};
+                if (i < lastIndex) {                                                                                    // 1.1. if there is next token
+                    nextToken[0] = s[i + 1];
+                    nextToken[0] = nextToken[0].startsWith("'") ? "19" + nextToken[0].substring(1) : nextToken[0];      // 1.1.1 special case: next token represents a year  i.e: '99 , '87
                     removeSuffix(nextToken);    //removes the suffix from the token (prefix too)
-                    nextToken[1]=nextToken[1].substring(0,nextToken[1].length()-1); //remove the stemmer bool
+//                    nextToken[1]=nextToken[1].substring(0,nextToken[1].length()-1); //remove the stemmer bool
+                    try {
+                        int nt = Integer.parseInt(nextToken[0]);                                                        // 1.1.2. if the next token is a number
+                        if (nt > 0 && nt <= 31) {                                                                       // 1.1.2.1. if the next token is a day in a month
+                            insertDate(termsDict, nextToken, token, null);                                         // 1.1.2.1.1.  then it's MM DD format
+                            continue;
+                        } else if (nt > 0 && nt < 2500) {                                                               // 1.1.2.2. if the next token is a year
+                            insertDate(termsDict, null, token, nextToken);                                         // 1.1.2.2.1.  then it's MM YYYY
+                            continue;
+                        } else {                                                                                        // 1.1.2.3 if next token is just a number
+                            insertToDictionary(termsDict, token);
+                        }
+                    } catch (Exception e) {                                                                             // 1.1.3. if the next token is NOT a number
+                        if (stopWords.contains(token[0].toLowerCase())) continue;                                       // 1.1.3.1. if it's a stop word, continue
+                        else insertToDictionary(termsDict, token);                                                      // 1.1.3.2. else add it to dictionary
+                    }//catch
+                }//if has next token
+                else {                                                                                                  // 1.2.  if there is NOT next token
+                    if (stopWords.contains(token[0].toLowerCase())) continue;                                           // 1.2.1.  if it's a stop word, continue
+                    else insertToDictionary(termsDict, token);                                                          // 1.2.2.  else add it to dictionary
                 }
+            }//if token is a month
+            //TODO - get rid of the regEx
+            else if (token[0].matches("^\\d*$")){                                                                 // 2. if token is a number
+                try {
+                    int nt = Integer.parseInt(token[0]);
+                    if (nt > 0 && nt <=31){                                                                             // 2.1. if the token is a day in a month
+                        String[] nextToken = {"", "0,"};
+                        if (i < lastIndex) {                                                                            // 2.1.1. if there is next token
+                            nextToken[0] = s[i + 1];
+                        }
+                    }
+                }catch (Exception e){
+
+                }
+
             }
 
 
         }
+
+    }
+
+    private static void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
+
+    }
+
+    private static void insertDate(HashMap<String, String> termsDict, String[] day, String[] month, String[] year) {
 
     }
 
@@ -309,12 +384,9 @@ public class Parse {
         end = (double) System.currentTimeMillis();
         System.out.println(end - start);*/
 
-        String s1 = "7.032133";
-        Double d = Double.parseDouble(s1);
-        System.out.println(d);
-        System.out.println();
-        String[] s = new String[]{testString, ""};
-        parse(s);
-        System.out.println(s[0]);
+        System.out.println(monthDictionary.toString());
+//        String[] s = new String[]{testString, ""};
+//        parse(s);
+//        System.out.println(s[0]);
     }
 }
