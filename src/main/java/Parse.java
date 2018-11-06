@@ -262,6 +262,67 @@ public class Parse {
         String[] s = str[0].split(" ");
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             String[] token = new String[]{s[i], "0,"};
+            char firstCharOfToken = token[0].charAt(0);
+            if (specialCharSet.contains(firstCharOfToken)){                 //1. if token starts with a symbol
+
+            } else if (Character.isDigit(firstCharOfToken)){                //2. if token starts with a digit
+
+            } else {                                                        //3. if token starts with a letter
+                if (Character.isUpperCase(firstCharOfToken)){               //3.1. if token starts with an UPPERCASE letter
+                    if (monthSet.contains(token[0].toUpperCase())){         //3.1.1. if token is a Month
+                        if (i<lastIndex){                                   //3.1.1.1. if token has next
+                            String[] nextToken = {s[i+1], "0,"};
+                            double nextT = numerize(nextToken);
+                            if (nextT!=-1) {                                //3.1.1.1.1. if token is a number
+                                if (isTokenADay(nextToken, token)) {        //3.1.1.1.1.1. if next token is a day (1-31)
+                                                                                            //todo - add token&next as a date     MMDD
+                                } else if (isTokenAYear(nextToken)) {       //3.1.1.1.1.2. if next token is a year
+                                                                                            //todo - add token-next as a date     YYYYMM
+                                } else {                                    //3.1.1.1.1.3. if next token is a "random" number
+                                                                                            //todo - add token to dictionary
+                                }
+                            } else {                                        //3.1.1.1.2. if token is Not a number
+                                                                                            //todo - add token to dictionary
+                            }
+                        } else {                                            //3.1.1.2. if token is the last token
+                                                                                            //todo - add token to dictionary
+                        }
+                    } else {                                                //3.1.2. if token is a Name
+                                                                                            //todo - add token to dictionary and check case
+                    }
+                } else {                                                    //3.2. if token starts with an lowercase letter
+                                                                                            //todo - add token to dictionary and check case
+                }
+            }
+        }
+    }
+
+    //todo - implement isTokenAYear
+    private static boolean isTokenAYear(String[] nextToken) {
+        return false;
+    }
+
+    /**
+     * works like Integer.parseInt, converts a String to a Double number
+     * @param token contains the string in "token[0]"
+     * @return if the token is a number, returns it.
+     *          else returns -1
+     */
+    //todo - implement numerize
+    private static double numerize(String[] token) {
+        return -1;
+    }
+
+
+    //todo - implement isTokenADay
+    private static boolean isTokenADay(String[] nextToken, String[] token) {
+        return false;
+    }
+
+    /*private static void parseTokens(HashMap<String, String> termsDict, String[] str) {
+        String[] s = str[0].split(" ");
+        for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
+            String[] token = new String[]{s[i], "0,"};
             removeSuffix(token);                //removes the suffix from the token (prefix too)
             if (monthSet.contains(token[0].toUpperCase())) {                                                            // 1. if the token is a month (by name)
                 String[] nextToken = {"", "0,"};
@@ -310,7 +371,7 @@ public class Parse {
 
         }
 
-    }
+    }*/
 
     private static void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
 
