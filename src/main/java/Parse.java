@@ -16,10 +16,10 @@ public class Parse {
     public static HashMap<String, String> monthDictionary = initMonthMap();
 
     private static HashSet<String> initStopWords() {
-        String baseDir = (String)System.getProperties().get("user.dir");
-        String filesPath =  baseDir + "/src/main/resources/stop_words.txt";
+        String baseDir = (String) System.getProperties().get("user.dir");
+        String filesPath = baseDir + "/src/main/resources/stop_words.txt";
         stopWords = new HashSet<String>();
-        Scanner s=null;
+        Scanner s = null;
         try {
             s = new Scanner(new File(filesPath));
         } catch (FileNotFoundException e) {
@@ -263,60 +263,92 @@ public class Parse {
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             String[] token = new String[]{s[i], "0,"};
             char firstCharOfToken = token[0].charAt(0);
-            if (specialCharSet.contains(firstCharOfToken)){                 //1. if token starts with a symbol
+            if (specialCharSet.contains(firstCharOfToken)) {                 //1. if token starts with a symbol
+                //todo - under stand what to do with symbols
 
-            } else if (Character.isDigit(firstCharOfToken)){                //2. if token starts with a digit
+            } else if (Character.isDigit(firstCharOfToken)) {                //2. if token starts with a digit
+                double tok = numerize(token);
+                if (tok != -1) {                                             //2.1. if token is a number
+                    if (i < lastIndex) {                                     //2.1.1. if token has next
+                        String[] nextToken = {s[i + 1], "0,"};
+                        if (token[0].contains(".")) {                        //2.1.1.1. if token is an Integer
 
-            } else {                                                        //3. if token starts with a letter
-                if (Character.isUpperCase(firstCharOfToken)){               //3.1. if token starts with an UPPERCASE letter
-                    if (monthSet.contains(token[0].toUpperCase())){         //3.1.1. if token is a Month
-                        if (i<lastIndex){                                   //3.1.1.1. if token has next
-                            String[] nextToken = {s[i+1], "0,"};
+
+                        }
+                    }
+                } else if (containsSpecialChar(token)) {                     //2.2. if token contains a special char (%,$..)
+                    //todo - add token+symbol
+
+                } else {                                                     //2.3. if token is a code (3dj14s..)
+                    //todo - add token to dictionary
+                }
+            } else {                                                         //3. if token starts with a letter
+                if (Character.isUpperCase(firstCharOfToken)) {               //3.1. if token starts with an UPPERCASE letter
+                    if (monthSet.contains(token[0].toUpperCase())) {         //3.1.1. if token is a Month
+                        if (i < lastIndex) {                                 //3.1.1.1. if token has next
+                            String[] nextToken = {s[i + 1], "0,"};
                             double nextT = numerize(nextToken);
-                            if (nextT!=-1) {                                //3.1.1.1.1. if token is a number
-                                if (isTokenADay(nextToken, token)) {        //3.1.1.1.1.1. if next token is a day (1-31)
-                                                                                            //todo - add token&next as a date     MMDD
-                                } else if (isTokenAYear(nextToken)) {       //3.1.1.1.1.2. if next token is a year
-                                                                                            //todo - add token-next as a date     YYYYMM
+                            if (nextT != -1) {                               //3.1.1.1.1. if token is a number
+                                if (isTokenADay(nextT)) {                    //3.1.1.1.1.1. if next token is a day (1-31)
+                                    //todo - add token-next as a date     MM-DD
+                                    insertDate(termsDict,nextToken,token,null);
+                                } else if (isTokenAYear(nextT)) {            //3.1.1.1.1.2. if next token is a year
+                                    //todo - add token-next as a date     YYYY-MM
                                 } else {                                    //3.1.1.1.1.3. if next token is a "random" number
-                                                                                            //todo - add token to dictionary
+                                    //todo - add token to dictionary
                                 }
                             } else {                                        //3.1.1.1.2. if token is Not a number
-                                                                                            //todo - add token to dictionary
+                                //todo - add token to dictionary
                             }
                         } else {                                            //3.1.1.2. if token is the last token
-                                                                                            //todo - add token to dictionary
+                            //todo - add token to dictionary
                         }
                     } else {                                                //3.1.2. if token is a Name
-                                                                                            //todo - add token to dictionary and check case
+                        //todo - add token to dictionary and check case
                     }
                 } else {                                                    //3.2. if token starts with an lowercase letter
-                                                                                            //todo - add token to dictionary and check case
+                    //todo - add token to dictionary and check case
                 }
             }
         }
     }
 
-    //todo - implement isTokenAYear
-    private static boolean isTokenAYear(String[] nextToken) {
+
+    //todo - implement containsSpecialChar
+    private static boolean containsSpecialChar(String[] token) {
         return false;
+    }
+
+    //todo - implement isTokenAYear
+    private static boolean isTokenAYear(double year) {
+        return isTokenAnInt(year) && year < 2500 && year > 0;
+    }
+
+    private static boolean isTokenAnInt(double num) {
+        int x = (int) num;
+        return num - x == 0;
     }
 
     /**
      * works like Integer.parseInt, converts a String to a Double number
+     *
      * @param token contains the string in "token[0]"
      * @return if the token is a number, returns it.
-     *          else returns -1
+     * else returns -1
      */
     //todo - implement numerize
     private static double numerize(String[] token) {
-        return -1;
+        try {
+            return Double.parseDouble(token[0]);
+        } catch (Exception e){
+            return -1;
+        }
     }
 
 
     //todo - implement isTokenADay
-    private static boolean isTokenADay(String[] nextToken, String[] token) {
-        return false;
+    private static boolean isTokenADay(double day) {
+        return isTokenAnInt(day) && day>0 && day<31;
     }
 
     /*private static void parseTokens(HashMap<String, String> termsDict, String[] str) {
@@ -374,14 +406,39 @@ public class Parse {
     }*/
 
     private static void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
+        if (!stopWords.contains(token[0])){
+            if (token[0].endsWith("'s")){
+                token[0]=token[0].substring(0,token[0].length()-2);
+            }
+            if (token[0].length()>3 || token[1].endsWith("1")){
+                if (termsDict.containsKey(token[0])){
+                    addApearanceInDictionary(termsDict,token);
+                }
+            }
+        }
+    }
 
+    private static void addApearanceInDictionary(HashMap<String, String> termsDict, String[] token) {
+        String [] s = termsDict.get(token[0]).split(",");
+        double x = numerize(s);
+        x+=1;
     }
 
     private static void insertDate(HashMap<String, String> termsDict, String[] day, String[] month, String[] year) {
-
+        month[0]=monthDictionary.get(month[0].toUpperCase());
+        if (day !=null){
+            if(day[0].length()==1){
+                day[0]="0"+day[0];
+            }
+            String[]date = {month[0]+"-"+day[0],"0,0"};
+            insertToDictionary(termsDict,date);
+        } else if (year!=null){
+            String [] date = {year[0]+"-"+month[0],"0,0"};
+            insertToDictionary(termsDict,date);
+        }
     }
 
-    private static void removeSuffix(String[] token) {
+    private static void cleanToken(String[] token) {
         boolean isSuffixRemoved = false;
         String tok = token[0];
         for (; tok.length() > 0 && specialCharSet.contains(tok.charAt(0)); tok = token[0] = tok.substring(1)) ;
@@ -415,10 +472,14 @@ public class Parse {
         /*Character[] characters = new Character[]{'[', '(', '{', '`', ')', '<', '|', '&', '~', '+', '^', '@', '*', '?', '$', '.', '>', ';', '_', '\'', ':', ']', '/', '\\', '}', '!', '=', '#', ',', '"', '-'};
         double start = (double) System.currentTimeMillis();
 
-        for (int i = 0; i < characters.length*2000; i++) {
-            if (speChar.contains(""+characters[i%characters.length]))
-                System.out.print(i+',');
+
+        String s = "sadhlfkajf;lkjdas;fkljdsa;lkvcm;aslkncnjavkdn;kdjvnkdajsvnkajsdnaflduihdslakjf";
+
+
+        for (int i = 0; i < 200000; i++) {
+            System.out.print(s.length());
         }
+
 
         double end = (double) System.currentTimeMillis();
         System.out.println();
@@ -426,24 +487,25 @@ public class Parse {
         System.out.println();
         start = (double) System.currentTimeMillis();
 
-        for (int i = 0; i < characters.length*2000; i++) {
-            if (specialCharSet.contains(characters[i%characters.length]))
-                System.out.print(i+',');
+
+        int x = s.length();
+        for (int i = 0; i < 200000; i++) {
+            System.out.print(x);
         }
 
         end = (double) System.currentTimeMillis();
         System.out.println();
         System.out.println(end - start);
-        System.out.println();
+        System.out.println();*/
 
-        start = (double) System.currentTimeMillis();
-        speChar.contains("\\");
-        end = (double) System.currentTimeMillis();
-        System.out.println(end - start);
-        start = (double) System.currentTimeMillis();
-        specialCharSet.contains("\\");
-        end = (double) System.currentTimeMillis();
-        System.out.println(end - start);*/
+//        start = (double) System.currentTimeMillis();
+//        speChar.contains("\\");
+//        end = (double) System.currentTimeMillis();
+//        System.out.println(end - start);
+//        start = (double) System.currentTimeMillis();
+//        specialCharSet.contains("\\");
+//        end = (double) System.currentTimeMillis();
+//        System.out.println(end - start);
 
         System.out.println(monthDictionary.toString());
 //        String[] s = new String[]{testString, ""};
