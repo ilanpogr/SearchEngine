@@ -8,7 +8,8 @@ import java.util.*;
 public class Parse {
 
     private static boolean nextUsed = false;
-    public static String testString = "2/3 just checking some of the rules, Ilan is a name so it sopposed to be capital letters November is a month and 11 NOV 2018 is a date. the number 1,203,453.22 should change and 99 percent that we will catch the numbers 1,243,535,238.3 without spending 2000 dollar. there are few more rules like NBA names and stuff. dollar checking checking checking May 1993 Oct 2015 Feb 13";
+    public static String testString = "2/3 just checking some of the rules, Ilan is a name so it sopposed to be capital letters November is a month and 11 NOV 2018 is a date. the number 1,203,453.22 should change and 99 percent that we will catch the numbers 1,243,535,238.3 without spending 2000 dollar. there are few more rules like NBA names and stuff. dollar checking checking checking May 1993 Oct 2015 Feb 13" +
+            " Let's make some strings and write numbers.. we should see only the numbers changing! Kid with 4312 bananas wished to sell 1341 2/5 of them to russian mafia the rail is 4,124,634,135,235,346.23515 km of devined happiness 7 3/2 Thousand is a smaller number then 40 Trillion 1010.56 is in the assignment pdf 10,123,000,000 is in the assignment pdf 55.88 Billion is in the assignment pdf 10,123,000 is in the assignment pdf lets look at some fractions: 8 6/4 kids, 5 3/4 thousand cups, please lets not go there.. one more: 6,000,111,000 last one: lets test the zeroes after the dot.. 542000.1235 and one more 5,435,340,000.78 done!";
     public static HashSet<Character> specialCharSet = initSpecialSet();
     public static HashSet<String> monthSet = initMonthSet();
     public static HashSet<String> stopWords = initStopWords();
@@ -56,7 +57,7 @@ public class Parse {
 
     private static HashSet<Character> initSpecialSet() {
         specialCharSet = new HashSet<>();
-        Character[] characters = new Character[]{'[', '(', '{', '`', ')', '<', '|', '&', '~', '+', '^', '@', '*', '?', '$', '.', '>', ';', '_', '\'', ':', ']', '/', '\\', '}', '!', '=', '#', ',', '"', '-'};
+        Character[] characters = new Character[]{'[', '(', '{', '`', ')', '<', '|', '&', '~', '+', '^', '@', '*', '?', '.', '>', ';', '_', '\'', ':', ']', '/', '\\', '}', '!', '=', '#', ',', '"', '-'};
 
         for (int i = 0; i < characters.length; ++i) {
             specialCharSet.add(characters[i]);
@@ -221,6 +222,7 @@ public class Parse {
     }
 
     private static String directNumberToFunc(String current, String next) {
+
         String tmp = current;
         current = numberRepresentationSwitchCase(current, next);
         if (current.equals(tmp)) {
@@ -262,28 +264,31 @@ public class Parse {
         String[] s = str[0].split(" ");
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             String[] token = new String[]{s[i], "0,"};
+            cleanToken(token);
             char firstCharOfToken = token[0].charAt(0);
             if (specialCharSet.contains(firstCharOfToken)) {                 //1. if token starts with a symbol
                 //todo - understand what to do with symbols
-
-            } else if (Character.isDigit(firstCharOfToken)) {                //2. if token starts with a digit
+                token[0] = token[0].substring(1) + token[0].charAt(0);
+                firstCharOfToken = token[0].charAt(0);
+            }
+            if (Character.isDigit(firstCharOfToken)) {                //2. if token starts with a digit
                 double tok = numerize(token);
                 if (tok != -1) {                                             //2.1. if token is a number
                     if (i < lastIndex) {                                     //2.1.1. if token has next
                         String[] nextToken = {s[i + 1], "0,"};
                         if (!token[0].contains(".")) {                       //2.1.1.1. if token is an Integer
-                            if (isTokenADay(tok)){                           //2.1.1.1.1. if token is a Day
-                                if (monthSet.contains(nextToken[0].toUpperCase())){
-                                    insertDate(termsDict,token,nextToken,null);
-                                    s[i]="";
-                                    s[++i]="";
+                            if (isTokenADay(tok)) {                           //2.1.1.1.1. if token is a Day
+                                if (monthSet.contains(nextToken[0].toUpperCase())) {
+                                    insertDate(termsDict, token, nextToken, null);
+                                    s[i] = "";
+                                    s[++i] = "";
                                     continue;
                                 }
                             }
                         }
-                        if(insertTokenWithNext(termsDict,token,nextToken)){
-                            s[i]="";
-                            s[++i]="";
+                        if (insertTokenWithNext(termsDict, token, nextToken)) {
+                            s[i] = "";
+                            s[++i] = "";
                             continue;
                         }
                         continue;
@@ -292,10 +297,19 @@ public class Parse {
                     }
                 } else {                                                     //2.3. if token is a code (3dj14s..)
                     //todo - add token to dictionary
+                    if (i < lastIndex) {                                        //2.3.1 if token has next
+                        String[] nextToken = {s[i + 1], "0,"};
+                        if (insertTokenWithNext(termsDict, token, nextToken)) {
+                            s[i] = "";
+                            s[++i] = "";
+                            continue;
+                        }
+                        s[i] = "";
+                        continue;
+                    }
 
                 }
             } else {                                                         //3. if token starts with a letter
-                cleanToken(token);
                 if (Character.isUpperCase(firstCharOfToken)) {               //3.1. if token starts with an UPPERCASE letter
                     if (monthSet.contains(token[0].toUpperCase())) {         //3.1.1. if token is a Month
                         if (i < lastIndex) {                                 //3.1.1.1. if token has next
@@ -304,13 +318,13 @@ public class Parse {
                             if (nextT != -1) {                               //3.1.1.1.1. if token is a number
                                 if (isTokenADay(nextT)) {                    //3.1.1.1.1.1. if next token is a day (1-31)  MM-DD
                                     insertDate(termsDict, nextToken, token, null);
-                                    s[i++]="";
-                                    s[i]="";
+                                    s[i++] = "";
+                                    s[i] = "";
                                     continue;
                                 } else if (isTokenAYear(nextT)) {            //3.1.1.1.1.2. if next token is a year         MM-YYYY
                                     insertDate(termsDict, null, token, nextToken);
-                                    s[i++]="";
-                                    s[i]="";
+                                    s[i++] = "";
+                                    s[i] = "";
                                     continue;
                                 }
                             }
@@ -318,57 +332,59 @@ public class Parse {
                     }
                 }
                 checkCaseAndInsertToDictionary(termsDict, token);
-                s[i]="";
+                s[i] = "";
                 continue;
                 //todo - add token to dictionary and check case
 
             }
         }
         for (int i = 0; i < s.length; i++) {
-            if (s[i]!="")
-            System.out.print(s[i]);
+            if (s[i] != "")
+                System.out.print(s[i]);
         }
     }
 
     /**
-     *
      * @param termsDict
      * @param token
      * @param nextToken
      * @return if inserted with the next token - true
-     *          else false
+     * else false
      */
     private static boolean insertTokenWithNext(HashMap<String, String> termsDict, String[] token, String[] nextToken) {
         if (nextToken[0].toLowerCase().startsWith("percent") ||
-                nextToken[0].equalsIgnoreCase("%")){
-            token[0]+="%";
-            insertToDictionary(termsDict,token);
+                nextToken[0].equalsIgnoreCase("%")) {
+            token[0] += "%";
+            insertToDictionary(termsDict, token);
             return true;
         }
         if (nextToken[0].toLowerCase().startsWith("dollar") ||
-                nextToken[0].equalsIgnoreCase("$")){
-            token[0]+="$";
-            insertToDictionary(termsDict,token);
+                nextToken[0].equalsIgnoreCase("$")) {
+            token[0] += " Dollars";
+            insertToDictionary(termsDict, token);
             return true;
         }
+        String s = directNumberToFunc(token[0], nextToken[0]);
+        if (!s.equalsIgnoreCase(token[0]))
+            return true;
 
         return false;
+
     }
 
     private static void checkCaseAndInsertToDictionary(HashMap<String, String> termsDict, String[] token) {
-        if (Character.isLowerCase(token[0].charAt(0))){
-            if (termsDict.containsKey(token[0].toUpperCase())){
+        if (Character.isLowerCase(token[0].charAt(0))) {
+            if (termsDict.containsKey(token[0].toUpperCase())) {
                 //take the value of the uppercase to the lower case and remove the upper case
             }
         }
-        if (termsDict.containsKey(token[0].toLowerCase())){
+        if (termsDict.containsKey(token[0].toLowerCase())) {
             token[0] = token[0].toLowerCase();
-        } else if (Character.isUpperCase(token[0].charAt(0))){
+        } else if (Character.isUpperCase(token[0].charAt(0))) {
             token[0] = token[0].toUpperCase();
         }
-        insertToDictionary(termsDict,token);
+        insertToDictionary(termsDict, token);
     }
-
 
 
     //todo - implement isTokenAYear
@@ -391,6 +407,7 @@ public class Parse {
     //todo - implement numerize
     private static double numerize(String[] token) {
         try {
+            token[0] = token[0].replaceAll(",", "");
             return Double.parseDouble(token[0]);
         } catch (Exception e) {
             return -1;
@@ -504,6 +521,10 @@ public class Parse {
         }
     }
 
+    private static void numberParse(String[] token) {
+
+    }
+
 
     public static void main(String[] args) {
         /*String str1 = "Let's make some strings and write numbers.. we should see only the numbers changing!";
@@ -563,6 +584,10 @@ public class Parse {
 //        System.out.println(end - start);
 
 //        System.out.println(monthDictionary.toString());
+        String[] c = {"12,345,678123876491"};
+        double x = numerize(c);
+//        int y = Integer.parseInt(c[0]);
+        System.out.println("\n" + x + "  ,  " + Math.log10(x) + "\n");
         String[] s = new String[]{testString, ""};
         parse(s);
         System.out.println(s[0]);
