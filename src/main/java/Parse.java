@@ -266,6 +266,10 @@ public class Parse {
             String[] token = new String[]{s[i], "0,"};
             cleanToken(token);
             char firstCharOfToken = token[0].charAt(0);
+            //todo - take care of dashes
+            //todo - rearrange the functions of numbers
+            //todo - add U.S. Dollars eve after quentifieres
+            //todo - between # and #
             if (specialCharSet.contains(firstCharOfToken)) {                 //1. if token starts with a symbol
                 //todo - understand what to do with symbols
                 token[0] = token[0].substring(1) + token[0].charAt(0);
@@ -280,35 +284,41 @@ public class Parse {
                             if (isTokenADay(tok)) {                           //2.1.1.1.1. if token is a Day
                                 if (monthSet.contains(nextToken[0].toUpperCase())) {
                                     insertDate(termsDict, token, nextToken, null);
-                                    s[i] = "";
-                                    s[++i] = "";
+                                    s[i] = token[0];
+                                    s[++i] = nextToken[0];
                                     continue;
                                 }
                             }
                         }
+                        //todo - insert
                         if (insertTokenWithNext(termsDict, token, nextToken)) {
-                            s[i] = "";
-                            s[++i] = "";
+                            s[i] = token[0];
+                            s[++i] = nextToken[0];
                             continue;
                         }
+                        if (i < lastIndex)
+                            s[i + 1] = nextToken[0];
                         continue;
                     } else {                                                 //2.1.2. if token has No next
 
                     }
                 } else {                                                     //2.3. if token is a code (3dj14s..)
                     //todo - add token to dictionary
+
                     if (i < lastIndex) {                                        //2.3.1 if token has next
                         String[] nextToken = {s[i + 1], "0,"};
                         if (insertTokenWithNext(termsDict, token, nextToken)) {
-                            s[i] = "";
-                            s[++i] = "";
+                            s[i] = token[0];
+                            s[++i] = nextToken[0];
                             continue;
                         }
-                        s[i] = "";
+                        s[i] = token[0];
                         continue;
                     }
 
                 }
+                insertTokenWithNext(termsDict, token, null);
+                continue;
             } else {                                                         //3. if token starts with a letter
                 if (Character.isUpperCase(firstCharOfToken)) {               //3.1. if token starts with an UPPERCASE letter
                     if (monthSet.contains(token[0].toUpperCase())) {         //3.1.1. if token is a Month
@@ -338,11 +348,18 @@ public class Parse {
 
             }
         }
-        for (int i = 0; i < s.length; i++) {
-            if (s[i] != "")
-                System.out.print(s[i]);
+        Collections
+        for (String ignored :
+                termsDict.keySet()) {
+            System.out.println(ignored);
         }
-    }
+
+
+//        for (int i = 0; i < s.length; i++) {
+//            if (s[i] != "")
+//                System.out.print(s[i]);
+//        }
+}
 
     /**
      * @param termsDict
@@ -352,23 +369,58 @@ public class Parse {
      * else false
      */
     private static boolean insertTokenWithNext(HashMap<String, String> termsDict, String[] token, String[] nextToken) {
-        if (nextToken[0].toLowerCase().startsWith("percent") ||
-                nextToken[0].equalsIgnoreCase("%")) {
-            token[0] += "%";
-            insertToDictionary(termsDict, token);
-            return true;
-        }
-        if (nextToken[0].toLowerCase().startsWith("dollar") ||
-                nextToken[0].equalsIgnoreCase("$")) {
-            token[0] += " Dollars";
-            insertToDictionary(termsDict, token);
-            return true;
-        }
-        String s = directNumberToFunc(token[0], nextToken[0]);
-        if (!s.equalsIgnoreCase(token[0]))
-            return true;
+        String quntifier = "";
+        boolean usedNext = false;
 
-        return false;
+        if (nextToken != null) {
+            if (nextToken[0].matches("\\d+/\\d+")) {
+                nextToken[0] = token[0] + " " + nextToken[0];
+                return false;
+            }
+            if (nextToken[0].toLowerCase().startsWith("thousand")) {
+                quntifier = "000";
+                usedNext = true;
+            }
+            if (nextToken[0].toLowerCase().startsWith("million")
+                || nextToken[0].equalsIgnoreCase("m")) {
+                quntifier = "000000";
+                usedNext = true;
+            }
+            if (nextToken[0].toLowerCase().startsWith("billion")
+                    || nextToken[0].equalsIgnoreCase("bn")
+                    || nextToken[0].equalsIgnoreCase("b")) {
+                quntifier = "000000000";
+                usedNext = true;
+            }
+            if (nextToken[0].toLowerCase().startsWith("trillion")) {
+                quntifier = "000000000000";
+                usedNext = true;
+            }
+        }
+        if (token[0].endsWith("$")) {
+            token[0] = token[0].substring(0, token[0].length() - 1) + quntifier + " Dollar";
+        } else if (token[0].contains("/")) {
+            usedNext = false;
+        } else {
+            token[0] += quntifier;
+        }
+        numberParse(token);
+        if (nextToken != null) {
+            if (nextToken[0].toLowerCase().startsWith("percent") ||
+                    nextToken[0].equalsIgnoreCase("%")) {
+                token[0] += "%";
+                insertToDictionary(termsDict, token);
+                return true;
+            }
+            if (nextToken[0].toLowerCase().startsWith("dollar") ||
+                    nextToken[0].equalsIgnoreCase("$")) {
+                token[0] += " Dollars";
+                insertToDictionary(termsDict, token);
+                return true;
+            }
+        }
+        insertToDictionary(termsDict, token);
+        return usedNext;
 
     }
 
@@ -488,8 +540,8 @@ public class Parse {
                 termsDict.put(token[0], token[1]);
                 addApearanceInDictionary(termsDict, token);
             }
-
         }
+        token[0] = "";
     }
 
     private static void addApearanceInDictionary(HashMap<String, String> termsDict, String[] token) {
@@ -522,6 +574,35 @@ public class Parse {
     }
 
     private static void numberParse(String[] token) {
+        double m = numerize(token);
+        if (m == -1) return;
+        int e = (int) Math.log10(m);
+        int dotIndex = 1;
+        String add = "";
+        if (e >= 3) {
+            dotIndex += e % 3;
+            String num = "" + m;
+            if (e >= 9) {
+                dotIndex += (e - 10);
+                add += "B";
+            } else if (e >= 6) {
+                add += "M";
+            } else if (e >= 3) {
+                add += "K";
+            }
+            String res = num.split("E")[0];
+            res = removeTrailingZero(res);
+            for (int i = res.length(); i < e - 1; i++) {
+                res += "0";
+            }
+            token[0] = res.replace(".", "");
+            token[0] = token[0].substring(0, dotIndex) + "." + token[0].substring(dotIndex);
+            token[0] = removeTrailingZero(token[0]);
+//            if (token[0].endsWith("0") && add != "") {
+//                token[0] = token[0].substring(0, token[0].length() - 1);
+//            }
+            token[0] += add;
+        }
 
     }
 
@@ -584,10 +665,10 @@ public class Parse {
 //        System.out.println(end - start);
 
 //        System.out.println(monthDictionary.toString());
-        String[] c = {"12,345,678123876491"};
-        double x = numerize(c);
+//        String[] c = {"12345.00012"};
+//        numberParse(c);
 //        int y = Integer.parseInt(c[0]);
-        System.out.println("\n" + x + "  ,  " + Math.log10(x) + "\n");
+//        System.out.println(c[0]);
         String[] s = new String[]{testString, ""};
         parse(s);
         System.out.println(s[0]);
