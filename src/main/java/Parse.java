@@ -246,7 +246,6 @@ public class Parse {
         3. if 'Trillion' next token - add 3 zeroes
         4/ if next token is 'Mathematical fracture' add to previous token!
       */
-
     public static HashMap<String, String> parse(String[] str) {
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
@@ -352,8 +351,8 @@ public class Parse {
         //is next dollar
         //is next quantifier
         int delta = checkIfTokenIsMoney(termsDict, token, i, strings);
-        if (delta==i){      // it's not money
-
+        if (delta == i) {      // it's not money
+            delta = checkIfTokenIsPercentage(termsDict, token, i, strings);
         }
 
 //        if (strings != null) {
@@ -390,40 +389,59 @@ public class Parse {
 
     }
 
-    private static boolean checkIfFracture(String token){
-        if (token.contains("/")){
+    private static boolean checkIfFracture(String token) {
+        if (token.contains("/")) {
             String[] check = token.split("/");
-            try{
+            try {
                 Integer.parseInt(check[0]);
                 Integer.parseInt(check[1]);
                 return true;
-            } catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
                 return false;
             }
         }
         return false;
     }
 
+    private static int checkIfTokenIsPercentage(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
+        String tmp = token[0].replace("%", "");
+        if (checkIfNumber(tmp)) {
+            if (token[0].contains("%")) {
+                token[0] = token[0].replace("%", "");
+                token[0] += "%";
+                token[1] += "0";
+                insertToDictionary(termsDict, token);
+                return i + 1;
+            } else if (strings[i+1].toLowerCase().startsWith("percent") || strings[i+1].toLowerCase().startsWith("percentage")) {
+                token[0] += "%";
+                token[1] += "0";
+                insertToDictionary(termsDict, token);
+                return i + 2;
+            }
+        }
+        return i;
+    }
+
     private static int checkIfTokenIsMoney(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         if (token[0].contains("$")) {
-            token[0]=token[0].replace("$", "");
+            token[0] = token[0].replace("$", "");
             i = addQuantityToToken(termsDict, token, i, strings, true);
             token[0] += " Dollars";
-            token[1] +="0";
-            insertToDictionary(termsDict,token);
-            return i+1;
+            token[1] += "0";
+            insertToDictionary(termsDict, token);
+            return i + 1;
         } else {
-            for (int j = i; j < strings.length && j<=i+3; j++) {
+            for (int j = i; j < strings.length && j <= i + 3; j++) {
                 if (checkIfFracture(strings[j])) {
                     token[0] += " " + strings[j];
                     j++;
                 }
-                if (strings[j].toLowerCase().startsWith("dollar")){
+                if (strings[j].toLowerCase().startsWith("dollar")) {
                     addQuantityToToken(termsDict, token, i, strings, true);
                     token[0] += " Dollars";
-                    token[1] +="0";
-                    insertToDictionary(termsDict,token);
-                    return j +1;
+                    token[1] += "0";
+                    insertToDictionary(termsDict, token);
+                    return j + 1;
                 }
             }
             return i;
@@ -435,34 +453,33 @@ public class Parse {
         if (isMoney) {
             if (token[0].toLowerCase().endsWith("m")) {
                 token[0] = token[0].replace("m", "");
-                moneyParse(token,0);
+                moneyParse(token, 0);
                 return i;
             }
             if (token[0].toLowerCase().endsWith("b") || token[0].toLowerCase().endsWith("bn")) {
                 token[0] = token[0].replace("b", "");
                 token[0] = token[0].replace("n", "");
-                moneyParse(token,3);
+                moneyParse(token, 3);
                 return i;
             }
             if (i < strings.length - 1) {
-                if (strings[i+1].toLowerCase().startsWith("trillion")) {
-                    moneyParse(token,6);
-                    return i+1;
+                if (strings[i + 1].toLowerCase().startsWith("trillion")) {
+                    moneyParse(token, 6);
+                    return i + 1;
+                } else if (strings[i + 1].toLowerCase().startsWith("billion")
+                        || strings[i + 1].equalsIgnoreCase("bn")
+                        || strings[i + 1].equalsIgnoreCase("b")) {
+                    moneyParse(token, 3);
+                    return i + 1;
                 }
-                else if (strings[i+1].toLowerCase().startsWith("billion")
-                        || strings[i+1].equalsIgnoreCase("bn")
-                        || strings[i+1].equalsIgnoreCase("b")) {
-                    moneyParse(token,3);
-                    return i+1;
-                }
-                if (strings[i+1].toLowerCase().startsWith("million")
-                        || strings[i+1].equalsIgnoreCase("m")) {
+                if (strings[i + 1].toLowerCase().startsWith("million")
+                        || strings[i + 1].equalsIgnoreCase("m")) {
 //                    moneyParse(token,0);
                     token[0] += " M";
-                    return i+1;
+                    return i + 1;
                 }
             }
-            moneyParse(token,0);
+            moneyParse(token, 0);
             return i;
         }
         return i;
@@ -502,7 +519,6 @@ public class Parse {
      * @return if the token is a number, returns it.
      * else returns -1
      */
-    //todo - implement numerize
     private static double numerize(String[] token) {
         try {
             token[0] = token[0].replaceAll(",", "");
@@ -512,6 +528,20 @@ public class Parse {
         }
     }
 
+    /**
+     * like numerize (above) but gets a string and returns boolean
+     * @param s : the string we wish to check without changing
+     * @return : true if a number
+     */
+    private static boolean checkIfNumber(String s){
+        try{
+            s = s.replaceAll(",", "");
+            Double.parseDouble(s);
+            return true;
+        } catch (NumberFormatException e){
+            return false;
+        }
+    }
 
     //todo - implement isTokenADay
     private static boolean isTokenADay(double day) {
@@ -558,17 +588,17 @@ public class Parse {
     }
 
     private static void cleanToken(String[] token) {
-        while (token[0].length() >0 && specialCharSet.contains(token[0].charAt(0))){
+        while (token[0].length() > 0 && specialCharSet.contains(token[0].charAt(0))) {
             token[0] = token[0].substring(1);
         }
-        while (token[0].length() >= 1 &&specialCharSet.contains(token[0].charAt(token[0].length()-1))){
-            token[0] = token[0].substring(0,token[0].length() - 1);
+        while (token[0].length() >= 1 && specialCharSet.contains(token[0].charAt(token[0].length() - 1))) {
+            token[0] = token[0].substring(0, token[0].length() - 1);
         }
     }
 
     //todo - parse better
     private static void moneyParse(String[] token, int i) {
-        if (i==0){
+        if (i == 0) {
             String[] num = cutDecimal(token);
             if (!num[0].contains(" ") && num[0].length() >= 7) {
                 num[0] = num[0].substring(0, num[0].length() - 6) + "." + num[0].substring(num[0].length() - 6);
@@ -577,8 +607,7 @@ public class Parse {
 //            } else {
 //                token[0] += " M";
 //            }
-        }
-        else {
+        } else {
             double m = numerize(token);
             m = m * Math.pow(10, i);
             token[0] = (int) m + " M";
@@ -620,8 +649,8 @@ public class Parse {
 
 
     public static void main(String[] args) {
-        String[] s1 = new String[]{"we have some numbers: 22 2/3 dollar, 123456789.1245 U.S Dollars, $123.7565, 10 Trillion Dollars. 20 Billion Dollars, 10 Million dollars, 2 m dollars, 2bn dollars", ""};
-        String[] s = new String[]{"we have some numbers: 22 2/3 dollar, 123456789.1245 U.S Dollars, $123.7565, 10 Trillion Dollars. 20 Billion Dollars, 10 Million dollars, 2 m dollars, 2bn dollars", ""};
+        String[] s1 = new String[]{"we have some percentage: 6% of glory, 10.6%, 10.6 percent, 90.9 percent, 12 percentage", ""};
+        String[] s = new String[]{"we have some percentage: 6% of glory, 10.6%, 10.6 percent, 90.9 percent, 12 percentage", ""};
         HashMap<String, String> termsDict = parse(s);
         System.out.println();
         System.out.println(s[0]);
