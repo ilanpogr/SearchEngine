@@ -238,21 +238,9 @@ public class Parse {
 //        }
 //        return current;
 //    }
-
-    /*TODO - follow the next lines:
-        0. if the number is less than Thousand: keep the number as is.
-        1. if next token is 'Thousand' or 1000 < int < 1000000 --> numberThousand and same for Million
-        2. 'Billion' next token convert to Billion..
-        3. if 'Trillion' next token - add 3 zeroes
-        4/ if next token is 'Mathematical fracture' add to previous token!
-      */
     public static HashMap<String, String> parse(String[] str) {
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
-//        if (str[1].length() != 0) {
-//            parseTokens(termsDict, str);
-//        }
-//        System.out.println(termsDict.toString());
         return termsDict;
     }
 
@@ -354,6 +342,9 @@ public class Parse {
         if (delta == i) {      // it's not money
             delta = checkIfTokenIsPercentage(termsDict, token, i, strings);
         }
+        if (delta == i) {        // it's not percentage
+            delta = checkIfTokenIsDateExtremeCase(termsDict, token, i, strings);
+        }
 
 //        if (strings != null) {
 //            if (strings[0].matches("\\d+/\\d+")) {
@@ -389,6 +380,7 @@ public class Parse {
 
     }
 
+
     private static boolean checkIfFracture(String token) {
         if (token.contains("/")) {
             String[] check = token.split("/");
@@ -403,6 +395,18 @@ public class Parse {
         return false;
     }
 
+    private static int checkIfTokenIsDateExtremeCase(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
+        if (checkIfNumber(token[0])) {
+            String[] month = {strings[i + 1]};
+            cleanToken(month);
+            if (monthSet.contains(month[0].toUpperCase())) {
+                insertDate(termsDict, token, month, null);
+                return i + 2;
+            }
+        }
+        return i;
+    }
+
     private static int checkIfTokenIsPercentage(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         String tmp = token[0].replace("%", "");
         if (checkIfNumber(tmp)) {
@@ -412,7 +416,7 @@ public class Parse {
                 token[1] += "0";
                 insertToDictionary(termsDict, token);
                 return i + 1;
-            } else if (strings[i+1].toLowerCase().startsWith("percent") || strings[i+1].toLowerCase().startsWith("percentage")) {
+            } else if (strings[i + 1].toLowerCase().startsWith("percent") || strings[i + 1].toLowerCase().startsWith("percentage")) {
                 token[0] += "%";
                 token[1] += "0";
                 insertToDictionary(termsDict, token);
@@ -530,15 +534,16 @@ public class Parse {
 
     /**
      * like numerize (above) but gets a string and returns boolean
+     *
      * @param s : the string we wish to check without changing
      * @return : true if a number
      */
-    private static boolean checkIfNumber(String s){
-        try{
+    private static boolean checkIfNumber(String s) {
+        try {
             s = s.replaceAll(",", "");
             Double.parseDouble(s);
             return true;
-        } catch (NumberFormatException e){
+        } catch (NumberFormatException e) {
             return false;
         }
     }
@@ -650,7 +655,7 @@ public class Parse {
 
     public static void main(String[] args) {
         String[] s1 = new String[]{"we have some percentage: 6% of glory, 10.6%, 10.6 percent, 90.9 percent, 12 percentage", ""};
-        String[] s = new String[]{"we have some percentage: 6% of glory, 10.6%, 10.6 percent, 90.9 percent, 12 percentage", ""};
+        String[] s = new String[]{"we have some dates: 14 MAY, 14 May, June 4", ""};
         HashMap<String, String> termsDict = parse(s);
         System.out.println();
         System.out.println(s[0]);
