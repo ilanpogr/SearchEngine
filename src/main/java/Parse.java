@@ -63,38 +63,6 @@ public class Parse {
     }
 
     /**
-     * Seperate the Integer from the Decimal number/
-     *
-     * @param str: the String that representing the whole number
-     * @return String array. [0] - Integer; [1] - Decimal.
-     */
-    private static String[] cutDecimal(String[] str) {
-        String[] result = new String[2];
-        int index = str[0].indexOf('.');
-        String rightSide = "";
-        String leftSide = "";
-        if (index != -1) {
-            rightSide = str[0].substring(index + 1, str[0].length());
-            leftSide = str[0].substring(0, index);
-        }
-        result[0] = leftSide;
-        result[1] = rightSide;
-        return result;
-    }
-
-    /**
-     * FUNCTION WAS TAKEN FROM:
-     * https://stackoverflow.com/questions/14984664/remove-trailing-zero-in-java
-     *
-     * @param s : the string with potential trailing zeroes
-     * @return s without the trailing zeroes
-     */
-    private static String removeTrailingZero(String s) {
-        s = s.indexOf(".") < 0 ? s : s.replaceAll("0*$", "").replaceAll("\\.$", "");
-        return s;
-    }
-
-    /**
      * Parsing numbers between thousand and million
      * Parameter String[] number: number[0] is Integer, number[1] is decimal.
      *
@@ -343,8 +311,12 @@ public class Parse {
             delta = checkIfTokenIsPercentage(termsDict, token, i, strings);
         }
         if (delta == i) {        // it's not percentage
-            delta = checkIfTokenIsDateExtremeCase(termsDict, token, i, strings);
+            delta = checkIfTokenIsDateExtremeCase(termsDict, token, i, strings);    //check if the date starts with a day and then month
         }
+        if (delta == i) {         // must be number if token apply to any rule
+            delta = checkIfTokenIsNum(termsDict, token, i, strings);
+        }
+
 
 //        if (strings != null) {
 //            if (strings[0].matches("\\d+/\\d+")) {
@@ -383,6 +355,7 @@ public class Parse {
 
     private static boolean checkIfFracture(String token) {
         if (token.contains("/")) {
+            token = token.replace(",", "");
             String[] check = token.split("/");
             try {
                 Integer.parseInt(check[0]);
@@ -393,6 +366,107 @@ public class Parse {
             }
         }
         return false;
+    }
+
+
+    /**
+     * Seperate the Integer from the Decimal number/
+     *
+     * @param str: the String that representing the whole number
+     * @return String array. [0] - Integer; [1] - Decimal.
+     */
+    private static String[] cutDecimal(String[] str) {
+        String[] result = new String[2];
+        int index = str[0].indexOf('.');
+        if (index != -1) {
+            String rightSide = "";
+            String leftSide = "";
+            rightSide = str[0].substring(index + 1, str[0].length());
+            leftSide = str[0].substring(0, index);
+            result[0] = leftSide;
+            result[1] = rightSide;
+            return result;
+        }
+        return str;
+    }
+
+    /**
+     * FUNCTION WAS TAKEN FROM:
+     * https://stackoverflow.com/questions/14984664/remove-trailing-zero-in-java
+     *
+     * @param s : the string with potential trailing zeroes
+     * @return s without the trailing zeroes
+     */
+    private static String[] removeTrailingZero(String[] s) {
+        s[0] = s[0].indexOf(".") < 0 ? s[0] : s[0].replaceAll("0*$", "").replaceAll("\\.$", "");
+        return s;
+    }
+
+    private static int checkIfTokenIsNum(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
+        try {
+            Double.parseDouble(token[0]);
+            String[] tmp = {token[0], ""};
+            String[] num = cutDecimal(tmp);
+            String[] s = {strings[i + 1].toLowerCase()};
+            cleanToken(s);
+            if (checkIfRepresentingNumber(s)) {
+                prepareNumberRepresentationForTerm(token, s);
+                i += 1;
+            } else if (num[0].length() < 4) { // smaller then Thousand
+                i = numberSmallerThanThousand(token, i, strings);
+            } else if (num[0].length() <= 6) { // Thousand
+                num[1] = num[0].substring(num[0].length() - 3) + num[1];
+                num[0] = num[0].substring(0, num[0].length() - 3);
+                token[0] = num[0] + "." + num[1];
+                token = removeTrailingZero(token);
+                token[0] = token[0] + "K";
+            } else if (num[0].length() <= 9) { // Million
+                num[1] = num[0].substring(num[0].length() - 6) + num[1];
+                num[0] = num[0].substring(0, num[0].length() - 6);
+                token[0] = num[0] + "." + num[1];
+                token = removeTrailingZero(token);
+                token[0] = token[0] + "M";
+            } else { // more than Million --> represented with B (Billion)
+                num[1] = num[0].substring(num[0].length() - 9) + num[1];
+                num[0] = num[0].substring(0, num[0].length() - 9);
+                token[0] = num[0] + "." + num[1];
+                token = removeTrailingZero(token);
+                token[0] = token[0] + "B";
+            }
+            insertToDictionary(termsDict, token);
+            return i + 1;
+        } catch (NumberFormatException e) {
+            return i;
+        }
+    }
+
+
+    private static boolean checkIfRepresentingNumber(String[] s) {
+        return s[0].equals("thousand") || s[0].equals("million") || s[0].equals("billion") || s[0].equals("trillion");
+    }
+
+
+    private static void prepareNumberRepresentationForTerm(String[] token, String[] s) {
+        if (s[0].equals("thousand")) {
+            token[0] += 'K';
+        } else if (s[0].equals("million")) {
+            token[0] += 'M';
+        } else if (s[0].equals("billion")) {
+            token[0] += 'B';
+        } else if (s[0].equals("trillion")) {
+            token[0] += "000" + 'B';
+        }
+    }
+
+    private static int numberSmallerThanThousand(String[] token, int i, String[] strings) {
+        if (!token[0].contains(".")) {              // no decimal --> option for fracture
+            if (checkIfFracture(strings[i + 1])) {
+                strings[i + 1] = strings[i + 1].replace(",", "");
+                token[0] += " " + strings[i + 1];
+                return i + 1;
+            }
+        }
+        return i;
     }
 
     private static int checkIfTokenIsDateExtremeCase(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
@@ -428,29 +502,68 @@ public class Parse {
 
     private static int checkIfTokenIsMoney(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         if (token[0].contains("$")) {
-            token[0] = token[0].replace("$", "");
+            token[0] = token[0].replace("$", "");      //$# or #$
             i = addQuantityToToken(termsDict, token, i, strings, true);
             token[0] += " Dollars";
             token[1] += "0";
             insertToDictionary(termsDict, token);
             return i + 1;
+        } else if (i + 1 < strings.length && strings[i + 1].toLowerCase().startsWith("dollar")) {    //# dollars
+            if (checkIfNumber(token[0])) {
+                token[0] += " Dollars";
+                token[1] += "0";
+                insertToDictionary(termsDict, token);
+                return i + 2;
+            }
         } else {
-            for (int j = i; j < strings.length && j <= i + 3; j++) {
-                if (checkIfFracture(strings[j])) {
-                    token[0] += " " + strings[j];
-                    j++;
+            if (checkIfNumber(token[0]) && i + 1 < strings.length) {
+                String[] tmp = {token[0], ""};
+                String[] num = cutDecimal(tmp);
+                if (num[0].length() <= 5) {  // less of million (might have fraction)
+                    if (checkIfFracture(strings[i + 1]) && i + 2 < strings.length && strings[i + 2].toLowerCase().startsWith("dollar")) {
+                        token[0] += " " + strings[i + 1] + " Dollars";
+                        token[1] += "0";
+                        insertToDictionary(termsDict, token);
+                        return i + 2;
+                    }
                 }
-                if (strings[j].toLowerCase().startsWith("dollar")) {
-                    addQuantityToToken(termsDict, token, i, strings, true);
-                    token[0] += " Dollars";
-                    token[1] += "0";
-                    insertToDictionary(termsDict, token);
-                    return j + 1;
+                for (int j = i; j < strings.length && j <= i + 3; j++) { // more then a million
+                    if (checkIfFracture(strings[j])) {
+                        token[0] += " " + strings[j];
+                        j++;
+                    }
+                    if (strings[j].toLowerCase().startsWith("dollar")) {
+                        addQuantityToToken(termsDict, token, i, strings, true);
+                        token[0] += " Dollars";
+                        token[1] += "0";
+                        insertToDictionary(termsDict, token);
+                        return j + 1;
+                    }
                 }
             }
-            return i;
         }
+        return i;
     }
+
+    // todo-check all those combos with if statements.
+/*
+
+UNDER MILLION DOLLARS:
+
+price fraction Dollars
+
+ABOVE MILLION DOLLARS:
+
+$price million
+$price billion
+$price trillion
+price m Dollars
+price bm dollars
+price billion u.s. dollars
+price million u.s. dollars
+price trillion u.s dollars
+ */
+
 
     private static int addQuantityToToken(HashMap<String, String> termsDict, String[] token, int i, String[] strings, boolean isMoney) {
 
@@ -485,6 +598,8 @@ public class Parse {
             }
             moneyParse(token, 0);
             return i;
+        } else {                // not money, must be a number
+
         }
         return i;
     }
@@ -619,48 +734,46 @@ public class Parse {
         }
     }
 
-    private static void numberParse(String[] token) {
-        double m = numerize(token);
-        if (m == -1) return;
-        int e = (int) Math.log10(m);
-        int dotIndex = 1;
-        String add = "";
-        if (e >= 3) {
-            dotIndex += e % 3;
-            String num = "" + m;
-            if (e >= 9) {
-                dotIndex += (e - 10);
-                add += "B";
-            } else if (e >= 6) {
-                add += "M";
-            } else if (e >= 3) {
-                add += "K";
-            }
-            String res = num.split("E")[0];
-            res = removeTrailingZero(res);
-            for (int i = res.length(); i < e - 1; i++) {
-                res += "0";
-            }
-            token[0] = res.replace(".", "");
-            token[0] = token[0].substring(0, dotIndex) + "." + token[0].substring(dotIndex);
-            token[0] = removeTrailingZero(token[0]);
-//            if (token[0].endsWith("0") && add != "") {
-//                token[0] = token[0].substring(0, token[0].length() - 1);
+//    private static void numberParse(String[] token) {
+//        double m = numerize(token);
+//        if (m == -1) return;
+//        int e = (int) Math.log10(m);
+//        int dotIndex = 1;
+//        String add = "";
+//        if (e >= 3) {
+//            dotIndex += e % 3;
+//            String num = "" + m;
+//            if (e >= 9) {
+//                dotIndex += (e - 10);
+//                add += "B";
+//            } else if (e >= 6) {
+//                add += "M";
+//            } else if (e >= 3) {
+//                add += "K";
 //            }
-            token[0] += add;
-        }
-
-    }
+//            String res = num.split("E")[0];
+//            res = removeTrailingZero(res);
+//            for (int i = res.length(); i < e - 1; i++) {
+//                res += "0";
+//            }
+//            token[0] = res.replace(".", "");
+//            token[0] = token[0].substring(0, dotIndex) + "." + token[0].substring(dotIndex);
+//            token[0] = removeTrailingZero(token[0]);
+////            if (token[0].endsWith("0") && add != "") {
+////                token[0] = token[0].substring(0, token[0].length() - 1);
+////            }
+//            token[0] += add;
+//        }
+//
+//    }
 
 
     public static void main(String[] args) {
-        String[] s1 = new String[]{"we have some percentage: 6% of glory, 10.6%, 10.6 percent, 90.9 percent, 12 percentage", ""};
-        String[] s = new String[]{"we have some dates: 14 MAY, 14 May, June 4", ""};
+        String[] s = new String[]{"123 billion U.S. dollars, 1 trillion U.s dollars", ""};
         HashMap<String, String> termsDict = parse(s);
         System.out.println();
         System.out.println(s[0]);
         System.out.println();
         System.out.println(termsDict.toString());
-
     }
 }
