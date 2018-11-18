@@ -4,9 +4,9 @@ import java.util.*;
 
 public class Parse {
 
-    private static boolean nextUsed = false;
-    private static String testString = "2/3 just checking some of the rules, Ilan is a name so it sopposed to be capital letters November is a month and 11 NOV 2018 is a date. the number 1,203,453.22 should change and 99 percent that we will catch the numbers 1,243,535,238.3 without spending 2000 dollar. there are few more rules like NBA names and stuff. dollar checking checking checking May 1993 Oct 2015 Feb 13" +
-            " Let's make some strings and write numbers.. we should see only the numbers changing! Kid with 4312 bananas wished to sell 1341 2/5 of them to russian mafia the rail is 4,124,634,135,235,346.23515 km of devined happiness 7 3/2 Thousand is a smaller number then 40 Trillion 1010.56 is in the assignment pdf 10,123,000,000 is in the assignment pdf 55.88 Billion is in the assignment pdf 10,123,000 is in the assignment pdf lets look at some fractions: 8 6/4 kids, 5 3/4 thousand cups, please lets not go there.. one more: 6,000,111,000 last one: lets test the zeroes after the dot.. 542000.1235 and one more 5,435,340,000.78 done!";
+    // todo - remove all stop words without the word AND!.. for BETWEEN expression..
+
+    private static boolean doneWithToken = true;
     private static HashSet<Character> specialCharSet = initSpecialSet();
     private static HashSet<String> monthSet = initMonthSet();
     private static HashSet<String> stopWords = initStopWords();
@@ -62,150 +62,7 @@ public class Parse {
         return specialCharSet;
     }
 
-    /**
-     * Parsing numbers between thousand and million
-     * Parameter String[] number: number[0] is Integer, number[1] is decimal.
-     *
-     * @param current: the current number we work with
-     * @return String after parsing.
-     */
-//    private static String numberThousand(String current) {
-//        current = current.replace(",", "");
-//        String[] number = cutDecimal(current);
-//        int integer = Integer.parseInt(number[0]);
-//        if (integer >= 1000 && integer < 1000000) {
-//            int decimal = integer % 1000;
-//            String tmp = extremeCaseDecimal(decimal, 'K');
-//            integer = integer / 1000;
-//            number[0] = Integer.toString(integer);
-//            number[1] = tmp + number[1];
-//            if (number[1].length() > 0) {
-//                current = number[0] + '.' + number[1];
-//            } else {
-//                current = number[0] + number[1];
-//            }
-//        }
-//        current = removeTrailingZero(current);
-//        current += 'K';
-//        return current;
-//    }
 
-    /**
-     * Parsing numbers between million and billion
-     * Parameter String[] number: number[0] is Integer, number[1] is decimal.
-     *
-     * @param current: the current number we work with
-     * @return String after parsing.
-     */
-//    private static String numberMillion(String current) {
-//        current = current.replace(",", "");
-//        String[] number = cutDecimal(current);
-//        int integer = Integer.parseInt(number[0]);
-//        if (integer < 1000000000 && integer >= 1000000) {
-//            int decimal = integer % 1000000;
-//            String tmp = extremeCaseDecimal(decimal, 'M');
-//            integer = integer / 1000000;
-//            number[0] = Integer.toString(integer);
-//            number[1] = tmp + number[1];
-//            if (number[1].length() > 0) {
-//                current = number[0] + '.' + number[1];
-//            } else {
-//                current = number[0] + number[1];
-//            }
-//        }
-//        current = removeTrailingZero(current);
-//        current += 'M';
-//        return current;
-//    }
-
-//    private static String numberBillion(String current) {
-//        current = current.replace(",", "");
-//        String[] number = cutDecimal(current);
-//        int index = number[0].length() - 9;
-//        number[1] = number[0].substring(index) + number[1];
-//        number[0] = number[0].substring(0, index);
-//        if (number[1].length() > 0) {
-//            current = number[0] + '.' + number[1];
-//        } else {
-//            current = number[0] + number[1];
-//        }
-//        current = removeTrailingZero(current);
-//        current += 'B';
-//        return current;
-//    }
-
-//    private static String extremeCaseDecimal(int decimal, char type) {
-//        String str = Integer.toString(decimal);
-//        if (type == 'K') {
-//            if (decimal < 10) {
-//                str = "00" + str;
-//            } else if (decimal < 100) {
-//                str = '0' + str;
-//            }
-//        } else if (type == 'M') {
-//            if (decimal < 10) {
-//                str = "00000" + str;
-//            } else if (decimal < 100) {
-//                str = "0000" + str;
-//            } else if (decimal < 1000) {
-//                str = "000" + str;
-//            } else if (decimal < 10000) {
-//                str = "00" + str;
-//            } else if (decimal < 100000) {
-//                str = '0' + str;
-//            }
-//        }
-//        return str;
-//    }
-
-//    //TODO - add the fraction number to current if exist
-//    private static String numberRepresentationSwitchCase(String current, String next) {
-//        String endStr = "";
-//        next.toLowerCase();
-//        switch (next) {
-//            case "thousand":
-//                endStr = "K";
-//                nextUsed = true;
-//            case "million":
-//                endStr = "K";
-//                nextUsed = true;
-//            case "billion":
-//                endStr = "B";
-//                nextUsed = true;
-//            case "trillion":
-//                String[] num = cutDecimal(current);
-//                num[0] += "000";
-//                if (num[1].length() > 0) {
-//                    current = num[0] + '.' + num[1];
-//                } else {
-//                    current = num[0] + num[1];
-//                }
-//                endStr += "B";
-//                nextUsed = true;
-//        }
-//        return current += endStr;
-//    }
-//
-//    private static String directNumberToFunc(String current, String next) {
-//
-//        String tmp = current;
-//        current = numberRepresentationSwitchCase(current, next);
-//        if (current.equals(tmp)) {
-//            String[] number = cutDecimal(current);
-//            if (number[0].length() >= 4 && number[0].length() < 7) {
-//                current = numberThousand(current);
-//            } else if (number[0].length() >= 7 && number[0].length() < 9) {
-//                current = numberMillion(current);
-//            } else if (number[0].length() >= 10) {
-//                current = numberBillion(current);
-//            }
-//        }
-//        if (next.matches("\\d+/\\d+")) {
-//            current += next;
-//            nextUsed = true;
-//        }
-//        return current;
-//    }
     public static HashMap<String, String> parse(String[] str) {
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
@@ -215,89 +72,131 @@ public class Parse {
     private static void parseTokens(HashMap<String, String> termsDict, String[] str) {
         //todo - split words by spaces even if there are more then one
         String[] s = str[0].split(" ");
+        boolean expressionFlag;
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
+            expressionFlag = false;
             String[] token = new String[]{s[i], "0,"};
             cleanToken(token);
             char firstCharOfToken = token[0].charAt(0);
-            //todo - take care of dashes
-            //todo - rearrange the functions of numbers
-            //todo - add U.S. Dollars eve after quentifieres
             //todo - between # and #
-            if (specialCharSet.contains(firstCharOfToken)) {                 //1. if token starts with a symbol
-                //todo - understand what to do with symbols
-                token[0] = token[0].substring(1) + token[0].charAt(0);
-                firstCharOfToken = token[0].charAt(0);
-                //function to dollars and percents
-                //function for dashes
-            }
-            if (Character.isDigit(firstCharOfToken) || firstCharOfToken == '$') {                //2. if token starts with a digit
-                double tok = numerize(token);
-                if (tok != -1) {                                             //2.1. if token is a number
-                    if (i < lastIndex) {                                     //2.1.1. if token has next
-                        String[] nextToken = {s[i + 1], "0,"};
-                        if (!token[0].contains(".")) {                       //2.1.1.1. if token is an Integer
-                            if (isTokenADay(tok)) {                           //2.1.1.1.1. if token is a Day
-                                if (monthSet.contains(nextToken[0].toUpperCase())) {
-                                    insertDate(termsDict, token, nextToken, null);
-                                    s[i] = token[0];
-                                    s[++i] = nextToken[0];
-                                    continue;
-                                }
-                            }
-                            //is next fraction
-                        }
-                    }
-                }                                                    //2.3. if token is a code (3dj14s..)
-
-                i = insertTokenWithNext(termsDict, token, i, s);
-                continue;
-            } else {                                                         //3. if token starts with a letter
-                if (Character.isUpperCase(firstCharOfToken)) {               //3.1. if token starts with an UPPERCASE letter
-                    if (monthSet.contains(token[0].toUpperCase())) {         //3.1.1. if token is a Month
-                        if (i < lastIndex) {                                 //3.1.1.1. if token has next
-                            String[] nextToken = {s[i + 1], "0,"};
-                            double nextT = numerize(nextToken);
-                            if (nextT != -1) {                               //3.1.1.1.1. if token is a number
-                                if (isTokenADay(nextT)) {                    //3.1.1.1.1.1. if next token is a day (1-31)  MM-DD
-                                    insertDate(termsDict, nextToken, token, null);
-                                    s[i++] = "";
-                                    s[i] = "";
-                                    continue;
-                                } else if (isTokenAYear(nextT)) {            //3.1.1.1.1.2. if next token is a year         MM-YYYY
-                                    insertDate(termsDict, null, token, nextToken);
-                                    s[i++] = "";
-                                    s[i] = "";
-                                    continue;
-                                }
-                            }
+            if (checkIfNumber(token[0])) {           // might be an expression starting with number without '-'
+                if (i + 1 < s.length && s[i + 1].contains("-")) { // an expression --> first a number and then an expression
+                    expressionFlag = true;
+                    i = beforeSlashForNumbers(termsDict, token, s, i);
+                    token[0] += "-";
+                    i = afterSlashForNumbers(termsDict, token, s, i);
+                    String[] numOfTokens = token[0].split(" ");
+                    i += numOfTokens.length - 1;
+                    if (i + 1 < s.length) {
+                        String[] tmp = {s[i + 1]}; // Extreme Case for last word is number representation
+                        cleanToken(tmp);
+                        if (checkIfRepresentingNumber(tmp)) {
+                            i++;
                         }
                     }
                 }
-                //todo - check special cases (between...)
-                checkCaseAndInsertToDictionary(termsDict, token);
-                s[i] = "";
-                continue;
+            }
+            if (!expressionFlag && token[0].contains("-")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
+
 
             }
-
-
+            if (!expressionFlag) {
+                if (specialCharSet.contains(firstCharOfToken)) {                 //1. if token starts with a symbol
+                    token[0] = token[0].substring(1) + token[0].charAt(0);
+                    firstCharOfToken = token[0].charAt(0);
+                    //function to dollars and percents
+                    //function for dashes
+                }
+                if (Character.isDigit(firstCharOfToken) || firstCharOfToken == '$') {                //2. if token starts with a digit
+                    double tok = numerize(token);
+                    if (tok != -1) {                                             //2.1. if token is a number
+                        if (i < lastIndex) {                                     //2.1.1. if token has next
+                            String[] nextToken = {s[i + 1], "0,"};
+                            if (!token[0].contains(".")) {                       //2.1.1.1. if token is an Integer
+                                if (isTokenADay(tok)) {                           //2.1.1.1.1. if token is a Day
+                                    if (monthSet.contains(nextToken[0].toUpperCase())) {
+                                        insertDate(termsDict, token, nextToken, null);
+                                        s[i] = token[0];
+                                        s[++i] = nextToken[0];
+                                        continue;
+                                    }
+                                }
+                                //is next fraction
+                            }
+                        }
+                    }                                                    //2.3. if token is a code (3dj14s..)
+                    i = insertTokenWithNext(termsDict, token, i, s);
+                    continue;
+                } else {                                                         //3. if token starts with a letter
+                    if (Character.isUpperCase(firstCharOfToken)) {               //3.1. if token starts with an UPPERCASE letter
+                        if (monthSet.contains(token[0].toUpperCase())) {         //3.1.1. if token is a Month
+                            if (i < lastIndex) {                                 //3.1.1.1. if token has next
+                                String[] nextToken = {s[i + 1], "0,"};
+                                double nextT = numerize(nextToken);
+                                if (nextT != -1) {                               //3.1.1.1.1. if token is a number
+                                    if (isTokenADay(nextT)) {                    //3.1.1.1.1.1. if next token is a day (1-31)  MM-DD
+                                        insertDate(termsDict, nextToken, token, null);
+                                        s[i++] = "";
+                                        s[i] = "";
+                                        continue;
+                                    } else if (isTokenAYear(nextT)) {            //3.1.1.1.1.2. if next token is a year         MM-YYYY
+                                        insertDate(termsDict, null, token, nextToken);
+                                        s[i++] = "";
+                                        s[i] = "";
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //todo - check special cases (between...)
+                    checkCaseAndInsertToDictionary(termsDict, token);
+                    s[i] = "";
+                    continue;
+                }
+            }
         }
-
-
-//        for (int i = 0; i < s.length; i++) {
-//            if (s[i] != "")
-//                System.out.print(s[i]);
-//        }
     }
 
-    /**
-     * @param termsDict
-     * @param token
-     * @param i
-     * @param strings
-     * @return if inserted with the next token - true
-     * else false
-     */
+    private static int afterSlashForNumbers(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
+        String[] strTmp = {strings[i + 1]};
+        cleanToken(strTmp);
+        strTmp[0] = strTmp[0].replace(",", "");
+        String[] expressionToken = strTmp[0].split("-");
+        String[] tmpToken = {expressionToken[1], "0,"};
+        if (checkIfNumber(expressionToken[1])) {
+            checkIfTokenIsNum(termsDict, tmpToken, i + 1, strings);
+            token[0] += tmpToken[0];
+        } else {
+            insertToDictionary(termsDict, tmpToken);
+        }
+        if (!checkIfNumber(expressionToken[1])) {
+            token[0] += expressionToken[1];
+        }
+        if (token[1].endsWith(",")) {
+            token[1] += "0";
+        }
+        insertToDictionary(termsDict, token);
+        String[] check = {expressionToken[0]};
+        if (checkIfRepresentingNumber(check)) {
+            return i + 1;
+        }
+        return i;
+    }
+
+    private static int beforeSlashForNumbers(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
+        String[] expressionToken = strings[i + 1].split("-");
+        if (checkIfFracture(expressionToken[0]) || checkIfRepresentingNumber(expressionToken)) {
+            doneWithToken = false;
+            checkIfTokenIsNum(termsDict, token, -1, expressionToken);
+            if (!checkIfRepresentingNumber(expressionToken) && !checkIfFracture(expressionToken[0])) {
+                token[0] += expressionToken[0];
+            }
+        }
+        return i;
+    }
+
+
     private static int insertTokenWithNext(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         String quntifier = "";
         boolean usedNext = false;
@@ -404,34 +303,44 @@ public class Parse {
 
     private static int checkIfTokenIsNum(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         try {
+            boolean flag = false;
             Double.parseDouble(token[0]);
             String[] tmp = {token[0], ""};
             String[] num = cutDecimal(tmp);
-            String[] s = {strings[i + 1].toLowerCase()};
-            cleanToken(s);
-            if (checkIfRepresentingNumber(s)) {
-                prepareNumberRepresentationForTerm(token, s);
-                i += 1;
-            } else if (num[0].length() < 4) { // smaller then Thousand
-                i = numberSmallerThanThousand(token, i, strings);
-            } else if (num[0].length() <= 6) { // Thousand
-                num[1] = num[0].substring(num[0].length() - 3) + num[1];
-                num[0] = num[0].substring(0, num[0].length() - 3);
-                token[0] = num[0] + "." + num[1];
-                token = removeTrailingZero(token);
-                token[0] = token[0] + "K";
-            } else if (num[0].length() <= 9) { // Million
-                num[1] = num[0].substring(num[0].length() - 6) + num[1];
-                num[0] = num[0].substring(0, num[0].length() - 6);
-                token[0] = num[0] + "." + num[1];
-                token = removeTrailingZero(token);
-                token[0] = token[0] + "M";
-            } else { // more than Million --> represented with B (Billion)
-                num[1] = num[0].substring(num[0].length() - 9) + num[1];
-                num[0] = num[0].substring(0, num[0].length() - 9);
-                token[0] = num[0] + "." + num[1];
-                token = removeTrailingZero(token);
-                token[0] = token[0] + "B";
+            if (i + 1 < strings.length) {
+                String[] s = {strings[i + 1].toLowerCase()};
+                cleanToken(s);
+                if (checkIfRepresentingNumber(s)) {
+                    prepareNumberRepresentationForTerm(token, s);
+                    i += 1;
+                    flag = true;
+                }
+            }
+            if (!flag) {
+                if (num[0].length() < 4) { // smaller then Thousand
+                    i = numberSmallerThanThousand(token, i, strings);
+                } else if (num[0].length() <= 6) { // Thousand
+                    num[1] = num[0].substring(num[0].length() - 3) + num[1];
+                    num[0] = num[0].substring(0, num[0].length() - 3);
+                    token[0] = num[0] + "." + num[1];
+                    token = removeTrailingZero(token);
+                    token[0] = token[0] + "K";
+                } else if (num[0].length() <= 9) { // Million
+                    num[1] = num[0].substring(num[0].length() - 6) + num[1];
+                    num[0] = num[0].substring(0, num[0].length() - 6);
+                    token[0] = num[0] + "." + num[1];
+                    token = removeTrailingZero(token);
+                    token[0] = token[0] + "M";
+                } else { // more than Million --> represented with B (Billion)
+                    num[1] = num[0].substring(num[0].length() - 9) + num[1];
+                    num[0] = num[0].substring(0, num[0].length() - 9);
+                    token[0] = num[0] + "." + num[1];
+                    token = removeTrailingZero(token);
+                    token[0] = token[0] + "B";
+                }
+            }
+            if (token[1].endsWith(",")) {
+                token[1] += "0";
             }
             insertToDictionary(termsDict, token);
             return i + 1;
@@ -440,11 +349,15 @@ public class Parse {
         }
     }
 
+    private static void convertToLowerCase(HashMap<String, String> termsDict, String[] token) {
+        String oldKey = termsDict.remove(token[0].toUpperCase());
+        termsDict.put(token[0].toLowerCase(), oldKey);
+        token[1] = oldKey;
+    }
 
     private static boolean checkIfRepresentingNumber(String[] s) {
         return s[0].equals("thousand") || s[0].equals("million") || s[0].equals("billion") || s[0].equals("trillion");
     }
-
 
     private static void prepareNumberRepresentationForTerm(String[] token, String[] s) {
         if (s[0].equals("thousand")) {
@@ -527,17 +440,19 @@ public class Parse {
                         return i + 2;
                     }
                 }
-                for (int j = i; j < strings.length && j <= i + 3; j++) { // more then a million
-                    if (checkIfFracture(strings[j])) {
-                        token[0] += " " + strings[j];
-                        j++;
-                    }
-                    if (strings[j].toLowerCase().startsWith("dollar")) {
-                        addQuantityToToken(termsDict, token, i, strings, true);
-                        token[0] += " Dollars";
-                        token[1] += "0";
-                        insertToDictionary(termsDict, token);
-                        return j + 1;
+                if (checkIfCanBeMoney(strings, i)) {
+                    for (int j = i; j < strings.length && j <= i + 3; j++) { // more then a million
+                        if (checkIfFracture(strings[j])) {
+                            token[0] += " " + strings[j];
+                            j++;
+                        }
+                        if (strings[j].toLowerCase().startsWith("dollar")) {
+                            addQuantityToToken(termsDict, token, i, strings, true);
+                            token[0] += " Dollars";
+                            token[1] += "0";
+                            insertToDictionary(termsDict, token);
+                            return j + 1;
+                        }
                     }
                 }
             }
@@ -545,25 +460,14 @@ public class Parse {
         return i;
     }
 
-    // todo-check all those combos with if statements.
-/*
-
-UNDER MILLION DOLLARS:
-
-price fraction Dollars
-
-ABOVE MILLION DOLLARS:
-
-$price million
-$price billion
-$price trillion
-price m Dollars
-price bm dollars
-price billion u.s. dollars
-price million u.s. dollars
-price trillion u.s dollars
- */
-
+    private static boolean checkIfCanBeMoney(String[] strings, int i) {
+        for (int j = i + 1; j <= i + 3; j++) {
+            if (j < strings.length && strings[j].toLowerCase().contains("dollar")) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private static int addQuantityToToken(HashMap<String, String> termsDict, String[] token, int i, String[] strings, boolean isMoney) {
 
@@ -604,11 +508,10 @@ price trillion u.s dollars
         return i;
     }
 
-
     private static void checkCaseAndInsertToDictionary(HashMap<String, String> termsDict, String[] token) {
         if (Character.isLowerCase(token[0].charAt(0))) {
             if (termsDict.containsKey(token[0].toUpperCase())) {
-                //todo - take the value of the uppercase to the lower case and remove the upper case
+                convertToLowerCase(termsDict, token);
             }
         }
         if (termsDict.containsKey(token[0].toLowerCase())) {
@@ -620,8 +523,6 @@ price trillion u.s dollars
 
     }
 
-
-    //todo - implement isTokenAYear
     private static boolean isTokenAYear(double year) {
         return isTokenAnInt(year) && year < 3000 && year > 0;
     }
@@ -663,7 +564,6 @@ price trillion u.s dollars
         }
     }
 
-    //todo - implement isTokenADay
     private static boolean isTokenADay(double day) {
         return isTokenAnInt(day) && day > 0 && day < 31;
     }
@@ -683,7 +583,9 @@ price trillion u.s dollars
                 addApearanceInDictionary(termsDict, token);
             }
         }
-        token[0] = "";
+        if (doneWithToken) {
+            token[0] = "";
+        }
     }
 
     private static void addApearanceInDictionary(HashMap<String, String> termsDict, String[] token) {
@@ -734,42 +636,10 @@ price trillion u.s dollars
         }
     }
 
-//    private static void numberParse(String[] token) {
-//        double m = numerize(token);
-//        if (m == -1) return;
-//        int e = (int) Math.log10(m);
-//        int dotIndex = 1;
-//        String add = "";
-//        if (e >= 3) {
-//            dotIndex += e % 3;
-//            String num = "" + m;
-//            if (e >= 9) {
-//                dotIndex += (e - 10);
-//                add += "B";
-//            } else if (e >= 6) {
-//                add += "M";
-//            } else if (e >= 3) {
-//                add += "K";
-//            }
-//            String res = num.split("E")[0];
-//            res = removeTrailingZero(res);
-//            for (int i = res.length(); i < e - 1; i++) {
-//                res += "0";
-//            }
-//            token[0] = res.replace(".", "");
-//            token[0] = token[0].substring(0, dotIndex) + "." + token[0].substring(dotIndex);
-//            token[0] = removeTrailingZero(token[0]);
-////            if (token[0].endsWith("0") && add != "") {
-////                token[0] = token[0].substring(0, token[0].length() - 1);
-////            }
-//            token[0] += add;
-//        }
-//
-//    }
-
 
     public static void main(String[] args) {
-        String[] s = new String[]{"123 billion U.S. dollars, 1 trillion U.s dollars", ""};
+        String s_tmp = "50 million-parts, 50 3/2-pages, 5 thousand-7 trillion, 2 thousand-2,000,000, 50 3/2-5 thousand";
+        String[] s = new String[]{"77 5/9-2 thousand, 2-5, 2/4-200", ""};
         HashMap<String, String> termsDict = parse(s);
         System.out.println();
         System.out.println(s[0]);
