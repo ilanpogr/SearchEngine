@@ -77,8 +77,19 @@ public class Parse {
             String[] token = new String[]{s[i], "0,"};
             cleanToken(token);
             char firstCharOfToken = token[0].charAt(0);
+
             //todo - between # and #
-            if (checkIfNumber(token[0])) {           // might be an expression starting with number without '-'
+            if (token[0].toLowerCase().equals("between")) {
+                String[] check = {s[i + 1]};
+                if (i + 1 < s.length && (checkIfFracture(check[0]) || checkIfNumber(check[0]))) {
+                    expressionFlag = true;
+                    doneWithToken = false;
+                    i = isTokenBetweenExpression(termsDict, token, s, i);
+                }
+            }
+
+
+            if (!expressionFlag && checkIfNumber(token[0])) {           // might be an expression starting with number without '-'
                 if (i + 1 < s.length && s[i + 1].contains("-")) { // an expression --> first a number and then an expression
                     expressionFlag = true;
                     i = beforeSlashForNumbers(termsDict, token, s, i);
@@ -98,7 +109,7 @@ public class Parse {
             if (!expressionFlag && token[0].contains("-")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
                 expressionFlag = true;
                 doneWithToken = false;
-                token[0] = token[0].replace(",","");
+                token[0] = token[0].replace(",", "");
                 i = expressionStartsWithSlash(termsDict, token, s, i);
                 i = numberAfterSlashInExpressionStartsWithSlash(termsDict, token, s, i);
             }
@@ -159,6 +170,30 @@ public class Parse {
         }
     }
 
+    private static int isTokenBetweenExpression(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
+        String[] betweenExpression = {"", "0,0"};
+        String[] numInBetweenExpession = {s[i + 1], "0,"};
+        cleanToken(numInBetweenExpession);
+        i++;
+        i = checkIfTokenIsNum(termsDict, numInBetweenExpession, i, s);
+        betweenExpression[0] = "between" + " " + numInBetweenExpession[0];
+        if (i + 1 < s.length && s[i].toLowerCase().equals("and")) {
+            numInBetweenExpession[0] = s[i + 1];
+            cleanToken(numInBetweenExpession);
+            numInBetweenExpession[0] = numInBetweenExpession[0].replace(",", "");
+            i++;
+            i = checkIfTokenIsNum(termsDict, numInBetweenExpession, i, s);
+            betweenExpression[0] += " and" + " " + numInBetweenExpession[0];
+            insertToDictionary(termsDict, betweenExpression);
+//            String[] str = betweenExpression[0].split(" ");
+//            String[] check = {str[str.length - 1]};
+//            if (checkIfRepresentingNumber(check)){              // PLASTER if number ends with representation
+                i--;
+//            }
+        }
+        return i;
+    }
+
     private static int numberAfterSlashInExpressionStartsWithSlash(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
         String[] tokenByDelimiter = token[0].split("-");
         if (checkIfNumber(tokenByDelimiter[1]) || checkIfFracture(tokenByDelimiter[1])) {
@@ -166,8 +201,8 @@ public class Parse {
             checkIfTokenIsNum(termsDict, tmpToken, i, s);
             String[] finalToken = {tokenByDelimiter[0] + "-" + tmpToken[0], "0,0"};
             insertToDictionary(termsDict, finalToken);
-            if (i + 1 <s.length) {
-                String[] check = {s[i+1]};
+            if (i + 1 < s.length) {
+                String[] check = {s[i + 1]};
                 cleanToken(check);
                 if (checkIfRepresentingNumber(check) || checkIfFracture(check[0])) {
                     return i + 1;
@@ -192,7 +227,7 @@ public class Parse {
             token[0] = strTmp[0] + "-";
             for (int j = 1; j < changeToken.length; j++) {
                 token[0] += changeToken[j];
-                if (j < changeToken.length - 1){
+                if (j < changeToken.length - 1) {
                     token[0] += "-";
                 }
             }
@@ -407,8 +442,8 @@ public class Parse {
             insertToDictionary(termsDict, token);
             return i + 1;
         } catch (NumberFormatException e) {
-            if (checkIfFracture(token[0])){             // EXTREME CASE IF FRACTURE WITHOUT NUMBER BEFORE IT
-                if (token[1].endsWith(",")){
+            if (checkIfFracture(token[0])) {             // EXTREME CASE IF FRACTURE WITHOUT NUMBER BEFORE IT
+                if (token[1].endsWith(",")) {
                     token[1] += "0";
                 }
                 insertToDictionary(termsDict, token);
@@ -441,10 +476,15 @@ public class Parse {
 
     private static int numberSmallerThanThousand(String[] token, int i, String[] strings) {
         if (!token[0].contains(".")) {              // no decimal --> option for fracture
-            if (i + 1 < strings.length && checkIfFracture(strings[i + 1])) {
-                strings[i + 1] = strings[i + 1].replace(",", "");
-                token[0] += " " + strings[i + 1];
-                return i + 1;
+            if (i+1<strings.length) {
+                String[] s = {strings[i+1]};
+                cleanToken(s);
+                if (checkIfFracture(s[0])) {
+                    s[0] = s[0].replace(",", "");
+//                    token[0] += " " + strings[i + 1];
+                    token[0] += " " + s[0];
+                    return i + 1;
+                }
             }
         }
         return i;
@@ -705,11 +745,13 @@ public class Parse {
     }
 
 
+    // todo - parse money better!
+
     public static void main(String[] args) {
 
-        // problem with #-parts --> parts considered not to be stemmed
+        // 20,000,000 dollars --> 20 M dollars ----------- PARSE MONEY BETTER!!!
         String s_tmp = "50 million-parts, 50 3/2-pages, 5 thousand-7 trillion, 2 thousand-2,000,000, 50 3/2-5 thousand";
-        String[] s = new String[]{"1/4-2, parts", ""};
+        String[] s = new String[]{"1,000,000,000$, 20,000,000 dollars, baby", ""};
         HashMap<String, String> termsDict = parse(s);
         System.out.println();
         System.out.println(s[0]);
