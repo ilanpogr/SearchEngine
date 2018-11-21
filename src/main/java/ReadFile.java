@@ -1,6 +1,4 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
@@ -11,12 +9,16 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ReadFile {
 
-    private static String regEx_Text = "^(<TEXT>[^<]*</TEXT>)$";
-    public static Vector<String> textList = new Vector<>();
+    private static ArrayList<String> DocNumList = new ArrayList<>();
+    private static List<String> docList = new ArrayList<>();
+    private static List<String> textList = new ArrayList<>();
+    private static List<String> docNumList = new ArrayList<>();
+
 
 
 
@@ -39,7 +41,7 @@ public class ReadFile {
      * @throws IOException: yes! of course I'll have soup before dessert..
      */
     // Converts the contents of a file into a CharSequence
-    public static CharSequence fromFile(String filename) throws IOException {
+    private static CharSequence fromFile(String filename) throws IOException {
         FileInputStream input = new FileInputStream(filename);
         FileChannel channel = input.getChannel();
 
@@ -51,8 +53,8 @@ public class ReadFile {
 
     //TODO: learn how to use maven: properties and on and on and on and on..
 
-    private static List<String> readByRegEx(String filesPath, String regEx){
-        List<String> textDic = new LinkedList<>();
+    private static ArrayList<String> readByRegEx(String filesPath, String regEx){
+        ArrayList<String> textDic = new ArrayList<>();
         try {
             // Create matcher on file
             Pattern pattern = Pattern.compile(regEx,Pattern.MULTILINE);
@@ -76,28 +78,88 @@ public class ReadFile {
         }
         try{
             Stream<Path> subPaths = Files.walk(path);
-            subPaths.forEach(System.out::println);
-        }catch (Exception e){
+            List<String> fileList = subPaths.filter(Files::isRegularFile).map(Objects::toString).collect(Collectors.toList());
+//            fileList.forEach(System.out::println);
+//            File dir = new File(path.toString());
+//            File [] files = dir.listFiles();
+            for (String file : fileList) {
+                readFromFile(file);
+            }
 
+
+        }catch (Exception e){
+            e.printStackTrace();
         }
 
 
     }
 
+    private static void readFromFile(String path){
+
+        try {
+
+            double start = System.currentTimeMillis();
+
+
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
+            StringBuilder stringBuilder = new StringBuilder();
+            Stream<String> s = bufferedReader.lines();
+            s.forEach(s1 -> stringBuilder.append(s1+" "));
+            System.out.println(stringBuilder);
+            String string = stringBuilder.toString();
+            docList.addAll(Arrays.asList(string.split("</TEXT>")));
+            docList.remove(docList.size()-1);
+            extractDocNums();
+            extractText();
+            HashMap<String,String> parsed=Parse.parse(new String[]{textList.remove(0)});
+            double end = System.currentTimeMillis();
+
+            System.out.println("Time took to read files: " + (end - start)/1000 +" sec.");
+            System.out.println();
+
+
+
+            int x=0;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
 
-        String baseDir = (String)System.getProperties().get("user.dir");
-        String filesPath =  baseDir + "/src/main/java/FB396001";
+//        String baseDir = (String)System.getProperties().get("user.dir");
+//        String filesPath =  baseDir + "/src/main/java/FB396001";
+//        readFromFile(filesPath);
+        String filesPath =  "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
         Path path = Paths.get(filesPath);
         readFiles(path);
-
-
-//        List<String> textDic = readByRegEx(filesPath, regEx_Text);
-//        while(!textDic.isEmpty() && textDic.iterator().hasNext()){
-//            System.out.println(textDic.iterator().next());
-//            textDic.iterator().next();
 //
-//        }
+//
+//        extractDocNums();
+    }
+
+    private static void extractDocNums() {
+        for (int i=textList.size() ;i<docList.size();i++) {
+            String s="";
+            String [] s1= docList.get(i).split("</DOCNO>");
+            s=s1[0];
+            docList.set(i, s1[1]);
+            s=s.split("<DOCNO>")[1].trim();
+            docNumList.add(s);
+        }
+    }
+
+    private static void extractText(){
+        for (int i = 0; i < docList.size(); i++) {
+            String text = docList.get(i).split("<TEXT>")[1].trim();
+            text = text.replaceAll("( )+", " ");
+            text = text.replace("CELLRULE", " ");
+            text = text.replace("TABLECELL", " ");
+            text = text.replace("CVJ=\"C\"", " ");
+            text = text.replace("CHJ=\"C\"", " ");
+            text = text.replace("CHJ=\"R\"", " ");
+            textList.add(docNumList.get(i)+" "+text);
+        }
+
     }
 }
