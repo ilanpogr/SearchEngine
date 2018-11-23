@@ -188,7 +188,7 @@ public class Parse {
 //            String[] str = betweenExpression[0].split(" ");
 //            String[] check = {str[str.length - 1]};
 //            if (checkIfRepresentingNumber(check)){              // PLASTER if number ends with representation
-                i--;
+            i--;
 //            }
         }
         return i;
@@ -476,8 +476,8 @@ public class Parse {
 
     private static int numberSmallerThanThousand(String[] token, int i, String[] strings) {
         if (!token[0].contains(".")) {              // no decimal --> option for fracture
-            if (i+1<strings.length) {
-                String[] s = {strings[i+1]};
+            if (i + 1 < strings.length) {
+                String[] s = {strings[i + 1]};
                 cleanToken(s);
                 if (checkIfFracture(s[0])) {
                     s[0] = s[0].replace(",", "");
@@ -531,6 +531,7 @@ public class Parse {
             return i + 1;
         } else if (i + 1 < strings.length && strings[i + 1].toLowerCase().startsWith("dollar")) {    //# dollars
             if (checkIfNumber(token[0])) {
+                moneyParse(token, 0);
                 token[0] += " Dollars";
                 token[1] += "0";
                 insertToDictionary(termsDict, token);
@@ -610,8 +611,6 @@ public class Parse {
             }
             moneyParse(token, 0);
             return i;
-        } else {                // not money, must be a number
-
         }
         return i;
     }
@@ -730,17 +729,26 @@ public class Parse {
     private static void moneyParse(String[] token, int i) {
         if (i == 0) {
             String[] num = cutDecimal(token);
+            boolean flag = false;
+            if (num[1].equals("0,")){
+                flag = true;
+            }
             if (!num[0].contains(" ") && num[0].length() >= 7) {
                 num[0] = num[0].substring(0, num[0].length() - 6) + "." + num[0].substring(num[0].length() - 6);
-                token[0] = num[0] + num[1] + " M";
+                if (!flag) {
+                    token[0] = num[0] + num[1];
+                } else {
+                    token[0] = num[0];
+                }
+                removeTrailingZero(token);
+                token[0] += " M";
             }
-//            } else {
-//                token[0] += " M";
-//            }
         } else {
             double m = numerize(token);
             m = m * Math.pow(10, i);
-            token[0] = (int) m + " M";
+            token[0] = String.format("%.12f", m);
+            removeTrailingZero(token);
+            token[0] += " M";
         }
     }
 
@@ -751,7 +759,7 @@ public class Parse {
 
         // 20,000,000 dollars --> 20 M dollars ----------- PARSE MONEY BETTER!!!
         String s_tmp = "50 million-parts, 50 3/2-pages, 5 thousand-7 trillion, 2 thousand-2,000,000, 50 3/2-5 thousand";
-        String[] s = new String[]{"1,000,000,000$, 20,000,000 dollars, baby", ""};
+        String[] s = new String[]{"10.00012000 billion u.s. dollars, baby", ""};
         HashMap<String, String> termsDict = parse(s);
         System.out.println();
         System.out.println(s[0]);
