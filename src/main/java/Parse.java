@@ -51,7 +51,7 @@ public class Parse {
 
     private static HashSet<Character> initSpecialSet() {
         specialCharSet = new HashSet<>();
-        Character[] characters = new Character[]{'[', '(', '{', '`', ')', '<', '|', '&', '~', '+', '^', '@', '*', '?', '.', '>', ';', '_', '\'', ':', ']', '/', '\\', '}', '!', '=', '#', ',', '"', '-'};
+        Character[] characters = new Character[]{' ', '\r', '\n', '[', '(', '{', '`', ')', '<', '|', '&', '~', '+', '^', '@', '*', '?', '.', '>', ';', '_', '\'', ':', ']', '/', '\\', '}', '!', '=', '#', ',', '"', '-'};
 
         for (int i = 0; i < characters.length; ++i) {
             specialCharSet.add(characters[i]);
@@ -68,7 +68,6 @@ public class Parse {
     }
 
     private static void parseTokens(HashMap<String, String> termsDict, String[] str) {
-        //todo - split words by spaces even if there are more then one
         String[] s = str[0].split(" ");
         boolean expressionFlag;
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
@@ -76,9 +75,10 @@ public class Parse {
             doneWithToken = true;
             String[] token = new String[]{s[i], "0,"};
             cleanToken(token);
+            if (token[0].equals("")){
+                continue;
+            }
             char firstCharOfToken = token[0].charAt(0);
-
-            //todo - between # and #
             if (token[0].toLowerCase().equals("between")) {
                 String[] check = {s[i + 1]};
                 if (i + 1 < s.length && (checkIfFracture(check[0]) || checkIfNumber(check[0]))) {
@@ -87,8 +87,6 @@ public class Parse {
                     i = isTokenBetweenExpression(termsDict, token, s, i);
                 }
             }
-
-
             if (!expressionFlag && checkIfNumber(token[0])) {           // might be an expression starting with number without '-'
                 if (i + 1 < s.length && s[i + 1].contains("-")) { // an expression --> first a number and then an expression
                     expressionFlag = true;
@@ -117,8 +115,6 @@ public class Parse {
                 if (specialCharSet.contains(firstCharOfToken)) {                 //1. if token starts with a symbol
                     token[0] = token[0].substring(1) + token[0].charAt(0);
                     firstCharOfToken = token[0].charAt(0);
-                    //function to dollars and percents
-                    //function for dashes
                 }
                 if (Character.isDigit(firstCharOfToken) || firstCharOfToken == '$') {                //2. if token starts with a digit
                     double tok = numerize(token);
@@ -134,7 +130,6 @@ public class Parse {
                                         continue;
                                     }
                                 }
-                                //is next fraction
                             }
                         }
                     }                                                    //2.3. if token is a code (3dj14s..)
@@ -185,11 +180,7 @@ public class Parse {
             i = checkIfTokenIsNum(termsDict, numInBetweenExpession, i, s);
             betweenExpression[0] += " and" + " " + numInBetweenExpession[0];
             insertToDictionary(termsDict, betweenExpression);
-//            String[] str = betweenExpression[0].split(" ");
-//            String[] check = {str[str.length - 1]};
-//            if (checkIfRepresentingNumber(check)){              // PLASTER if number ends with representation
             i--;
-//            }
         }
         return i;
     }
@@ -295,13 +286,6 @@ public class Parse {
 
 
     private static int insertTokenWithNext(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
-        String quntifier = "";
-        boolean usedNext = false;
-        boolean isMoney = false;
-        // check if has next
-        //is next percent
-        //is next dollar
-        //is next quantifier
         int delta = checkIfTokenIsMoney(termsDict, token, i, strings);
         if (delta == i) {      // it's not money
             delta = checkIfTokenIsPercentage(termsDict, token, i, strings);
@@ -312,38 +296,6 @@ public class Parse {
         if (delta == i) {         // must be number if token apply to any rule
             delta = checkIfTokenIsNum(termsDict, token, i, strings);
         }
-
-
-//        if (strings != null) {
-//            if (strings[0].matches("\\d+/\\d+")) {
-//                strings[0] = nextToken[0] + " " + strings[0];
-////                return false;
-//            }
-//
-//        }
-//        if (nextToken[0].endsWith("$")) {
-//            nextToken[0] = nextToken[0].substring(0, nextToken[0].length() - 1) + quntifier + " Dollar";
-//        } else if (nextToken[0].contains("/")) {
-//            usedNext = false;
-//        } else {
-//            nextToken[0] += quntifier;
-//        }
-//        numberParse(nextToken);
-//        if (strings != null) {
-//            if (strings[0].toLowerCase().startsWith("percent") ||
-//                    strings[0].equalsIgnoreCase("%")) {
-//                nextToken[0] += "%";
-//                insertToDictionary(termsDict, nextToken);
-////                return true;
-//            }
-//            if (strings[0].toLowerCase().startsWith("dollar") ||
-//                    strings[0].equalsIgnoreCase("$")) {
-//                nextToken[0] += " Dollars";
-//                insertToDictionary(termsDict, nextToken);
-////                return true;
-//            }
-//        }
-//        insertToDictionary(termsDict, nextToken);
         return delta - 1;
 
     }
@@ -530,8 +482,8 @@ public class Parse {
             insertToDictionary(termsDict, token);
             return i + 1;
         } else if (i + 1 < strings.length && strings[i + 1].toLowerCase().startsWith("dollar")) {    //# dollars
-            if (checkIfNumber(token[0])) {
-                moneyParse(token, 0);
+            if (checkIfNumber(token[0]) || token[0].toLowerCase().endsWith("m") || token[0].toLowerCase().endsWith("bn")) {
+                i = addQuantityToToken(termsDict, token, i, strings, true);
                 token[0] += " Dollars";
                 token[1] += "0";
                 insertToDictionary(termsDict, token);
@@ -546,7 +498,7 @@ public class Parse {
                         token[0] += " " + strings[i + 1] + " Dollars";
                         token[1] += "0";
                         insertToDictionary(termsDict, token);
-                        return i + 2;
+                        return i + 3;
                     }
                 }
                 if (checkIfCanBeMoney(strings, i)) {
@@ -582,7 +534,7 @@ public class Parse {
 
         if (isMoney) {
             if (token[0].toLowerCase().endsWith("m")) {
-                token[0] = token[0].replace("m", "");
+                token[0] = token[0].replace("m", " M");
                 moneyParse(token, 0);
                 return i;
             }
@@ -604,7 +556,6 @@ public class Parse {
                 }
                 if (strings[i + 1].toLowerCase().startsWith("million")
                         || strings[i + 1].equalsIgnoreCase("m")) {
-//                    moneyParse(token,0);
                     token[0] += " M";
                     return i + 1;
                 }
@@ -752,18 +703,48 @@ public class Parse {
         }
     }
 
-
-    // todo - parse money better!
-
     public static void main(String[] args) {
-
-        // 20,000,000 dollars --> 20 M dollars ----------- PARSE MONEY BETTER!!!
-        String s_tmp = "50 million-parts, 50 3/2-pages, 5 thousand-7 trillion, 2 thousand-2,000,000, 50 3/2-5 thousand";
-        String[] s = new String[]{"10.00012000 billion u.s. dollars, baby", ""};
+        String test = "now we are going to take all the rules and aply a final test \n" +
+                "first of all lets look at some numbers: \n" +
+                "10,123 \n" +
+                "123 Thousand \n" +
+                "some words in between \n" +
+                "1010.56 this is a number also \n" +
+                "10,123,000 should apeare different in the dictionary \n" +
+                "some words before the number: 55 Million. YEY! \n" +
+                "Yey. Name, name, naming, again some numbers 10,123,000,000 \n" +
+                "55 Billion, and the number 7 Trillion. \n" +
+                "numbers under thousand: 22, 24, 4 1/2 \n" +
+                "lets look at some precentage.. \n" +
+                "22.22% also you can wirte it like 22.22 precent or 22.22 precentage \n" +
+                "that is it for precntage. now lets see prices. this is going to be a long one \n" +
+                "1.7320 Dollars, 22 2/4 Dollars and also $450,000 \n" +
+                "now the other price rules: 1,000,000 Dollars, $450,000,000 \n" +
+                "$100 million and 20.6m Dollars or 20.6 m Dollars \n" +
+                "100$ billion \n" +
+                "100 bn dollars or 100bn Dollars need to be the same. \n" +
+                "lets see if all U.S. prices works \n" +
+                "100 billion U.S. dollars and 320 million U.S. dollars and 1 trillion U.S dollars.. \n" +
+                "now some dates:: 14 MAY, 14 May the same thing.. \n" +
+                "June 4, JUNE 4 still the same. now with years \n" +
+                "May 1994 or MAY 1994 thats are all the dates.. \n" +
+                "now the expressions!!! \n" +
+                "To-Be-Or-Not-To-Be.. 10-parts, 10 2/3-pages, 10 thousand-pages, 10-20 2/4 \n" +
+                "pages-20 2/4, pages-10 thousand, 10 million-2 trillion. \n" +
+                "and now betweens... YEY!!!! \n" +
+                "between 2 and 7, between 2 2/4 and 10 thousand. between 1 million and 2 million \n" +
+                "between 2 3/4 and 10 2/4. \n" +
+                "thats it!";
+        String[] s = new String[]{test, ""};
+        String[] one = {"100 m dollars", ""};
         HashMap<String, String> termsDict = parse(s);
         System.out.println();
         System.out.println(s[0]);
         System.out.println();
-        System.out.println(termsDict.toString());
+        for (Map.Entry<String, String> entry : termsDict.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            System.out.println("Token: " + key + " ; Flags: " + value);
+        }
     }
 }
