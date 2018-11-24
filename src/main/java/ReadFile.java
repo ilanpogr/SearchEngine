@@ -1,16 +1,23 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class ReadFile {
 
     private static String regEx_Text = "^(<TEXT>[^<]*</TEXT>)$";
+    public static Vector<String> textList = new Vector<>();
+
 
 
 
@@ -63,15 +70,34 @@ public class ReadFile {
         return textDic;
     }
 
-
-    public static void main(String[] args) {
-        String baseDir = (String)System.getProperties().get("user.dir");
-        String filesPath =  baseDir + "/src/main/java/FB396001";
-        List<String> textDic = readByRegEx(filesPath, regEx_Text);
-        while(!textDic.isEmpty() && textDic.iterator().hasNext()){
-            System.out.println(textDic.iterator().next());
-            textDic.iterator().next();
+    public static void readFiles(Path path){
+        if (path==null){
+            System.out.println("No path given");
+        }
+        try{
+            Stream<Path> subPaths = Files.walk(path);
+            subPaths.forEach(System.out::println);
+        }catch (Exception e){
 
         }
+
+
+    }
+
+
+    public static void main(String[] args) {
+
+        String baseDir = (String)System.getProperties().get("user.dir");
+        String filesPath =  baseDir + "/src/main/java/FB396001";
+        Path path = Paths.get(filesPath);
+        readFiles(path);
+
+
+//        List<String> textDic = readByRegEx(filesPath, regEx_Text);
+//        while(!textDic.isEmpty() && textDic.iterator().hasNext()){
+//            System.out.println(textDic.iterator().next());
+//            textDic.iterator().next();
+//
+//        }
     }
 }
