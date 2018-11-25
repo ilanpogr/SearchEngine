@@ -92,7 +92,7 @@ public class Parse {
                 }
             }
             if (!expressionFlag && checkIfNumber(token[0])) {           // might be an expression starting with number without '-'
-                if (i + 1 < s.length && s[i + 1].contains("-")) { // an expression --> first a number and then an expression
+                if (i + 1 < s.length && s[i + 1].contains("-") && !s[i + 1].contains("--")) { // an expression --> first a number and then an expression
                     expressionFlag = true;
                     i = beforeSlashForNumbers(termsDict, token, s, i);
                     token[0] += "-";
@@ -108,7 +108,7 @@ public class Parse {
                     }
                 }
             }
-            if (!expressionFlag && token[0].contains("-")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
+            if (!expressionFlag && token[0].contains("-") && !token[0].contains("--")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
                 expressionFlag = true;
                 doneWithToken = false;
                 token[0] = token[0].replace(",", "");
@@ -301,9 +301,17 @@ public class Parse {
         if (delta == i) {         // must be number if token apply to any rule
             delta = checkIfTokenIsNum(termsDict, token, i, strings);
         }
+        if (delta == i) {         // must be number if token apply to any rule
+//            delta = checkIfTokenHasPlace(termsDict, token, i, strings);
+            checkCaseAndInsertToDictionary(termsDict, token);
+            return i;
+        }
         return delta - 1;
 
     }
+
+//    private int checkIfTokenHasPlace(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
+//    }
 
 
 
@@ -692,7 +700,7 @@ public class Parse {
 
     private void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
         if (!stopWords.contains(token[0])) {
-            if (token[0].endsWith("'s")) {
+            if (token[0].toLowerCase().endsWith("'s")) {
                 token[0] = token[0].substring(0, token[0].length() - 2);
             }
             if (token[1].endsWith(",")) {
