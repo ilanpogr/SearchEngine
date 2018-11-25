@@ -2,7 +2,8 @@ package ReadFile;
 
 import TextContainers.*;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+
+import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -28,7 +29,6 @@ public class ReadFile {
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
 //    private Map<String,String> docMap = new M
-    private static String currPath;
     private static int docCounter = 0;
 
     public ReadFile() {
@@ -72,8 +72,9 @@ public class ReadFile {
             s.forEach(s1 -> stringBuilder.append(s1 + " "));
 //            System.out.println(stringBuilder);
             String string = stringBuilder.toString();
-            unInstancedDocList.addAll(Arrays.asList(string.split("</DOC>")));
-//            unInstancedDocList.remove(unInstancedDocList.size() - 1);
+//            unInstancedDocList.addAll(Arrays.asList(string.split("</DOC>")));
+            unInstancedDocList.addAll(Arrays.asList(splitByWholeSeparator(string, "</DOC>")));
+            unInstancedDocList.remove(unInstancedDocList.size() - 1);
             createDocList();
             return docList;
 //            extractDocNums();
@@ -91,56 +92,107 @@ public class ReadFile {
 
     private void createDocList() {
         for (String doc : unInstancedDocList) {
-            String[] document = {Jsoup.parse(doc).toString()};
-            System.out.println(doc);
-            String[] docNum = new String[1];
-            String[] docText = new String[1];
+            StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
+            StringBuilder docNum = new StringBuilder();
+            StringBuilder docText = new StringBuilder();
             extractTag(docNum, document, "docno");
             extractTag(docText, document, "text");
             Doc curr = new Doc(docNum, docText);
-            String[] docArr = document[0].split("\n");
-            String line = "", tag = "";
+            docNum.setLength(0);
+            docText.setLength(0);
+            String[] docArr = split(String.valueOf(document), '\n');
+            StringBuilder line = new StringBuilder(), tag = new StringBuilder();
             for (int i = 0; i < docArr.length; i++) {
-                docArr[i] = docArr[i].trim();
+                docArr[i] = trim(docArr[i]);
                 if (docArr[i].startsWith("<")) {
-                    String[] lineArr = docArr[i].split(">", 2);
-                    docArr[i] = lineArr[1].trim();
-                    if (!line.isEmpty() && docArr[i].isEmpty()) {
-                        if (!lineArr[0].contains("/"))continue;
-                        tag = lineArr[0].split("/")[1].toUpperCase();
-                        curr.addAttributes(new String[]{tag.trim(), line.trim()});
-                        tag = "";
-                        line = "";
+//                    String[] lineArr = docArr[i].split(">", 2);
+                    String[] lineArr = split(docArr[i], ">", 2);
+                    if (lineArr.length < 2 && line.length()<1){
+                        continue;
+                    }
+                    if (line.length() > 0 && docArr[i].isEmpty()) {
+                        docArr[i] = trim(lineArr[1]);
+                        if (!lineArr[0].contains("/")) continue;
+//                        tag = lineArr[0].split("/")[1].toUpperCase();
+                        tag.append(upperCase(split(lineArr[0], "/")[1]));
+                        curr.addAttributes(new String[]{trim(String.valueOf(tag)), trim(String.valueOf(line))});
+                        tag.setLength(0);
+                        line.setLength(0);
                     }
                     if (docArr[i].endsWith(">")) {
-                        docArr[i] = docArr[i].split("<", 2)[0].trim();
+//                        docArr[i] = trim(docArr[i].split("<", 2)[0]);
+                        docArr[i] = trim(split(docArr[i], "<", 2)[0]);
                     }
                 }
                 if (docArr[i].isEmpty()) continue;
-                line += " " + docArr[i];
+                line.append(" ").append(docArr[i]);
             }
             docList.add(curr);
         }
     }
+//private void createDocList() {
+//        for (String doc : unInstancedDocList) {
+//            String[] document = {Jsoup.parse(doc).toString()};
+//            String[] docNum = new String[1];
+//            String[] docText = new String[1];
+//            extractTag(docNum, document, "docno");
+//            extractTag(docText, document, "text");
+//            Doc curr = new Doc(docNum, docText);
+//            String[] docArr = split(document[0],"\n");
+//            String line = "", tag = "";
+//            for (int i = 0; i < docArr.length; i++) {
+//                docArr[i] = trim(docArr[i]);
+//                if (docArr[i].startsWith("<")) {
+////                    String[] lineArr = docArr[i].split(">", 2);
+//                    String[] lineArr = split(docArr[i],">", 2);
+//                    if (lineArr.length==2) {
+//                        docArr[i] = trim(lineArr[1]);
+//                        if (!line.isEmpty() && docArr[i].isEmpty()) {
+//                            if (!lineArr[0].contains("/")) continue;
+////                        tag = lineArr[0].split("/")[1].toUpperCase();
+//                            tag = upperCase(split(lineArr[0], "/")[1]);
+//                            curr.addAttributes(new String[]{trim(tag), trim(line)});
+//                            tag = "";
+//                            line = "";
+//                        }
+//                    }
+//                    if (docArr[i].endsWith(">")) {
+////                        docArr[i] = trim(docArr[i].split("<", 2)[0]);
+//                        docArr[i] = trim(split(docArr[i],"<", 2)[0]);
+//                    }
+//                }
+//                if (docArr[i].isEmpty()) continue;
+//                line += " " + docArr[i];
+//            }
+//            docList.add(curr);
+//        }
+//    }
 
-    private void extractTag(String[] element, String[] document, String delimiter) {
-        String[] tmp = document[0].split(delimiter + ">", 3);
-        if (tmp.length<3) {
-            element[0]="";
-            return;
-        }
-        if (!delimiter.equalsIgnoreCase("text")) {
-            document[0] = tmp[0].substring(0, tmp[0].length() - 1).trim()+ "\n " + tmp[2].trim();
-        }
-            element[0] = tmp[1].substring(0, tmp[1].length() - 2).trim();
+    private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
+//        String[] tmp = document[0].split(delimiter + ">", 3);
+        String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
+//        if (tmp.length < 3) {
+//            element.delete(0,element.length());
+//            return;
+//        }
+//        if (!delimiter.equalsIgnoreCase("text")) {
+//            document[0] = trim(substring(tmp[0],0, tmp[0].length() - 1))+ "\n " + trim(tmp[2]);
+//        }
+        element.append(trim(substring(tmp[1], 0, tmp[1].length() - 2)));
     }
 
     public ArrayList<Doc> getFileList() {
-        if (fileCounter < rootPath.size()) {
+        if (hasNextFile()) {
             return readFromFile(rootPath.get(fileCounter++));
         }
         return null;
     }
+
+    public boolean hasNextFile() {
+        return fileCounter < rootPath.size();
+    }
+
+
 
     /*private void extractText() {
         for (int i = 0; i < unInstancedDocList.size(); i++) {
