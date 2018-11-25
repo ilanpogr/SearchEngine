@@ -7,33 +7,24 @@ public class Doc {
     public final String docNum;
     public final String text;
     public final int length;
+    private int max_tf;
     private Map<String, String> attributes;
-    private String docBuilder;
 
-    public Doc(String docNum, String text) {
-        this.docNum = docNum;
-        this.text = text;
-        this.length = text.split(" ").length;
+    public Doc(String[] docNum, String[] text) {
+        this.docNum = docNum[0];
+        this.text = text[0];
+        this.length = text[0].split(" ").length;
+        max_tf=-1;
         this.attributes = new HashMap<>();
     }
 
-    public Doc(String[] doc) {
-        docBuilder = doc[0];
-        this.docNum = extractDocNum();
-        this.text = "";
-        this.length = 0;
-        this.attributes = new HashMap<>();
+    public int getMax_tf() {
+        return max_tf;
     }
 
-    private String extractDocNum() {
-        String s = "";
-        String[] s1 = docBuilder.split("</DOCNO>");
-        s = s1[0];
-        docBuilder = s1[1];
-        s1 = s.split("<DOCNO>");
-        s=s1[1].trim();
-        docBuilder=s1[0]+docBuilder;
-        return s;
+    public void setMax_tf(int max_tf) {
+        if (this.max_tf!=-1 || max_tf<0) return;
+        this.max_tf = max_tf;
     }
 
     public void getAtributes(String[] tag) {

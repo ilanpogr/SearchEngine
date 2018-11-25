@@ -1,6 +1,9 @@
 package ReadFile;
 
 import TextContainers.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -16,25 +19,29 @@ import java.util.stream.Stream;
 
 public class ReadFile {
 
-    private ArrayList<String> docList;
-    private ArrayList<String> textList;
-    private ArrayList<String> docNumList;
-    //    private Map<String,String> docMap = new M
+    //TODO- return all Tags as Atributes from a Doc
+
+    private ArrayList<String> unInstancedDocList;
+    private ArrayList<Doc> docList;
     private static ArrayList<String> rootPath;
-    private static int docCounter = 0;
     private static int fileCounter = 0;
+    //    private ArrayList<String> textList;
+//    private ArrayList<String> docNumList;
+//    private Map<String,String> docMap = new M
     private static String currPath;
+    private static int docCounter = 0;
 
     public ReadFile() {
+        this.unInstancedDocList = new ArrayList<>();
         this.docList = new ArrayList<>();
-        this.textList = new ArrayList<>();
-        this.docNumList = new ArrayList<>();
+//        this.textList = new ArrayList<>();
+//        this.docNumList = new ArrayList<>();
     }
 
     public ReadFile(String path) {
         this();
-        if (rootPath==null)
-        rootPath = new ArrayList<>(createPathsList(Paths.get(path)));
+        if (rootPath == null)
+            rootPath = new ArrayList<>(createPathsList(Paths.get(path)));
     }
 
     private static List<String> createPathsList(Path path) {
@@ -50,9 +57,10 @@ public class ReadFile {
     }
 
     private void clearLists() {
-        docList = new ArrayList<>();
-        textList = new ArrayList<>();
-        docNumList = new ArrayList<>();
+        unInstancedDocList.clear();
+        docList.clear();
+//        textList = new ArrayList<>();
+//        docNumList = new ArrayList<>();
     }
 
     private ArrayList<Doc> readFromFile(String path) {
@@ -64,11 +72,12 @@ public class ReadFile {
             s.forEach(s1 -> stringBuilder.append(s1 + " "));
 //            System.out.println(stringBuilder);
             String string = stringBuilder.toString();
-            docList.addAll(Arrays.asList(string.split("</TEXT>")));
-            docList.remove(docList.size() - 1);
-            extractTags();
+            unInstancedDocList.addAll(Arrays.asList(string.split("</DOC>")));
+//            unInstancedDocList.remove(unInstancedDocList.size() - 1);
+            createDocList();
+            return docList;
 //            extractDocNums();
-            extractText();
+//            extractText();
 //            double end = System.currentTimeMillis();
 //            System.out.println("Time took to read files: " + (end - start) / 1000 + " sec.");
 //            System.out.println();
@@ -80,15 +89,62 @@ public class ReadFile {
         return null;
     }
 
-    private void extractTags() {
-
+    private void createDocList() {
+        for (String doc : unInstancedDocList) {
+            String[] document = {Jsoup.parse(doc).toString()};
+            String[] docNum = new String[1];
+            String[] docText = new String[1];
+            extractTag(docNum, document, "docno");
+//            docText[0]="";
+            extractTag(docText, document, "text");
+            Doc curr = new Doc(docNum, docText);
+            String[] docArr = document[0].split("\n");
+            String line = "", tag = "";
+            for (int i = 0; i < docArr.length; i++) {
+                docArr[i] = docArr[i].trim();
+                if (docArr[i].startsWith("<")) {
+                    String[] lineArr = docArr[i].split(">", 2);
+                    docArr[i] = lineArr[1].trim();
+                    if (!line.isEmpty() && docArr[i].isEmpty()) {
+                        if (!lineArr[0].contains("/"))continue;
+                        tag = lineArr[0].split("/")[1].toUpperCase();
+                        curr.addAttributes(new String[]{tag.trim(), line.trim()});
+                        tag = "";
+                        line = "";
+                    }
+                    if (docArr[i].endsWith(">")) {
+                        docArr[i] = docArr[i].split("<", 2)[0].trim();
+                    }
+                }
+                if (docArr[i].isEmpty()) continue;
+                line += " " + docArr[i];
+            }
+            docList.add(curr);
+        }
     }
 
+    private void extractTag(String[] element, String[] document, String delimiter) {
+        String[] tmp = document[0].split(delimiter + ">", 3);
+        if (tmp.length<3) {
+            element[0]="";
+            return;
+        }
+        if (!delimiter.equalsIgnoreCase("text")) {
+            document[0] = tmp[0].substring(0, tmp[0].length() - 1).trim()+ "\n " + tmp[2].trim();
+        }
+            element[0] = tmp[1].substring(0, tmp[1].length() - 2).trim();
+    }
 
+    public ArrayList<Doc> getFileList() {
+        if (fileCounter < rootPath.size()) {
+            return readFromFile(rootPath.get(fileCounter++));
+        }
+        return null;
+    }
 
-    private void extractText() {
-        for (int i = 0; i < docList.size(); i++) {
-            String text = docList.get(i);
+    /*private void extractText() {
+        for (int i = 0; i < unInstancedDocList.size(); i++) {
+            String text = unInstancedDocList.get(i);
             String[] s = text.split("<TEXT>");
             if (s.length > 1)
                 text = s[1].trim();
@@ -114,16 +170,9 @@ public class ReadFile {
             textList.add(docNumList.get(i) + " " + text);
         }
 
-    }
+    }*/
 
-    public ArrayList<Doc> getFileList() {
-        if (fileCounter<rootPath.size()){
-            return readFromFile(rootPath.get(fileCounter++));
-        }
-        return null;
-    }
-
-    public void readFiles(String path) {
+    /*public void readFiles(String path) {
         if (path == null) {
             System.out.println("No path given");
         }
@@ -143,5 +192,5 @@ public class ReadFile {
         }
 
 
-    }
+    }*/
 }
