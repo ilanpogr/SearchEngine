@@ -92,10 +92,10 @@ public class ReadFile {
     private void createDocList() {
         for (String doc : unInstancedDocList) {
             String[] document = {Jsoup.parse(doc).toString()};
+            System.out.println(doc);
             String[] docNum = new String[1];
             String[] docText = new String[1];
             extractTag(docNum, document, "docno");
-//            docText[0]="";
             extractTag(docText, document, "text");
             Doc curr = new Doc(docNum, docText);
             String[] docArr = document[0].split("\n");
