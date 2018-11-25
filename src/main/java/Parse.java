@@ -1,13 +1,14 @@
-import org.tartarus.snowball.SnowballStemmer;
-import org.tartarus.snowball.ext.englishStemmer;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.*;
+
 public class Parse {
 
-    private  boolean doneWithToken = true;
+    private boolean doneWithToken = true;
     private static HashSet<Character> specialCharSet = initSpecialSet();
     private static HashSet<String> monthSet = initMonthSet();
     private static HashSet<String> stopWords = initStopWords();
@@ -72,14 +73,16 @@ public class Parse {
     }
 
     private void parseTokens(HashMap<String, String> termsDict, String[] str) {
-        String[] s = str[0].split(" ");
+//        String[] s = str[0].split(" ");
+//        StringBuilder stringBuilder = new StringBuilder(str[0]);
+        String[] s = split(str[0], " ");
         boolean expressionFlag;
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             expressionFlag = false;
             doneWithToken = true;
             String[] token = new String[]{s[i], "0,"};
             cleanToken(token);
-            if (token[0].equals("")){
+            if (token[0].equals("")) {
                 continue;
             }
             char firstCharOfToken = token[0].charAt(0);
@@ -92,18 +95,23 @@ public class Parse {
                 }
             }
             if (!expressionFlag && checkIfNumber(token[0])) {           // might be an expression starting with number without '-'
-                if (i + 1 < s.length && s[i + 1].contains("-") && !s[i + 1].contains("--")) { // an expression --> first a number and then an expression
-                    expressionFlag = true;
-                    i = beforeSlashForNumbers(termsDict, token, s, i);
-                    token[0] += "-";
-                    i = afterSlashForNumbers(termsDict, token, s, i);
-                    String[] numOfTokens = token[0].split(" ");
-                    i += numOfTokens.length - 1;
-                    if (i + 1 < s.length) {
-                        String[] tmp = {s[i + 1]}; // Extreme Case for last word is number representation
-                        cleanToken(tmp);
-                        if (checkIfRepresentingNumber(tmp)) {
-                            i++;
+                if (i + 1 < s.length) {
+                    String[] check = {s[i+1]};
+                    cleanToken(check);
+                    if (check[0].contains("-") && !check[0].contains("--")) { // an expression --> first a number and then an expression
+                        expressionFlag = true;
+                        i = beforeSlashForNumbers(termsDict, token, s, i);
+                        token[0] += "-";
+                        i = afterSlashForNumbers(termsDict, token, s, i);
+//                        String[] numOfTokens = token[0].split(" ");
+                        String[] numOfTokens = split(token[0]," ");
+                        i += numOfTokens.length - 1;
+                        if (i + 1 < s.length) {
+                            String[] tmp = {s[i + 1]}; // Extreme Case for last word is number representation
+                            cleanToken(tmp);
+                            if (checkIfRepresentingNumber(tmp)) {
+                                i++;
+                            }
                         }
                     }
                 }
@@ -111,7 +119,8 @@ public class Parse {
             if (!expressionFlag && token[0].contains("-") && !token[0].contains("--")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
                 expressionFlag = true;
                 doneWithToken = false;
-                token[0] = token[0].replace(",", "");
+//                token[0] = replace(token[0],",", "");
+                token[0] = replace(token[0],",", "");
                 i = expressionStartsWithSlash(termsDict, token, s, i);
                 i = numberAfterSlashInExpressionStartsWithSlash(termsDict, token, s, i);
             }
@@ -180,7 +189,8 @@ public class Parse {
         if (i + 1 < s.length && s[i].toLowerCase().equals("and")) {
             numInBetweenExpession[0] = s[i + 1];
             cleanToken(numInBetweenExpession);
-            numInBetweenExpession[0] = numInBetweenExpession[0].replace(",", "");
+//            numInBetweenExpession[0] = numInBetweenExpession[0].replace(",", "");
+            numInBetweenExpession[0] = replace(numInBetweenExpession[0],",", "");
             i++;
             i = checkIfTokenIsNum(termsDict, numInBetweenExpession, i, s);
             betweenExpression[0] += " and" + " " + numInBetweenExpession[0];
@@ -191,7 +201,7 @@ public class Parse {
     }
 
     private int numberAfterSlashInExpressionStartsWithSlash(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
-        String[] tokenByDelimiter = token[0].split("-");
+        String[] tokenByDelimiter = split(token[0],"-");
         if (checkIfNumber(tokenByDelimiter[1]) || checkIfFracture(tokenByDelimiter[1])) {
             String[] tmpToken = {tokenByDelimiter[1], "0,"};
             checkIfTokenIsNum(termsDict, tmpToken, i, s);
@@ -212,15 +222,17 @@ public class Parse {
         String[] strTmp = {token[0], token[1]};
         String[] finalToken = {"", "0,"};
         cleanToken(strTmp);
-        strTmp[0] = strTmp[0].replace(",", "");
-        String[] expressionTokens = strTmp[0].split("-");
+//        strTmp[0] = strTmp[0].replace(",", "");
+        strTmp[0] = replace(strTmp[0],",", "");
+        String[] expressionTokens = split(strTmp[0],"-");
         strTmp[0] = expressionTokens[0];
         if (checkIfNumber(expressionTokens[0]) || checkIfFracture(expressionTokens[0])) {      // expression starts with a num #-..
             checkIfTokenIsNum(termsDict, strTmp, 0, expressionTokens);
             finalToken[0] = strTmp[0];
-            String[] changeToken = token[0].split("-");
+            String[] changeToken = split(token[0],"-");
             token[0] = strTmp[0] + "-";
             for (int j = 1; j < changeToken.length; j++) {
+//                token[0] += changeToken[j];
                 token[0] += changeToken[j];
                 if (j < changeToken.length - 1) {
                     token[0] += "-";
@@ -253,8 +265,9 @@ public class Parse {
     private int afterSlashForNumbers(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
         String[] strTmp = {strings[i + 1]};
         cleanToken(strTmp);
-        strTmp[0] = strTmp[0].replace(",", "");
-        String[] expressionToken = strTmp[0].split("-");
+        strTmp[0] = replace(strTmp[0],",", "");
+//        strTmp[0] = strTmp[0].replace(",", "");
+        String[] expressionToken = split(strTmp[0],"-");
         String[] tmpToken = {expressionToken[1], "0,"};
         if (checkIfNumber(expressionToken[1])) {
             checkIfTokenIsNum(termsDict, tmpToken, i + 1, strings);
@@ -277,7 +290,7 @@ public class Parse {
     }
 
     private int beforeSlashForNumbers(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
-        String[] expressionToken = strings[i + 1].split("-");
+        String[] expressionToken = split(strings[i + 1],"-");
         if (checkIfFracture(expressionToken[0]) || checkIfRepresentingNumber(expressionToken)) {
             doneWithToken = false;
             checkIfTokenIsNum(termsDict, token, -1, expressionToken);
@@ -287,7 +300,6 @@ public class Parse {
         }
         return i;
     }
-
 
 
     private int insertTokenWithNext(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
@@ -314,11 +326,11 @@ public class Parse {
 //    }
 
 
-
     private boolean checkIfFracture(String token) {
         if (token.contains("/")) {
-            token = token.replace(",", "");
-            String[] check = token.split("/");
+//            token = token.replace(",", "");
+            token = replace(token,",", "");
+            String[] check = split(token,"/");
             try {
                 Integer.parseInt(check[0]);
                 Integer.parseInt(check[1]);
@@ -352,7 +364,8 @@ public class Parse {
                 String[] s = {strings[i + 1]};
                 cleanToken(s);
                 if (checkIfFracture(s[0])) {
-                    s[0] = s[0].replace(",", "");
+//                    s[0] = s[0].replace(",", "");
+                    s[0] = replace(s[0],",", "");
 //                    token[0] += " " + strings[i + 1];
                     token[0] += " " + s[0];
                     return i + 1;
@@ -392,7 +405,8 @@ public class Parse {
      */
     private double numerize(String[] token) {
         try {
-            token[0] = token[0].replaceAll(",", "");
+//            token[0] = token[0].replaceAll(",", "");
+            token[0] = replace(token[0],",", "");
             return Double.parseDouble(token[0]);
         } catch (Exception e) {
             return -1;
@@ -419,7 +433,7 @@ public class Parse {
      */
     private boolean checkIfNumber(String s) {
         try {
-            s = s.replaceAll(",", "");
+            s = replace(s,",", "");
             Double.parseDouble(s);
             return true;
         } catch (NumberFormatException e) {
@@ -476,23 +490,23 @@ public class Parse {
                     token[1] += "0";
                 }
                 insertToDictionary(termsDict, token);
+                i++;
             }
             return i;
         }
     }
 
 
-
     private int checkIfTokenIsPercentage(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
-        String tmp = token[0].replace("%", "");
+        String tmp = replace(token[0],"%", "");
         if (checkIfNumber(tmp)) {
             if (token[0].contains("%")) {
-                token[0] = token[0].replace("%", "");
+                token[0] = replace(token[0],"%", "");
                 token[0] += "%";
                 token[1] += "0";
                 insertToDictionary(termsDict, token);
                 return i + 1;
-            } else if (strings[i + 1].toLowerCase().startsWith("percent") || strings[i + 1].toLowerCase().startsWith("percentage")) {
+            } else if (i<strings.length-1 && (strings[i + 1].toLowerCase().startsWith("percent") || strings[i + 1].toLowerCase().startsWith("percentage"))) {
                 token[0] += "%";
                 token[1] += "0";
                 insertToDictionary(termsDict, token);
@@ -503,13 +517,11 @@ public class Parse {
     }
 
 
-
     private void convertToLowerCase(HashMap<String, String> termsDict, String[] token) {
         String oldKey = termsDict.remove(token[0].toUpperCase());
         termsDict.put(token[0].toLowerCase(), oldKey);
         token[1] = oldKey;
     }
-
 
 
     private boolean isTokenAnInt(double num) {
@@ -526,7 +538,7 @@ public class Parse {
     }
 
     private int checkIfTokenIsDateExtremeCase(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
-        if (checkIfNumber(token[0])) {
+        if (i+1<strings.length && checkIfNumber(token[0])) {
             String[] month = {strings[i + 1]};
             cleanToken(month);
             if (monthSet.contains(month[0].toUpperCase())) {
@@ -552,10 +564,10 @@ public class Parse {
     }
 
 
-
     private int checkIfTokenIsMoney(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         if (token[0].contains("$")) {
-            token[0] = token[0].replace("$", "");      //$# or #$
+//            token[0] = token[0].replace("$", "");      //$# or #$
+            token[0] = replace(token[0],"$", "");      //$# or #$
             i = addQuantityToToken(termsDict, token, i, strings, true);
             token[0] += " Dollars";
             token[1] += "0";
@@ -614,7 +626,7 @@ public class Parse {
         if (i == 0) {
             String[] num = cutDecimal(token);
             boolean flag = false;
-            if (num[1].equals("0,")){
+            if (num[1].equals("0,")) {
                 flag = true;
             }
             if (!num[0].contains(" ") && num[0].length() >= 7) {
@@ -640,13 +652,15 @@ public class Parse {
 
         if (isMoney) {
             if (token[0].toLowerCase().endsWith("m")) {
-                token[0] = token[0].replace("m", " M");
+                token[0] = replace(token[0],"m", " M");
                 moneyParse(token, 0);
                 return i;
             }
             if (token[0].toLowerCase().endsWith("b") || token[0].toLowerCase().endsWith("bn")) {
-                token[0] = token[0].replace("b", "");
-                token[0] = token[0].replace("n", "");
+//                token[0] = token[0].replace("b", "");
+//                token[0] = token[0].replace("n", "");
+                token[0] = replace(token[0],"b", "");
+                token[0] = replace(token[0],"n", "");
                 moneyParse(token, 3);
                 return i;
             }
@@ -671,7 +685,6 @@ public class Parse {
         }
         return i;
     }
-
 
 
     private void cleanToken(String[] token) {
@@ -719,9 +732,67 @@ public class Parse {
     }
 
     private void addApearanceInDictionary(HashMap<String, String> termsDict, String[] token) {
-        String[] s = termsDict.get(token[0]).split(",");
+        String[] s = split(termsDict.get(token[0]),",");
         int x = (int) numerize(s);
         x++;
         termsDict.put(token[0], "" + x + "," + s[1]);
+    }
+
+
+    public static void main(String[] args) {
+        String test = "now we are going to take all the rules and aply a final test \n" +
+                "first of all lets look at some numbers: \n" +
+                "10,123 \n" +
+                "123 Thousand \n" +
+                "some words in between \n" +
+                "1010.56 this is a number also \n" +
+                "10,123,000 should apeare different in the dictionary \n" +
+                "some words before the number: 55 Million. YEY! \n" +
+                "Yey. Name, name, naming, again some numbers 10,123,000,000 \n" +
+                "55 Billion, and the number 7 Trillion. \n" +
+                "numbers under thousand: 22, 24, 4 1/2 \n" +
+                "lets look at some precentage.. \n" +
+                "22.22% also you can wirte it like 22.22 precent or 22.22 precentage \n" +
+                "that is it for precntage. now lets see prices. this is going to be a long one \n" +
+                "1.7320 Dollars, 22 2/4 Dollars and also $450,000 \n" +
+                "now the other price rules: 1,000,000 Dollars, $450,000,000 \n" +
+                "$100 million and 20.6m Dollars or 20.6 m Dollars \n" +
+                "100$ billion \n" +
+                "100 bn dollars or 100bn Dollars need to be the same. \n" +
+                "lets see if all U.S. prices works \n" +
+                "100 billion U.S. dollars and 320 million U.S. dollars and 1 trillion U.S dollars.. \n" +
+                "now some dates:: 14 MAY, 14 May the same thing.. \n" +
+                "June 4, JUNE 4 still the same. now with years \n" +
+                "May 1994 or MAY 1994 thats are all the dates.. \n" +
+                "now the expressions!!! \n" +
+                "To-Be-Or-Not-To-Be.. 10-parts, 10 2/3-pages, 10 thousand-pages, 10-20 2/4 \n" +
+                "pages-20 2/4, pages-10 thousand, 10 million-2 trillion. \n" +
+                "and now betweens... YEY!!!! \n" +
+                "between 2 and 7, between 2 2/4 and 10 thousand. between 1 million and 2 million \n" +
+                "between 2 3/4 and 10 2/4. \n" +
+                "thats it!";
+        String[] s = new String[]{test, ""};
+        String[] one = {"There are basically three ways of parsing data interchange formats such as JSON or XML. The first one is deserialization into a data object model. In this approach, the structure of JSON or XML document is represented by classes which can be created manually by a programmer or automatically generated with a tool.", ""};
+        Parse p1 = new Parse();
+        Parse p2 = new Parse();
+        HashMap<String, String> termsDict1 = p2.parse(one);
+        HashMap<String, String> termsDict2 = p2.parse(s);
+        System.out.println();
+        System.out.println(one[0]);
+        System.out.println();
+        for (Map.Entry<String, String> entry : termsDict1.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            System.out.println("Token: " + key + " ; Flags: " + value);
+        }
+        System.out.println();
+        System.out.println(s[0]);
+        System.out.println();
+
+        for (Map.Entry<String, String> entry : termsDict2.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            System.out.println("Token: " + key + " ; Flags: " + value);
+        }
     }
 }

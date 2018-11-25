@@ -1,6 +1,7 @@
 package TextContainers;
 
 import java.util.*;
+import static org.apache.commons.lang3.StringUtils.split;
 
 public class Doc {
 
@@ -10,10 +11,10 @@ public class Doc {
     private int max_tf;
     private Map<String, String> attributes;
 
-    public Doc(String[] docNum, String[] text) {
-        this.docNum = docNum[0];
-        this.text = text[0];
-        this.length = text[0].split(" ").length;
+    public Doc(StringBuilder docNum, StringBuilder text) {
+        this.docNum = String.valueOf(docNum);
+        this.text = String.valueOf(text);
+        this.length = split(String.valueOf(text), ' ').length;
         max_tf=-1;
         this.attributes = new HashMap<>();
     }
