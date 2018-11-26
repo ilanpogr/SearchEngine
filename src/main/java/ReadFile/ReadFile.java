@@ -29,7 +29,7 @@ public class ReadFile {
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
 //    private Map<String,String> docMap = new M
-    private static int docCounter = 0;
+//    private static int docCounter = 0;
 
     public ReadFile() {
         this.unInstancedDocList = new ArrayList<>();
@@ -83,8 +83,6 @@ public class ReadFile {
 //            double end = System.currentTimeMillis();
 //            System.out.println("Time took to read files: " + (end - start) / 1000 + " sec.");
 //            System.out.println();
-
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -193,57 +191,4 @@ public class ReadFile {
         return fileCounter < rootPath.size();
     }
 
-
-
-    /*private void extractText() {
-        for (int i = 0; i < unInstancedDocList.size(); i++) {
-            String text = unInstancedDocList.get(i);
-            String[] s = text.split("<TEXT>");
-            if (s.length > 1)
-                text = s[1].trim();
-            else {
-                String textTmp = text;
-                text = s[0];
-                s = text.split("<P>");
-                if (s.length > 1)
-                    for (int j = 1; j < s.length; j += 2) {
-                        if (j == 1)
-                            text = "";
-                        text += s[j].split("</P>")[0];
-                    }
-                else
-                    docCounter--;
-            }
-            text = text.replaceAll("( )+", " ");
-            text = text.replace("CELLRULE", " ");
-            text = text.replace("TABLECELL", " ");
-            text = text.replace("CVJ=\"C\"", " ");
-            text = text.replace("CHJ=\"C\"", " ");
-            text = text.replace("CHJ=\"R\"", " ");
-            textList.add(docNumList.get(i) + " " + text);
-        }
-
-    }*/
-
-    /*public void readFiles(String path) {
-        if (path == null) {
-            System.out.println("No path given");
-        }
-        try {
-            Stream<Path> subPaths = Files.walk(Paths.get(path));
-            List<String> fileList = subPaths.filter(Files::isRegularFile).map(Objects::toString).collect(Collectors.toList());
-            for (String file : fileList) {
-                currPath = fileList.get(fileCounter);
-                fileCounter++;
-                this.readFromFile(file);
-                this.clearLists();
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-    }*/
 }

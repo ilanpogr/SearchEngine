@@ -1,7 +1,8 @@
+import Parser.Parse;
 import ReadFile.ReadFile;
+import Stemmer.Stemmer;
 import TextContainers.Doc;
-
-
+import Stemmer.Stemmer;
 import java.util.*;
 
 public class Controller {
@@ -15,6 +16,11 @@ public class Controller {
 
     public static void main(String[] args) {
         double mainStartTime = System.currentTimeMillis();
+
+
+
+
+
         int j = 0, f = 0, ii=0;
         try {
             String path = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
@@ -26,12 +32,14 @@ public class Controller {
                 f++;
                 double read = System.currentTimeMillis();
                 filesList = readFile.getFileList();
-                for (int i = 0; i < filesList.size(); i++) {
+                for (int i = 0; i < /*filesList.size()*/2; i++) {
                     double parsestart = System.currentTimeMillis();
                     currPath = filesList.get(i).docNum;
 //                    if (String.valueOf(filesList.get(i).text).isEmpty())
 //                        System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ii);
                     HashMap<String, String> map = new Parse().parse(new String[]{String.valueOf(filesList.get(i).text)});
+                    Stemmer stemmer =new Stemmer();
+                    stemmer.stem(map);
                     updateDocsMaxTf(filesList.get(i), map);
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
