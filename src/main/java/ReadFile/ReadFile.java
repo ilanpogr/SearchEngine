@@ -76,6 +76,7 @@ public class ReadFile {
             unInstancedDocList.addAll(Arrays.asList(splitByWholeSeparator(string, "</DOC>")));
             unInstancedDocList.remove(unInstancedDocList.size() - 1);
             createDocList();
+            stringBuilder.setLength(0);
             return docList;
 //            extractDocNums();
 //            extractText();
@@ -100,33 +101,31 @@ public class ReadFile {
             Doc curr = new Doc(docNum, docText);
             docNum.setLength(0);
             docText.setLength(0);
-            String[] docArr = split(String.valueOf(document), '\n');
-            StringBuilder line = new StringBuilder(), tag = new StringBuilder();
-            for (int i = 0; i < docArr.length; i++) {
-                docArr[i] = trim(docArr[i]);
-                if (docArr[i].startsWith("<")) {
+//            String[] docArr = split(String.valueOf(document), '\n');
+//            StringBuilder line = new StringBuilder(), tag = new StringBuilder();
+//            for (int i = 0; i < docArr.length; i++) {
+//                docArr[i] = trim(docArr[i]);
+//                if (docArr[i].startsWith("<")) {
 //                    String[] lineArr = docArr[i].split(">", 2);
-                    String[] lineArr = split(docArr[i], ">", 2);
-                    if (lineArr.length < 2 && line.length()<1){
-                        continue;
-                    }
-                    if (line.length() > 0 && docArr[i].isEmpty()) {
-                        docArr[i] = trim(lineArr[1]);
-                        if (!lineArr[0].contains("/")) continue;
-//                        tag = lineArr[0].split("/")[1].toUpperCase();
-                        tag.append(upperCase(split(lineArr[0], "/")[1]));
-                        curr.addAttributes(new String[]{trim(String.valueOf(tag)), trim(String.valueOf(line))});
-                        tag.setLength(0);
-                        line.setLength(0);
-                    }
-                    if (docArr[i].endsWith(">")) {
+////                    String[] lineArr = split(docArr[i], ">", 2);
+//                    docArr[i] = trim(lineArr[1]);
+//                    if (line.length() > 0 && docArr[i].isEmpty()) {
+//                        if (!lineArr[0].contains("/")) continue;
+////                        tag = lineArr[0].split("/")[1].toUpperCase();
+////                        tag.append(upperCase(split(lineArr[0], "/")[1]));
+//                        tag.append(upperCase(lineArr[0].split( "/")[1]));
+//                        curr.addAttributes(new String[]{trim(String.valueOf(tag)), trim(String.valueOf(line))});
+//                        tag.setLength(0);
+//                        line.setLength(0);
+//                    }
+//                    if (docArr[i].endsWith(">")) {
 //                        docArr[i] = trim(docArr[i].split("<", 2)[0]);
-                        docArr[i] = trim(split(docArr[i], "<", 2)[0]);
-                    }
-                }
-                if (docArr[i].isEmpty()) continue;
-                line.append(" ").append(docArr[i]);
-            }
+////                        docArr[i] = trim(split(docArr[i], "<", 2)[0]);
+//                    }
+//                }
+//                if (docArr[i].isEmpty()) continue;
+//                line.append(" ").append(docArr[i]);
+//            }
             docList.add(curr);
         }
     }
@@ -171,10 +170,10 @@ public class ReadFile {
     private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
 //        String[] tmp = document[0].split(delimiter + ">", 3);
         String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
-//        if (tmp.length < 3) {
-//            element.delete(0,element.length());
-//            return;
-//        }
+        if (tmp.length < 3) {
+            element.delete(0,element.length());
+            return;
+        }
 //        if (!delimiter.equalsIgnoreCase("text")) {
 //            document[0] = trim(substring(tmp[0],0, tmp[0].length() - 1))+ "\n " + trim(tmp[2]);
 //        }
@@ -183,12 +182,14 @@ public class ReadFile {
 
     public ArrayList<Doc> getFileList() {
         if (hasNextFile()) {
+            clearLists();
             return readFromFile(rootPath.get(fileCounter++));
         }
         return null;
     }
 
     public boolean hasNextFile() {
+//        return fileCounter < 1000;
         return fileCounter < rootPath.size();
     }
 
