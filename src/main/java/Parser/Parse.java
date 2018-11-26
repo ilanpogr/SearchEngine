@@ -720,7 +720,7 @@ public class Parse {
     }
 
     private void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
-        if (!stopWords.contains(token[0])) {
+        if (!stopWords.contains(token[0].toLowerCase())) {
             if (token[0].toLowerCase().endsWith("'s")) {
                 token[0] = token[0].substring(0, token[0].length() - 2);
             }

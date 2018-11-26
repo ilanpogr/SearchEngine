@@ -12,7 +12,7 @@ import static org.apache.commons.lang3.StringUtils.trim;
 public class Stemmer {
 
     private static Map<String,String> cache = new HashMap<>();
-    private Map<String,String> stemmed;
+    private HashMap<String,String> stemmed;
     private SnowballStemmer snowballStemmer = new englishStemmer();
 
     public void clear(){
@@ -20,10 +20,12 @@ public class Stemmer {
         stemmed.clear();
     }
 
-    public Map<String,String> stem(Map<String,String> parsedDic){
+    public HashMap<String,String> stem(HashMap<String,String> parsedDic){
         stemmed = new HashMap<>();
         for (Map.Entry<String,String> term : parsedDic.entrySet()
              ) {
+            boolean isUppercase = Character.isUpperCase(term.getKey().charAt(0));
+            //todo - to lower - stem - to upper case
             if (term.getValue().endsWith("0")){
                 stemmed.put(term.getKey(),term.getValue());
                 continue;
