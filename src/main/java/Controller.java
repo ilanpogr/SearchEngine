@@ -39,7 +39,14 @@ public class Controller {
 //                        System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ii);
                     HashMap<String, String> map = new Parse().parse(new String[]{String.valueOf(filesList.get(i).text)});
                     Stemmer stemmer =new Stemmer();
-                    stemmer.stem(map);
+                    HashMap<String, String> stemmed = stemmer.stem(map);
+                    ArrayList<String> sm = new ArrayList<>(map.keySet());
+                    Collections.sort(sm);
+                    System.out.println(sm.toString());
+                    ArrayList<String> sst = new ArrayList<>(stemmed.keySet());
+                    Collections.sort(sst);
+                    System.out.println(sst.toString());
+
                     updateDocsMaxTf(filesList.get(i), map);
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
