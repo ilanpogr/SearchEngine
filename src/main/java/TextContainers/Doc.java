@@ -2,6 +2,7 @@ package TextContainers;
 
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.split;
 
@@ -12,6 +13,7 @@ public class Doc {
 //    public final int length;
     private int length;
     private int max_tf;
+    private int fpCounter;
     private Map<String, String> attributes;
 
 //    public Doc(StringBuilder docNum, StringBuilder text) {
@@ -26,6 +28,7 @@ public class Doc {
         this.attributes = new HashMap<>();
         max_tf=-1;
         length=0;
+        fpCounter=101;
     }
 
     public int getMax_tf() {
@@ -73,6 +76,10 @@ public class Doc {
 
     public void addAttributes(String[] tags) {
         for (int i = 0; i < tags.length - 1; i++) {
+//            if (tags[i].equalsIgnoreCase("f"))
+//                tags[i] =appendIfMissing(tags[i],""+fpCounter++);
+//            if (tags[i].equalsIgnoreCase("f104"))
+//                tags[i]="COUNTRY";
             attributes.put(tags[i++], tags[i]);
         }
     }
@@ -80,6 +87,14 @@ public class Doc {
     public void addAttributes(ArrayList<String> tags) {
         for (int i = 0; i < tags.size() - 1; i++) {
             attributes.put(tags.get(i++), tags.get(i));
+        }
+    }
+
+    public String getAttribute(String key){
+        try{
+            return attributes.get(key);
+        } catch (Exception e){
+         return "";
         }
     }
 

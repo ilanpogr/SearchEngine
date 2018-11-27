@@ -133,6 +133,9 @@ public class ReadFile {
                 line.append(" ").append(docArr[i]);
             }
             curr.setLength();
+//            int x=0;
+//            if (curr.getAttribute("COUNTRY")!=null || curr.getAttribute("F101")!=null)
+//                x++;
             docList.add(curr);
 
         }
