@@ -5,9 +5,7 @@ import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,15 +39,24 @@ public class ReadFile {
     public ReadFile(String path) {
         this();
         if (rootPath == null)
-            rootPath = new ArrayList<>(createPathsList(Paths.get(path)));
+            rootPath = new ArrayList<>(createPathsList(/*Paths.get(*/path));
     }
 
-    private static List<String> createPathsList(Path path) {
-        List<String> fileList = null;
+    private static List<String> createPathsList(String path) {
+        List<String> fileList = new ArrayList<>();
         try {
-            Stream<Path> subPaths = Files.walk(path);
-            fileList = subPaths.filter(Files::isRegularFile).map(Objects::toString).collect(Collectors.toList());
-
+//            Stream<Path> subPaths = Files.walk(Paths.get(path));
+//            fileList = subPaths.filter(Files::isRegularFile).map(Objects::toString).collect(Collectors.toList());
+            File root = new File(path);
+            File[] dirs = root.listFiles();
+            StringBuilder filePath = new StringBuilder();
+            for (int i = 0; i < dirs.length; i++) {
+                filePath.append(dirs[i]);
+                filePath.append(substring(filePath.toString(), lastIndexOfAny(dirs[i].getPath(), "\\")));
+                fileList.add(filePath.toString());
+                filePath.setLength(0);
+            }
+            System.out.println(fileCounter);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -99,31 +106,31 @@ public class ReadFile {
             Doc curr = new Doc(docNum, docText);
             docNum.setLength(0);
             docText.setLength(0);
-//            String[] docArr = split(String.valueOf(document), '\n');
-//            StringBuilder line = new StringBuilder(), tag = new StringBuilder();
-//            for (int i = 0; i < docArr.length; i++) {
-//                docArr[i] = trim(docArr[i]);
-//                if (docArr[i].startsWith("<")) {
-//                    String[] lineArr = docArr[i].split(">", 2);
-////                    String[] lineArr = split(docArr[i], ">", 2);
-//                    docArr[i] = trim(lineArr[1]);
-//                    if (line.length() > 0 && docArr[i].isEmpty()) {
-//                        if (!lineArr[0].contains("/")) continue;
-////                        tag = lineArr[0].split("/")[1].toUpperCase();
-////                        tag.append(upperCase(split(lineArr[0], "/")[1]));
-//                        tag.append(upperCase(lineArr[0].split( "/")[1]));
-//                        curr.addAttributes(new String[]{trim(String.valueOf(tag)), trim(String.valueOf(line))});
-//                        tag.setLength(0);
-//                        line.setLength(0);
-//                    }
-//                    if (docArr[i].endsWith(">")) {
-//                        docArr[i] = trim(docArr[i].split("<", 2)[0]);
-////                        docArr[i] = trim(split(docArr[i], "<", 2)[0]);
-//                    }
-//                }
-//                if (docArr[i].isEmpty()) continue;
-//                line.append(" ").append(docArr[i]);
-//            }
+            String[] docArr = split(document.toString(), '\n');
+            StringBuilder line = new StringBuilder(), tag = new StringBuilder();
+            for (int i = 0; i < docArr.length; i++) {
+                docArr[i] = trim(docArr[i]);
+                if (docArr[i].startsWith("<")) {
+                    String[] lineArr = docArr[i].split(">", 2);
+//                    String[] lineArr = split(docArr[i], ">", 2);
+                    docArr[i] = trim(lineArr[1]);
+                    if (line.length() > 0 && docArr[i].isEmpty()) {
+                        if (!lineArr[0].contains("/")) continue;
+//                        tag = lineArr[0].split("/")[1].toUpperCase();
+//                        tag.append(upperCase(split(lineArr[0], "/")[1]));
+                        tag.append(upperCase(lineArr[0].split( "/")[1]));
+                        curr.addAttributes(new String[]{trim(tag.toString()), trim(line.toString())});
+                        tag.setLength(0);
+                        line.setLength(0);
+                    }
+                    if (docArr[i].endsWith(">")) {
+                        docArr[i] = trim(docArr[i].split("<", 2)[0]);
+//                        docArr[i] = trim(split(docArr[i], "<", 2)[0]);
+                    }
+                }
+                if (docArr[i].isEmpty()) continue;
+                line.append(" ").append(docArr[i]);
+            }
             docList.add(curr);
         }
     }
@@ -169,7 +176,7 @@ public class ReadFile {
 //        String[] tmp = document[0].split(delimiter + ">", 3);
         String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
         if (tmp.length < 3) {
-            element.delete(0,element.length());
+            element.delete(0, element.length());
             return;
         }
 //        if (!delimiter.equalsIgnoreCase("text")) {
