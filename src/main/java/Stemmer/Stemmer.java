@@ -6,26 +6,28 @@ import java.util.Map;
 import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
-import static org.apache.commons.lang3.StringUtils.*;
-//import
+import static org.apache.commons.lang3.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.trim;
+import static org.apache.commons.lang3.StringUtils.lowerCase;
+import static org.apache.commons.lang3.StringUtils.upperCase;
 
 public class Stemmer {
 
     private static Map<String, String> cache = new HashMap<>();
-    private HashMap<String, String> stemmed;
+    private HashMap<String, Integer> stemmed;
     private SnowballStemmer snowballStemmer = new englishStemmer();
 
-    public void clear() {
+    private void clear() {
         cache.clear();
         stemmed.clear();
     }
 
-    public HashMap<String, String> stem(HashMap<String, String> parsedDic) {
+    public HashMap<String, Integer> stem(HashMap<String, String> parsedDic) {
         stemmed = new HashMap<>();
         for (Map.Entry<String, String> term : parsedDic.entrySet()
         ) {
             if (term.getValue().endsWith("0")) {
-                stemmed.put(term.getKey(), term.getValue());
+                stemmed.put(term.getKey(), toint(term.getValue()));
                 continue;
             }
 
@@ -40,12 +42,12 @@ public class Stemmer {
                         s= lowerCase(s);
                         cache.replace(term.getKey(),cache.get(lowerCase(s)));
                     }
-                    stemmed.put(cache.get(s),term.getValue());
+                    stemmed.put(cache.get(s),toint(term.getValue()));
                     continue;
                 }
             }
             if (cache.containsKey(s)){
-                stemmed.put(cache.get(s),term.getValue());
+                stemmed.put(cache.get(s),toint(term.getValue()));
                 continue;
             }
             if (s.contains(" ")) {//if has more than 1 word
@@ -73,10 +75,10 @@ public class Stemmer {
                 stemmedTerm.append(isUppercase?upperCase(snowballStemmer.getCurrent()):snowballStemmer.getCurrent());
             }
             if (stemmed.containsKey(stemmedTerm.toString())) {
-                currentStemmed.append(split(stemmed.get(stemmedTerm.toString()), ",")[0]);
+                currentStemmed.append(stemmed.get(stemmedTerm.toString()));
                 sumFrequency(stemmed, stemmedTerm, currentStemmed, term.getValue());
             } else {
-                stemmed.put(isUppercase?upperCase(stemmedTerm.toString()):stemmedTerm.toString(), term.getValue());
+                stemmed.put(isUppercase?upperCase(stemmedTerm.toString()):stemmedTerm.toString(), toint(term.getValue()));
             }
             cache.put(isUppercase?upperCase(s):s, stemmedTerm.toString());
 
@@ -84,13 +86,24 @@ public class Stemmer {
         return stemmed;
     }
 
-    private void sumFrequency(Map<String, String> stemmed, StringBuilder stemmedTerm, StringBuilder currentStemmed, String value) {
+    private Integer toint(String value) {
+        int num = 1;
+        try {
+            num = Integer.parseInt(split(value, ",")[0]);
+        }
+        catch (Exception e){
+
+        }
+        return num;
+    }
+
+    private void sumFrequency(Map<String, Integer> stemmed, StringBuilder stemmedTerm, StringBuilder currentStemmed, String value) {
         try {
             int x = Integer.parseInt(currentStemmed.toString());
-            x += Integer.parseInt(split(value, ",")[0]);
+            int y = Integer.parseInt(split(value, ",")[0]);
             currentStemmed.setLength(0);
-            currentStemmed.append(x).append(",1");
-            stemmed.replace(stemmedTerm.toString(), value, currentStemmed.toString());
+//            currentStemmed.append(x).append(",1");
+            stemmed.replace(stemmedTerm.toString(), y, x+y);
         } catch (Exception e) {
 
         }

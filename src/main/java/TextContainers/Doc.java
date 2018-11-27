@@ -1,26 +1,48 @@
 package TextContainers;
 
 import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.split;
 
 public class Doc {
 
-    public final String docNum;
-    public final String text;
-    public final int length;
+//    public final String docNum;
+//    public final String text;
+//    public final int length;
+    private int length;
     private int max_tf;
     private Map<String, String> attributes;
 
-    public Doc(StringBuilder docNum, StringBuilder text) {
-        this.docNum = String.valueOf(docNum);
-        this.text = String.valueOf(text);
-        this.length = split(String.valueOf(text), ' ').length;
-        max_tf=-1;
+//    public Doc(StringBuilder docNum, StringBuilder text) {
+//        this.docNum = String.valueOf(docNum);
+//        this.text = String.valueOf(text);
+//        this.length = split(String.valueOf(text), ' ').length;
+//        max_tf=-1;
+//        this.attributes = new HashMap<>();
+//    }
+
+    public Doc(){
         this.attributes = new HashMap<>();
+        max_tf=-1;
+        length=0;
     }
 
     public int getMax_tf() {
         return max_tf;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength() {
+        if (length==0) {
+            for (Map.Entry<String, String> att : attributes.entrySet()
+            ) {
+                length+=split(att.getValue()," ").length+1;
+            }
+        }
     }
 
     public void setMax_tf(int max_tf) {
@@ -59,5 +81,13 @@ public class Doc {
         for (int i = 0; i < tags.size() - 1; i++) {
             attributes.put(tags.get(i++), tags.get(i));
         }
+    }
+
+    public String docNum() {
+        return attributes.get("DOCNO");
+    }
+
+    public String [] text() {
+        return new String[]{attributes.get("TEXT")};
     }
 }

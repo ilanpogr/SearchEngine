@@ -35,12 +35,12 @@ public class Controller {
                 filesList = readFile.getFileList();
                 for (int i = 0; i < filesList.size(); i++) {
                     double parsestart = System.currentTimeMillis();
-                    currPath = filesList.get(i).docNum;
+                    currPath = filesList.get(i).docNum();
 //                    if (String.valueOf(filesList.get(i).text).isEmpty())
 //                        System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ii);
-                    HashMap<String, String> map = p.parse(new String[]{String.valueOf(filesList.get(i).text)});
+                    HashMap<String, String> map = p.parse(filesList.get(i).text());
                     Stemmer stemmer =new Stemmer();
-                    HashMap<String, String> stemmed = stemmer.stem(map);
+                    HashMap<String, Integer> stemmed = stemmer.stem(map);
 //                    ArrayList<String> sm = new ArrayList<>(map.keySet());
 //                    Collections.sort(sm);
 //                    System.out.println(sm.toString());
@@ -80,7 +80,7 @@ public class Controller {
         }
         if (maxTTF < max) {
             maxTTF = max;
-            maxTTFS = maxKey + " -> " + doc.docNum;
+            maxTTFS = maxKey + " -> " + doc.docNum();
         }
         doc.setMax_tf(max);
         doc.addAttributes(new String[]{"MAX-TF", maxKey + ":" + max + ""});
