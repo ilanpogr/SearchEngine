@@ -38,9 +38,9 @@ public class Controller {
                     currPath = filesList.get(i).docNum();
 //                    if (String.valueOf(filesList.get(i).text).isEmpty())
 //                        System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ii);
-                    HashMap<String, String> map = p.parse(filesList.get(i).text());
-                    Stemmer stemmer =new Stemmer();
-                    HashMap<String, Integer> stemmed = stemmer.stem(map);
+//                    HashMap<String, String> map = p.parse(filesList.get(i).text());
+//                    Stemmer stemmer =new Stemmer();
+//                    HashMap<String, Integer> stemmed = stemmer.stem(map);
 //                    ArrayList<String> sm = new ArrayList<>(map.keySet());
 //                    Collections.sort(sm);
 //                    System.out.println(sm.toString());
@@ -48,7 +48,7 @@ public class Controller {
 //                    Collections.sort(sst);
 //                    System.out.println(sst.toString());
 //
-                    updateDocsMaxTf(filesList.get(i), map);
+//                    updateDocsMaxTf(filesList.get(i), map);
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
                     fileparse += (parseend - parsestart) / 1000;
