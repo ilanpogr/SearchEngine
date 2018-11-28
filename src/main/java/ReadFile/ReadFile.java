@@ -16,19 +16,25 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ *
+ */
 public class ReadFile {
 
     //TODO- return all Tags as Atributes from a Doc
 
-    private ArrayList<String> unInstancedDocList;
-    private ArrayList<Doc> docList;
-    private static ArrayList<String> rootPath;
+    private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
+    private ArrayList<Doc> docList; //a list of Docs, from a single File
+    private static ArrayList<String> rootPath; //paths list of all files in the corpus
     private static int fileCounter = 0;
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
 //    private Map<String,String> docMap = new M
 //    private static int docCounter = 0;
 
+    /**
+     * dCtor
+     */
     public ReadFile() {
         this.unInstancedDocList = new ArrayList<>();
         this.docList = new ArrayList<>();
@@ -36,12 +42,21 @@ public class ReadFile {
 //        this.docNumList = new ArrayList<>();
     }
 
+    /**
+     * Ctor
+     * @param path - to corpus dir
+     */
     public ReadFile(String path) {
         this();
         if (rootPath == null)
             rootPath = new ArrayList<>(createPathsList(/*Paths.get(*/path));
     }
 
+    /**
+     * create a list with all paths within corpus dir
+     * @param path - to corpus dir
+     * @return List of paths
+     */
     private static List<String> createPathsList(String path) {
         List<String> fileList = new ArrayList<>();
         try {
@@ -63,6 +78,9 @@ public class ReadFile {
         return fileList;
     }
 
+    /**
+     * clears the documents lists
+     */
     private void clearLists() {
         unInstancedDocList.clear();
         docList.clear();
@@ -70,6 +88,11 @@ public class ReadFile {
 //        docNumList = new ArrayList<>();
     }
 
+    /**
+     * reads a File and splits it into a document list
+     * @param path - to the file
+     * @return a list of Doc (documents)
+     */
     private ArrayList<Doc> readFromFile(String path) {
         try {
 //            double start = System.currentTimeMillis();
@@ -96,6 +119,9 @@ public class ReadFile {
         return null;
     }
 
+    /**
+     * creates a list of Doc from the read File
+     */
     private void createDocList() {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
@@ -178,6 +204,13 @@ public class ReadFile {
 //        }
 //    }
 
+    /**
+     * extracts a given tag from a document string.
+     * the element cut from the document will be kept in 'element' for further use
+     * @param element - String holder (mutable)
+     * @param document - holding the document String (also mutable) and cuts the given key (optional)
+     * @param delimiter - tag's name to extract
+     */
     private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
 //        String[] tmp = document[0].split(delimiter + ">", 3);
         String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
@@ -191,6 +224,12 @@ public class ReadFile {
         element.append(trim(substring(tmp[1], 0, tmp[1].length() - 2)));
     }
 
+    /**
+     * get a list of 'Doc' from a single File.
+     * the function works as a queue, each time it's called it will return the next file
+     * in a form of Doc's list.
+     * @return ArrayList of Doc
+     */
     public ArrayList<Doc> getFileList() {
         if (hasNextFile()) {
             clearLists();
@@ -199,6 +238,10 @@ public class ReadFile {
         return null;
     }
 
+    /**
+     * check if there are more files in the corpus
+     * @return true if there are unread files, else false
+     */
     public boolean hasNextFile() {
 //        return fileCounter < 1000;
         return fileCounter < rootPath.size();
