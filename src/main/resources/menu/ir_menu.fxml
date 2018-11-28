@@ -10,22 +10,31 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="260.0" prefWidth="300.0" stylesheets="@style_menu.css" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.IR_MenuView">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="380.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.IR_MenuView">
     <children>
-        <VBox prefHeight="260.0" prefWidth="300.0">
+        <VBox prefHeight="380.0" prefWidth="300.0">
             <children>
-                <Region prefHeight="10.0" prefWidth="300.0" />
+            <Region prefHeight="10.0" prefWidth="200.0" />
+            <Button fx:id="start_bttn" disable="true" mnemonicParsing="false" onAction="#Start" prefHeight="40.0" prefWidth="300.0" text="START" />
+            <Region prefHeight="10.0" prefWidth="200.0" />
+            <Region fx:id="region_delimiter" prefHeight="10.0" prefWidth="200.0" />
+            <Region prefHeight="10.0" prefWidth="200.0" />
                 <Button mnemonicParsing="false" onAction="#BrowseDataSet" prefHeight="40.0" prefWidth="280.0" text="Browse Data Set">
                     <VBox.margin>
                         <Insets left="10.0" />
                     </VBox.margin>
                 </Button>
                 <Region prefHeight="10.0" prefWidth="300.0" />
-                <Button fx:id="save_files_path" mnemonicParsing="false" onAction="#savePostingFile_DictionaryFile" prefHeight="40.0" prefWidth="280.0" text="Save Posting and Dictionary">
+                <Button mnemonicParsing="false" onAction="#savePostingFile_DictionaryFile" prefHeight="40.0" prefWidth="280.0" text="Save Posting and Dictionary">
                     <VBox.margin>
                         <Insets left="10.0" />
                     </VBox.margin>
                 </Button>
+            <Region prefHeight="10.0" prefWidth="300.0" />
+            <Button contentDisplay="CENTER" mnemonicParsing="false" prefHeight="40.0" prefWidth="280.0" text="Show Dictionary">
+               <VBox.margin>
+                  <Insets left="10.0" />
+               </VBox.margin></Button>
                 <Region prefHeight="10.0" prefWidth="300.0" />
                 <HBox prefHeight="40.0" prefWidth="300.0">
                     <children>
@@ -47,7 +56,7 @@
                     </children>
                 </HBox>
                 <Region prefHeight="10.0" prefWidth="300.0" />
-                <Button fx:id="reset_button" alignment="CENTER" contentDisplay="CENTER" minHeight="40.0" mnemonicParsing="false" onAction="#Reset" prefHeight="40.0" prefWidth="280.0" text="Reset" textAlignment="CENTER">
+                <Button alignment="CENTER" contentDisplay="CENTER" minHeight="40.0" mnemonicParsing="false" onAction="#Reset" prefHeight="40.0" prefWidth="280.0" text="Reset" textAlignment="CENTER">
                     <VBox.margin>
                         <Insets left="10.0" />
                     </VBox.margin>
