@@ -1,4 +1,7 @@
+package TextContainers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class City {
 
@@ -6,7 +9,7 @@ public class City {
     private String countryName;
     private String currency;
     private String docName;
-    private int possition;
+    private ArrayList<Integer> possitions;
     private double population;
 
 
@@ -27,8 +30,18 @@ public class City {
         return docName;
     }
 
-    public int getPossition() {
-        return possition;
+    public ArrayList<Integer> getPossition() {
+        return possitions;
+    }
+
+    public void addPossition(int x){
+        possitions.add(x);
+    }
+
+    public void addPossitions(int [] a){
+        for (int i : a) {
+            possitions.add(i);
+        }
     }
 
     public String getCurrency() {

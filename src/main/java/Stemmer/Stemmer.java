@@ -30,9 +30,10 @@ public class Stemmer {
 
     /**
      * Stem the document given after parsing.
+     *
      * @param parsedDic the parsed document's dictionary
      * @return HashMap: key - String, the term from the Doc;
-     *                  value - Integer, the term frequency within the given Doc.
+     * value - Integer, the term frequency within the given Doc.
      */
     public HashMap<String, Integer> stem(HashMap<String, String> parsedDic) {
         stemmed = new HashMap<>();
@@ -47,17 +48,17 @@ public class Stemmer {
             String s = term.getKey();
             if (Character.isUpperCase(s.charAt(0))) { //if the term is uppercase
                 isUppercase = true;
-                if (cache.containsKey(s)){  //if we stemmed this term
-                    if (cache.containsKey(lowerCase(s))){   //if we stemmed the same word as lowercase
-                        s= lowerCase(s);    //convert it to lowercase
-                        cache.put(term.getKey(),cache.get(lowerCase(s)));// and add it to cache, from now on the term will be stemmed to lowercase
+                if (cache.containsKey(s)) {  //if we stemmed this term
+                    if (cache.containsKey(lowerCase(s))) {   //if we stemmed the same word as lowercase
+                        s = lowerCase(s);    //convert it to lowercase
+                        cache.put(term.getKey(), cache.get(lowerCase(s)));// and add it to cache, from now on the term will be stemmed to lowercase
                     }
-                    stemmed.put(cache.get(s),toint(term.getValue()));   //add it to the dictionary
+                    stemmed.put(cache.get(s), toint(term.getValue()));   //add it to the dictionary
                     continue;
                 }
             }
-            if (cache.containsKey(s)){  //if we stemmed this term
-                stemmed.put(cache.get(s),toint(term.getValue()));//add it to the dictionary
+            if (cache.containsKey(s)) {  //if we stemmed this term
+                stemmed.put(cache.get(s), toint(term.getValue()));//add it to the dictionary
                 continue;
             }
             if (s.contains(" ")) {//if the term has more than 1 word
@@ -70,52 +71,64 @@ public class Stemmer {
                         snowballStemmer.setCurrent(token);
                         snowballStemmer.stem();
                         currentStemmed.append(snowballStemmer.getCurrent());
-                        if (isUppercase){
+                        if (isUppercase) {
                             token = upperCase(token);
                         }
-                        cache.put(token, currentStemmed.toString());//store in the cache how to stem it
+                        cache.put(token, currentStemmed.toString());    //store in the cache how to stem it
                     }
                     stemmedTerm.append(currentStemmed).append(" ");
                     currentStemmed.setLength(0);
                 }
                 trim(stemmedTerm.toString());
-            } else {
+            } else {    //else - the term is a single word
                 snowballStemmer.setCurrent(s);
                 snowballStemmer.stem();
-                stemmedTerm.append(isUppercase?upperCase(snowballStemmer.getCurrent()):snowballStemmer.getCurrent());
+                stemmedTerm.append(isUppercase ? upperCase(snowballStemmer.getCurrent()) : snowballStemmer.getCurrent());
             }
-            if (stemmed.containsKey(stemmedTerm.toString())) {
+            if (stemmed.containsKey(stemmedTerm.toString())) {// if we stemmed the word in this doc
                 currentStemmed.append(stemmed.get(stemmedTerm.toString()));
-                sumFrequency(stemmed, stemmedTerm, currentStemmed, term.getValue());
+                sumFrequency(stemmed, stemmedTerm, currentStemmed, term.getValue());//sum the values
             } else {
-                stemmed.put(isUppercase?upperCase(stemmedTerm.toString()):stemmedTerm.toString(), toint(term.getValue()));
+                stemmed.put(isUppercase ? upperCase(stemmedTerm.toString()) : stemmedTerm.toString(), toint(term.getValue()));
             }
-            cache.put(isUppercase?upperCase(s):s, stemmedTerm.toString());
+            cache.put(isUppercase ? upperCase(s) : s, stemmedTerm.toString());
 
         }
         return stemmed;
     }
 
+    /**
+     * converts the term value to an Integer after the stemming
+     *
+     * @param value - the term's value in the dictionary
+     * @return the Integer value
+     */
     private Integer toint(String value) {
         int num = 1;
         try {
             num = Integer.parseInt(split(value, ",")[0]);
-        }
-        catch (Exception e){
-
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return num;
     }
 
+    /**
+     * adds the given value to the term's value in the dictionary
+     *
+     * @param stemmed        - the Map after stem.
+     * @param stemmedTerm    - the stemmed term to sum it's value.
+     * @param currentStemmed - the value that need to be added.
+     * @param value          - the value that need to be added to.
+     */
     private void sumFrequency(Map<String, Integer> stemmed, StringBuilder stemmedTerm, StringBuilder currentStemmed, String value) {
         try {
             int x = Integer.parseInt(currentStemmed.toString());
             int y = Integer.parseInt(split(value, ",")[0]);
             currentStemmed.setLength(0);
-//            currentStemmed.append(x).append(",1");
-            stemmed.replace(stemmedTerm.toString(), y, x+y);
+            stemmed.replace(stemmedTerm.toString(), y, x + y);
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
     }
 }

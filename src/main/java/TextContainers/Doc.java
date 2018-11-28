@@ -103,6 +103,6 @@ public class Doc {
     }
 
     public String [] text() {
-        return new String[]{attributes.get("TEXT")};
+        return new String[]{attributes.getOrDefault("TEXT","")};
     }
 }
