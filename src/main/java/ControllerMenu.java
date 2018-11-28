@@ -1,5 +1,5 @@
 import javafx.fxml.FXMLLoader;
-import view.IR_MenuView;
+import View.IR_MenuView;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -40,7 +40,7 @@ public class ControllerMenu implements Observer {
         Scene scene = new Scene(root);
         scene.getStylesheets().add("menu/style_menu.css");
         stage.setScene(scene);
-        modelMenu = new ModelMenu();
+//        modelMenu = new ModelMenu();
         ir_menuView = fxmlLoader.getController();
         ir_menuView.addObserver(this);
         propertiesFile = new PropertiesFile(properties_file_name);
