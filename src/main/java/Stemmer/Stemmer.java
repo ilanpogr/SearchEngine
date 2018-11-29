@@ -16,7 +16,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 public class Stemmer {
 
     private static Map<String, String> cache = new HashMap<>();
-    private HashMap<String, Pair<Integer,String>> stemmed;
+    private HashMap<String, MutablePair<Integer,String>> stemmed;
     private SnowballStemmer snowballStemmer = new englishStemmer();
 
     /**
@@ -34,7 +34,7 @@ public class Stemmer {
      * @return HashMap: key - String, the term from the Doc;
      * value - Integer, the term frequency within the given Doc.
      */
-    public HashMap<String, Pair<Integer, String>> stem(HashMap<String, String> parsedDic) {
+    public HashMap<String, MutablePair<Integer, String>> stem(HashMap<String, String> parsedDic) {
         stemmed = new HashMap<>();
         for (Map.Entry<String, String> term : parsedDic.entrySet()
         ) {
@@ -85,8 +85,7 @@ public class Stemmer {
                 stemmedTerm.append(isUppercase ? upperCase(snowballStemmer.getCurrent()) : snowballStemmer.getCurrent());
             }
             if (stemmed.containsKey(stemmedTerm.toString())) {// if we stemmed the word in this doc
-                currentStemmed.append(stemmed.get(stemmedTerm.toString()));
-                sumFrequency(stemmed, stemmedTerm, currentStemmed, term.getValue());//sum the values
+                sumFrequency(stemmed, stemmedTerm, toPair(replaceChars(stemmed.get(stemmedTerm.toString()).toString(),"()","")), toPair(term.getValue()));//sum the values
             } else {
                 stemmed.put(isUppercase ? upperCase(stemmedTerm.toString()) : stemmedTerm.toString(), toPair(term.getValue()));
             }
@@ -102,7 +101,7 @@ public class Stemmer {
      * @param value - the term's value in the dictionary
      * @return the Integer value
      */
-    private Pair<Integer,String> toPair(String value) {
+    private MutablePair<Integer,String> toPair(String value) {
         int num = 1;
         String positions ="";
         try {
@@ -118,17 +117,15 @@ public class Stemmer {
 
     /**
      * adds the given value to the term's value in the dictionary
-     *  @param stemmed        - the Map after stem.
+     * @param stemmed        - the Map after stem.
      * @param stemmedTerm    - the stemmed term to sum it's value.
-     * @param currentStemmed - the value that need to be added.
+     * @param currentStemmedValue - the value that need to be added.
      * @param value          - the value that need to be added to.
      */
-    private void sumFrequency(HashMap<String, Pair<Integer, String>> stemmed, StringBuilder stemmedTerm, StringBuilder currentStemmed, String value) {
+    private void sumFrequency(HashMap<String, MutablePair<Integer, String>> stemmed, StringBuilder stemmedTerm, MutablePair<Integer, String> currentStemmedValue, Pair<Integer,String> value) {
         try {
-            int x = Integer.parseInt(currentStemmed.toString());
-            int y = Integer.parseInt(split(value, ",")[0]);
-            currentStemmed.setLength(0);
-            stemmed.put(stemmedTerm.toString(), new MutablePair<>(x + y,substringAfter(value,",")));
+            currentStemmedValue.setLeft(currentStemmedValue.getLeft()+value.getLeft());
+            stemmed.put(stemmedTerm.toString(), currentStemmedValue );
         } catch (Exception e) {
             e.printStackTrace();
         }
