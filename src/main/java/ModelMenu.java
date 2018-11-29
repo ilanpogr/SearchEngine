@@ -2,6 +2,7 @@ import Parser.Parse;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -45,10 +46,10 @@ public class ModelMenu {
                 for (int i = 0; i < filesList.size(); i++) {
                     docCounter++;
                     currPath = filesList.get(i).docNum();
-//                    handleFile(parsedDic);
                     HashMap<String, String> parsedDic = parser.parse(filesList.get(i).text());
+                    handleFile(parsedDic);
                     Stemmer stemmer = new Stemmer();
-                    HashMap<String, Integer> stemmed = stemmer.stem(parsedDic);
+                    HashMap<String, Pair<Integer,String>> stemmed = stemmer.stem(parsedDic);
                 }
             }
         } catch (Exception e) {
@@ -61,6 +62,8 @@ public class ModelMenu {
     private void handleFile(HashMap<String, String> parsedDic) {
         int maxTf = 0, length = 0;
         if (isStemMode){
+            Stemmer stemmer = new Stemmer();
+            HashMap<String, Pair<Integer, String>> stemmed = stemmer.stem(parsedDic);
 
         } else {
 

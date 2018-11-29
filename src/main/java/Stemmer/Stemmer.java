@@ -3,13 +3,12 @@ package Stemmer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
-import static org.apache.commons.lang3.StringUtils.split;
-import static org.apache.commons.lang3.StringUtils.trim;
-import static org.apache.commons.lang3.StringUtils.lowerCase;
-import static org.apache.commons.lang3.StringUtils.upperCase;
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * Stemmer class - stems with "SnowBall" stemmer (PorterStemmer2)
@@ -17,7 +16,7 @@ import static org.apache.commons.lang3.StringUtils.upperCase;
 public class Stemmer {
 
     private static Map<String, String> cache = new HashMap<>();
-    private HashMap<String, Integer> stemmed;
+    private HashMap<String, Pair<Integer,String>> stemmed;
     private SnowballStemmer snowballStemmer = new englishStemmer();
 
     /**
@@ -35,12 +34,12 @@ public class Stemmer {
      * @return HashMap: key - String, the term from the Doc;
      * value - Integer, the term frequency within the given Doc.
      */
-    public HashMap<String, Integer> stem(HashMap<String, String> parsedDic) {
+    public HashMap<String, Pair<Integer, String>> stem(HashMap<String, String> parsedDic) {
         stemmed = new HashMap<>();
         for (Map.Entry<String, String> term : parsedDic.entrySet()
         ) {
             if (term.getValue().endsWith("0")) {    //if there is no need to stem it,
-                stemmed.put(term.getKey(), toint(term.getValue())); //add it to the dictionary
+                stemmed.put(term.getKey(), toPair(term.getValue())); //add it to the dictionary
                 continue;
             }
             boolean isUppercase = false;
@@ -53,12 +52,12 @@ public class Stemmer {
                         s = lowerCase(s);    //convert it to lowercase
                         cache.put(term.getKey(), cache.get(lowerCase(s)));// and add it to cache, from now on the term will be stemmed to lowercase
                     }
-                    stemmed.put(cache.get(s), toint(term.getValue()));   //add it to the dictionary
+                    stemmed.put(cache.get(s), toPair(term.getValue()));   //add it to the dictionary
                     continue;
                 }
             }
             if (cache.containsKey(s)) {  //if we stemmed this term
-                stemmed.put(cache.get(s), toint(term.getValue()));//add it to the dictionary
+                stemmed.put(cache.get(s), toPair(term.getValue()));//add it to the dictionary
                 continue;
             }
             if (s.contains(" ")) {//if the term has more than 1 word
@@ -89,7 +88,7 @@ public class Stemmer {
                 currentStemmed.append(stemmed.get(stemmedTerm.toString()));
                 sumFrequency(stemmed, stemmedTerm, currentStemmed, term.getValue());//sum the values
             } else {
-                stemmed.put(isUppercase ? upperCase(stemmedTerm.toString()) : stemmedTerm.toString(), toint(term.getValue()));
+                stemmed.put(isUppercase ? upperCase(stemmedTerm.toString()) : stemmedTerm.toString(), toPair(term.getValue()));
             }
             cache.put(isUppercase ? upperCase(s) : s, stemmedTerm.toString());
 
@@ -103,30 +102,33 @@ public class Stemmer {
      * @param value - the term's value in the dictionary
      * @return the Integer value
      */
-    private Integer toint(String value) {
+    private Pair<Integer,String> toPair(String value) {
         int num = 1;
+        String positions ="";
         try {
-            num = Integer.parseInt(split(value, ",")[0]);
+            String [] values = split(value, ",");
+            num = Integer.parseInt(values[0]);
+            positions = substringAfter(join(values,","),",");
         } catch (Exception e) {
             e.printStackTrace();
+            positions = substringAfter(value,",");
         }
-        return num;
+        return new MutablePair<>(num,positions);
     }
 
     /**
      * adds the given value to the term's value in the dictionary
-     *
-     * @param stemmed        - the Map after stem.
+     *  @param stemmed        - the Map after stem.
      * @param stemmedTerm    - the stemmed term to sum it's value.
      * @param currentStemmed - the value that need to be added.
      * @param value          - the value that need to be added to.
      */
-    private void sumFrequency(Map<String, Integer> stemmed, StringBuilder stemmedTerm, StringBuilder currentStemmed, String value) {
+    private void sumFrequency(HashMap<String, Pair<Integer, String>> stemmed, StringBuilder stemmedTerm, StringBuilder currentStemmed, String value) {
         try {
             int x = Integer.parseInt(currentStemmed.toString());
             int y = Integer.parseInt(split(value, ",")[0]);
             currentStemmed.setLength(0);
-            stemmed.replace(stemmedTerm.toString(), y, x + y);
+            stemmed.put(stemmedTerm.toString(), new MutablePair<>(x + y,substringAfter(value,",")));
         } catch (Exception e) {
             e.printStackTrace();
         }
