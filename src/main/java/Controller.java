@@ -3,6 +3,7 @@ import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
 import Stemmer.Stemmer;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -41,7 +42,7 @@ public class Controller {
 //                    handleFile(filesList.get(i).text())
                     HashMap<String, String> map = p.parse(filesList.get(i).text());
                     Stemmer stemmer = new Stemmer();
-                    HashMap<String, Integer> stemmed = stemmer.stem(map);
+                    HashMap<String, Pair<Integer, String>> stemmed = stemmer.stem(map);
 //                    ArrayList<String> sm = new ArrayList<>(map.keySet());
 //                    Collections.sort(sm);
 //                    System.out.println(sm.toString());
