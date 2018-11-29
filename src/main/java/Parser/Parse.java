@@ -14,8 +14,13 @@ public class Parse {
     private static HashSet<String> stopWords = initStopWords();
     private static HashMap<String, String> monthDictionary = initMonthMap();
     private int currentPosition = 0;
+    private int numOfUniqueTerms = 0;
 
 
+    /** TODO - initStopWords(String path) that will get from the model (using the properties)
+     * Initialize set of all the wanted stop-words.
+     * @return : the set of stop-words
+     */
     private static HashSet<String> initStopWords() {
         String baseDir = (String) System.getProperties().get("user.dir");
         String filesPath = baseDir + "/src/main/resources/stop_words.txt";
@@ -30,18 +35,10 @@ public class Parse {
         return stopWords;
     }
 
-    private static HashMap<String, String> initMonthMap() {
-        monthDictionary = new HashMap<String, String>();
-        String[] months = {"JANUARY", "01", "JAN", "01", "FEBRUARY", "02", "FEB", "02", "MARCH", "03", "MAR", "03",
-                "APRIL", "04", "APR", "04", "MAY", "05", "JUNE", "06", "JUN", "06", "JULY", "07", "JUL", "07",
-                "AUGUST", "08", "AUG", "08", "SEPTEMBER", "09", "SEP", "09", "OCTOBER", "10", "OCT", "10",
-                "NOVEMBER", "11", "NOV", "11", "DECEMBER", "12", "DEC", "12"};
-        for (int i = 0; i < months.length - 1; i++) {
-            monthDictionary.put(months[i++], months[i]);
-        }
-        return monthDictionary;
-    }
-
+    /**
+     * Initialize set of all month's name representations
+     * @return : the Set of month names.
+     */
     private static HashSet<String> initMonthSet() {
         monthSet = new HashSet<>();
         String[] months = {"JANUARY", "JAN", "FEBRUARY", "FEB", "MARCH", "MAR", "APRIL", "APR",
@@ -55,6 +52,26 @@ public class Parse {
         return monthSet;
     }
 
+    /**
+     * Initialize Map of all months that will be represented by number after parse.
+     * @return : the Map of months representation.
+     */
+    private static HashMap<String, String> initMonthMap() {
+        monthDictionary = new HashMap<String, String>();
+        String[] months = {"JANUARY", "01", "JAN", "01", "FEBRUARY", "02", "FEB", "02", "MARCH", "03", "MAR", "03",
+                "APRIL", "04", "APR", "04", "MAY", "05", "JUNE", "06", "JUN", "06", "JULY", "07", "JUL", "07",
+                "AUGUST", "08", "AUG", "08", "SEPTEMBER", "09", "SEP", "09", "OCTOBER", "10", "OCT", "10",
+                "NOVEMBER", "11", "NOV", "11", "DECEMBER", "12", "DEC", "12"};
+        for (int i = 0; i < months.length - 1; i++) {
+            monthDictionary.put(months[i++], months[i]);
+        }
+        return monthDictionary;
+    }
+
+    /**
+     * Initialize set of all chars that wished to be cleaned out of the token. --> TOKEN <--
+     * @return : the Set after initializing.
+     */
     private static HashSet<Character> initSpecialSet() {
         specialCharSet = new HashSet<>();
         Character[] characters = new Character[]{' ', '\r', '\n', '[', '(', '{', '`', ')', '<', '|', '&', '~', '+', '^', '@', '*', '?', '.', '>', ';', '_', '\'', ':', ']', '/', '\\', '}', '!', '=', '#', ',', '"', '-'};
@@ -66,13 +83,24 @@ public class Parse {
         return specialCharSet;
     }
 
-
+    /**
+     * A wrapper function that starting the whole process.
+     * @param str : an Array containing 1 cell of the whole text.
+     * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
+     */
     public HashMap<String, String> parse(String[] str) {
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
         return termsDict;
     }
 
+    /**
+     * The main function that splits the single string with text, to an array of words.
+     * each word (token) will be checked with multiple rules an be applied as needed.
+     * the RULES: you can find than in the project description.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param str : Array with one cell, containing the text.
+     */
     private void parseTokens(HashMap<String, String> termsDict, String[] str) {
 //        String[] s = str[0].split(" ");
 //        StringBuilder stringBuilder = new StringBuilder(str[0]);
@@ -185,7 +213,15 @@ public class Parse {
         }
     }
 
-
+    /**
+     * Handles the token that the expression is applied to rule "BETWEEN ___ AND ___".
+     * the tokens in the expression can be only numbers. they will be sent to the number rules handling function.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param s : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 's'
+     * @return : the current index of handled token in 's'
+     */
     private int isTokenBetweenExpression(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
         String[] betweenExpression = {"", "0," + currentPosition + ",0"};
         String[] numInBetweenExpession = {s[i + 1], "0,"};
@@ -207,6 +243,14 @@ public class Parse {
         return i;
     }
 
+    /**
+     * Handles a token during expression rule, that the number rule applied here. token-"# (null/number representation/fracture)"
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param s : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 's'
+     * @return : the current index of handled token in 's'
+     */
     private int numberAfterSlashInExpressionStartsWithSlash(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
         String[] tokenByDelimiter = split(token[0], "-");
         if (checkIfNumber(tokenByDelimiter[1]) || checkIfFracture(tokenByDelimiter[1])) {
@@ -225,6 +269,16 @@ public class Parse {
         return i;
     }
 
+    /**
+     * Handles a token during expression rule, the first token af this rule (current) contains '-'.
+     * Options to handle: word-... , #-...
+     * sends each option to be handled separately. in this function need only the current token
+     * without checking next tokens
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param i : current index in the text tokens array
+     * @return : the current index of handled token in text tokens array
+     */
     private int expressionStartsWithSlash(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
         String[] strTmp = {token[0], token[1]};
         String[] finalToken = {"", "0,"};
@@ -269,6 +323,14 @@ public class Parse {
         return i;
     }
 
+    /**
+     * handles all rules after the slash that applied to the rules of expressions: token token'-'token token (optional)
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 'strings'
+     * @return : the current index of handled token in 'strings'
+     */
     private int afterSlashForNumbers(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
         String[] strTmp = {strings[i + 1]};
         cleanToken(strTmp);
@@ -296,6 +358,14 @@ public class Parse {
         return i;
     }
 
+    /**
+     * handles all rules before the slash that applied to the rules of expressions: token token'-'tokens
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 'strings'
+     * @return : the current index of handled token in 'strings'
+     */
     private int beforeSlashForNumbers(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
         String[] expressionToken = split(strings[i + 1], "-");
         if (checkIfFracture(expressionToken[0]) || checkIfRepresentingNumber(expressionToken)) {
@@ -308,7 +378,17 @@ public class Parse {
         return i;
     }
 
-
+    /**
+     * checks 4 rules for parsing (if rule aplied, i++ for knowing if token was applied to one of those rules).
+     * rules that token might be applied to: MONEY, PERCENTAGE, NUMBER (and not in an expression),
+     * and extreme case for date (the rest of the rule dealt in the main parsing function before
+     * reaching here.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in the text tokens array
+     * @return : the current index of handled token in 'strings' (if token dealt with any rule, i++, so returning i--);
+     */
     private int insertTokenWithNext(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         int delta = checkIfTokenIsMoney(termsDict, token, i, strings);
         if (delta == i) {      // it's not money
@@ -329,13 +409,13 @@ public class Parse {
 
     }
 
-//    private int checkIfTokenHasPlace(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
-//    }
-
-
+    /**
+     * checks if token is fracture: # '/' #.
+     * @param token : the token.
+     * @return : isFracture.
+     */
     private boolean checkIfFracture(String token) {
         if (token.contains("/")) {
-//            token = token.replace(",", "");
             token = replace(token, ",", "");
             String[] check = split(token, "/");
             if (check.length < 2) {
@@ -352,10 +432,20 @@ public class Parse {
         return false;
     }
 
+    /**
+     * check if the string representing a number size. (array for using token as pointer)
+     * @param s : token
+     * @return :isNumberSizeRepresentation.
+     */
     private boolean checkIfRepresentingNumber(String[] s) {
         return s[0].equals("thousand") || s[0].equals("million") || s[0].equals("billion") || s[0].equals("trillion");
     }
 
+    /**
+     * changing the number representing to be represented as the parsing rules.
+     * @param token : current token with number.
+     * @param s : the number representation.
+     */
     private void prepareNumberRepresentationForTerm(String[] token, String[] s) {
         if (s[0].equals("thousand")) {
             token[0] += 'K';
@@ -368,6 +458,15 @@ public class Parse {
         }
     }
 
+    /**
+     * handles all token numbers that are smaller than thousand.
+     * rules that paid attention to: if the number is not decimal,
+     * might be the next token a fracture.
+     * @param token : current number token
+     * @param i : current position in 'strings'
+     * @param strings : the whole text by tokens.
+     * @return : current position in strings after handling the token.
+     */
     private int numberSmallerThanThousand(String[] token, int i, String[] strings) {
         if (!token[0].contains(".")) {              // no decimal --> option for fracture
             if (i + 1 < strings.length) {
@@ -387,7 +486,6 @@ public class Parse {
 
     /**
      * Seperate the Integer from the Decimal number/
-     *
      * @param str: the String that representing the whole number
      * @return String array. [0] - Integer; [1] - Decimal.
      */
@@ -407,8 +505,19 @@ public class Parse {
     }
 
     /**
+     * removing all trailing zeros if the token (number) is decimal.
+     * FUNCTION WAS TAKEN FROM:
+     * https://stackoverflow.com/questions/14984664/remove-trailing-zero-in-java
+     * @param s : the string with potential trailing zeroes
+     * @return s without the trailing zeroes
+     */
+    private String[] removeTrailingZero(String[] s) {
+        s[0] = s[0].indexOf(".") < 0 ? s[0] : s[0].replaceAll("0*$", "").replaceAll("\\.$", "");
+        return s;
+    }
+
+    /**
      * works like Integer.parseInt, converts a String to a Double number
-     *
      * @param token contains the string in "token[0]"
      * @return if the token is a number, returns it.
      * else returns -1
@@ -424,20 +533,7 @@ public class Parse {
     }
 
     /**
-     * FUNCTION WAS TAKEN FROM:
-     * https://stackoverflow.com/questions/14984664/remove-trailing-zero-in-java
-     *
-     * @param s : the string with potential trailing zeroes
-     * @return s without the trailing zeroes
-     */
-    private String[] removeTrailingZero(String[] s) {
-        s[0] = s[0].indexOf(".") < 0 ? s[0] : s[0].replaceAll("0*$", "").replaceAll("\\.$", "");
-        return s;
-    }
-
-    /**
      * like numerize (above) but gets a string and returns boolean
-     *
      * @param s : the string we wish to check without changing
      * @return : true if a number
      */
@@ -451,6 +547,16 @@ public class Parse {
         }
     }
 
+    /**
+     * checks all the possible options that a token can be a number (by the rules for numbers), and sends the token
+     * to the right function to be handled there.
+     * if the token is not a number, i stays the same.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 'strings'
+     * @return : the current index of handled token in 'strings'
+     */
     private int checkIfTokenIsNum(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         try {
             boolean flag = false;
@@ -506,7 +612,16 @@ public class Parse {
         }
     }
 
-
+    /**
+     * checks all the possible options that a token can be a percentage representation (by the rules for percentage), and sends the token
+     * to the right function to be handled there.
+     * if the token is not a percentage representation, i stays the same.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 'strings'
+     * @return : the current index of handled token in 'strings'
+     */
     private int checkIfTokenIsPercentage(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         String tmp = replace(token[0], "%", "");
         if (checkIfNumber(tmp)) {
@@ -526,7 +641,12 @@ public class Parse {
         return i;
     }
 
-
+    /**
+     * if dictionary contains same token with Lower Case Letters, token will be removed from dictionary
+     * and added to the counter of Lower Case Letters token.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : current token is with Upper Case Letters.
+     */
     private void convertToLowerCase(HashMap<String, String> termsDict, String[] token) {
         String oldKey = termsDict.remove(token[0].toUpperCase());
         termsDict.put(token[0].toLowerCase(), oldKey);
@@ -534,19 +654,42 @@ public class Parse {
     }
 
 
+    /**
+     * checks if number is an int.
+     * @param num : number
+     * @return : isInt
+     */
     private boolean isTokenAnInt(double num) {
         int x = (int) num;
         return num - x == 0;
     }
 
+    /**
+     * checks if token is a year representation
+     * @param year : the token
+     * @return : isYear
+     */
     private boolean isTokenAYear(double year) {
         return isTokenAnInt(year) && year < 3000 && year > 0;
     }
 
+    /**
+     * checks if token is a day representation
+     * @param day : the token
+     * @return : isYear
+     */
     private boolean isTokenADay(double day) {
         return isTokenAnInt(day) && day > 0 && day < 31;
     }
 
+    /**
+     * check if the token is date representation (#-MONTH).
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 'strings'
+     * @return : the current index of handled token in 'strings'
+     */
     private int checkIfTokenIsDateExtremeCase(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         if (i + 1 < strings.length && checkIfNumber(token[0])) {
             String[] month = {strings[i + 1]};
@@ -559,6 +702,15 @@ public class Parse {
         return i;
     }
 
+    /**
+     * all token that are applied to the date parsing rules called here and inserted to
+     * the dictionary. (only 2 out of 3 parameters 'day', 'month', 'year') will be not null.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param day : the day
+     * @param month : the month
+     * @param year : th year
+     * @return : the current index of handled token in 'strings'
+     */
     private void insertDate(HashMap<String, String> termsDict, String[] day, String[] month, String[] year, int i) {
         month[0] = monthDictionary.get(month[0].toUpperCase());
         if (day != null) {
@@ -573,7 +725,16 @@ public class Parse {
         }
     }
 
-
+    /**
+     * checks all the possible options that a token can be a money representation (by the rules for money), and sends the token
+     * to the right function to be handled there.
+     * if the token is not a money representation, i stays the same.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 'strings'
+     * @return : the current index of handled token in 'strings'
+     */
     private int checkIfTokenIsMoney(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         if (token[0].contains("$")) {
 //            token[0] = token[0].replace("$", "");      //$# or #$
@@ -623,6 +784,12 @@ public class Parse {
         return i;
     }
 
+    /**
+     * checks if the token can be money representation
+     * @param strings the whole text as array of tokens
+     * @param i : current position in 'strings'
+     * @return : isCanBeMoney
+     */
     private boolean checkIfCanBeMoney(String[] strings, int i) {
         for (int j = i + 1; j <= i + 3; j++) {
             if (j < strings.length && strings[j].toLowerCase().contains("dollar")) {
@@ -632,6 +799,12 @@ public class Parse {
         return false;
     }
 
+    /**
+     * handles tokens that found to be money representation and changes the token
+     * as the rules applies
+     * @param token : current token
+     * @param i : option to take care of the token.
+     */
     private void moneyParse(String[] token, int i) {
         if (i == 0) {
             String[] num = cutDecimal(token);
@@ -658,6 +831,16 @@ public class Parse {
         }
     }
 
+    /**
+     *  if money token is money' checks if represented with with quantity and the rules
+     *  are applied as specified for money quantity representation.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : the current token we are working with
+     * @param strings : an Array containing all tokens of the text (pointer)
+     * @param i : current index in 'strings'
+     * @param isMoney : isTokenMoney
+     * @return : the current index of handled token in 'strings'
+     */
     private int addQuantityToToken(HashMap<String, String> termsDict, String[] token, int i, String[] strings, boolean isMoney) {
 
         if (isMoney) {
@@ -696,7 +879,11 @@ public class Parse {
         return i;
     }
 
-
+    /**
+     * cleaning the token from all symbol at 'specialCharSet' starting at the beginning until reaching
+     * letter/number and than from the end.
+     * @param token current token we are working with
+     */
     private void cleanToken(String[] token) {
         while (token[0].length() > 0 && specialCharSet.contains(token[0].charAt(0))) {
             token[0] = token[0].substring(1);
@@ -706,6 +893,12 @@ public class Parse {
         }
     }
 
+    /**
+     * if token is with Upper Case Letter, function checks if the dictionary
+     * already contains same token with Lower Case Letters.
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token : current token we are working with.
+     */
     private void checkCaseAndInsertToDictionary(HashMap<String, String> termsDict, String[] token) {
         if (Character.isLowerCase(token[0].charAt(0))) {
             if (termsDict.containsKey(token[0].toUpperCase())) {
@@ -721,6 +914,12 @@ public class Parse {
 
     }
 
+    /**
+     * inserts the token to the dictionary. removing all 's from the ending of a token, and if
+     * the token didn't apply to any parse rule, add a flag that the token is good for stemming.
+     * @param termsDict : the Dictionary that will contain all the terms.
+     * @param token : current token we are working with.
+     */
     private void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
         if (!stopWords.contains(token[0].toLowerCase())) {
             if (token[0].toLowerCase().endsWith("'s")) {
@@ -729,80 +928,33 @@ public class Parse {
             if (token[1].endsWith(",")) {
                 token[1] += currentPosition + (token[0].length() < 4 ? ",0" : ",1");
             }
-            if (termsDict.containsKey(token[0])) {
+//            if (termsDict.containsKey(token[0])) {
+//                addApearanceInDictionary(termsDict, token);
+//            } else {
+//                termsDict.put(token[0], token[1]);
                 addApearanceInDictionary(termsDict, token);
-            } else {
-                termsDict.put(token[0], token[1]);
-                addApearanceInDictionary(termsDict, token);
-            }
+//            }
         }
         if (doneWithToken) {
             token[0] = "";
         }
     }
 
+    /**
+     * if token already exists in the dictionary, ++ to the term counter.
+     * @param termsDict : the Dictionary that will contain all the terms.
+     * @param token : current token we are working with.
+     */
     private void addApearanceInDictionary(HashMap<String, String> termsDict, String[] token) {
-        String[] s = split(termsDict.get(token[0]), ",");
-        int x = (int) numerize(s);
-        x++;
-        termsDict.put(token[0], x + "," + s[1]+ "," + s[2]);
-    }
-
-
-    public static void main(String[] args) {
-        String test = "now we are going to take all the rules and aply a final test \n" +
-                "first of all lets look at some numbers: \n" +
-                "10,123 \n" +
-                "123 Thousand \n" +
-                "some words in between \n" +
-                "1010.56 this is a number also \n" +
-                "10,123,000 should apeare different in the dictionary \n" +
-                "some words before the number: 55 Million. YEY! \n" +
-                "Yey. Name, name, naming, again some numbers 10,123,000,000 \n" +
-                "55 Billion, and the number 7 Trillion. \n" +
-                "numbers under thousand: 22, 24, 4 1/2 \n" +
-                "lets look at some precentage.. \n" +
-                "22.22% also you can wirte it like 22.22 precent or 22.22 precentage \n" +
-                "that is it for precntage. now lets see prices. this is going to be a long one \n" +
-                "1.7320 Dollars, 22 2/4 Dollars and also $450,000 \n" +
-                "now the other price rules: 1,000,000 Dollars, $450,000,000 \n" +
-                "$100 million and 20.6m Dollars or 20.6 m Dollars \n" +
-                "100$ billion \n" +
-                "100 bn dollars or 100bn Dollars need to be the same. \n" +
-                "lets see if all U.S. prices works \n" +
-                "100 billion U.S. dollars and 320 million U.S. dollars and 1 trillion U.S dollars.. \n" +
-                "now some dates:: 14 MAY, 14 May the same thing.. \n" +
-                "June 4, JUNE 4 still the same. now with years \n" +
-                "May 1994 or MAY 1994 thats are all the dates.. \n" +
-                "now the expressions!!! \n" +
-                "To-Be-Or-Not-To-Be.. 10-parts, 10 2/3-pages, 10 thousand-pages, 10-20 2/4 \n" +
-                "pages-20 2/4, pages-10 thousand, 10 million-2 trillion. \n" +
-                "and now betweens... YEY!!!! \n" +
-                "between 2 and 7, between 2 2/4 and 10 thousand. between 1 million and 2 million \n" +
-                "between 2 3/4 and 10 2/4. \n" +
-                "thats it!";
-        String[] s = new String[]{test, ""};
-        String[] one = {"There are basically three ways of parsing data interchange formats such as JSON or XML. The first one is deserialization into a data object model. In this approach, the structure of JSON or XML document is represented by classes which can be created manually by a programmer or automatically generated with a tool.", ""};
-        Parse p1 = new Parse();
-        Parse p2 = new Parse();
-        HashMap<String, String> termsDict1 = p2.parse(one);
-        HashMap<String, String> termsDict2 = p2.parse(s);
-        System.out.println();
-        System.out.println(one[0]);
-        System.out.println();
-        for (Map.Entry<String, String> entry : termsDict1.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            System.out.println("Token: " + key + " ; Flags: " + value);
-        }
-        System.out.println();
-        System.out.println(s[0]);
-        System.out.println();
-
-        for (Map.Entry<String, String> entry : termsDict2.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            System.out.println("Token: " + key + " ; Flags: " + value);
+        String[] s;
+        if (termsDict.containsKey(token[0])){
+            s = split(termsDict.get(token[0]), ",");
+            int x = (int) numerize(s);
+            x++;
+            String value = join(s,":");
+            termsDict.put(token[0], x + substring(value,indexOf(value,":"),lastIndexOf(value,":")) + ":"+currentPosition+","+s[s.length-1]);
+        } else {
+            termsDict.put(token[0],replaceOnceIgnoreCase(token[1],"0","1"));
         }
     }
 }
