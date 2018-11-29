@@ -3,6 +3,7 @@ import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
 import Stemmer.Stemmer;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -42,7 +43,7 @@ public class Controller {
 //                    handleFile(filesList.get(i).text())
                     HashMap<String, String> map = p.parse(filesList.get(i).text());
                     Stemmer stemmer = new Stemmer();
-                    HashMap<String, Pair<Integer, String>> stemmed = stemmer.stem(map);
+//                    HashMap<String, MutablePair<Integer, String>> stemmed = stemmer.stem(map);
 //                    ArrayList<String> sm = new ArrayList<>(map.keySet());
 //                    Collections.sort(sm);
 //                    System.out.println(sm.toString());
@@ -57,7 +58,7 @@ public class Controller {
                     j++;
                     ii = i;
                 }
-                if (f % 18 == 0)
+//                if (f % 18 == 0)
                     System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")");
                 filesList.clear();
             }

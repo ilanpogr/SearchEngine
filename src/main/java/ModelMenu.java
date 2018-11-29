@@ -2,6 +2,7 @@ import Parser.Parse;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -12,7 +13,7 @@ public class ModelMenu {
     private static ArrayList<Doc> filesList = new ArrayList<>();
     private static LinkedHashMap<String, String> cache = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> fileDic = new LinkedHashMap<>();
-    private static LinkedHashMap<String, String> docDic = new LinkedHashMap<>();
+    private static LinkedHashMap<String, String> termDic = new LinkedHashMap<>();
     private static String currPath;
     private String corpusPath;
     private String targetDirPath;
@@ -48,8 +49,6 @@ public class ModelMenu {
                     currPath = filesList.get(i).docNum();
                     HashMap<String, String> parsedDic = parser.parse(filesList.get(i).text());
                     handleFile(parsedDic);
-                    Stemmer stemmer = new Stemmer();
-                    HashMap<String, Pair<Integer,String>> stemmed = stemmer.stem(parsedDic);
                 }
             }
         } catch (Exception e) {
@@ -63,7 +62,7 @@ public class ModelMenu {
         int maxTf = 0, length = 0;
         if (isStemMode){
             Stemmer stemmer = new Stemmer();
-            HashMap<String, Pair<Integer, String>> stemmed = stemmer.stem(parsedDic);
+            HashMap<String, MutablePair<Integer, String>> stemmed = stemmer.stem(parsedDic);
 
         } else {
 
