@@ -32,6 +32,7 @@ public class Parse {
             e.printStackTrace();
         }
         while (s.hasNext()) stopWords.add(s.nextLine());
+        stopWords.remove("between");
         return stopWords;
     }
 
@@ -112,7 +113,7 @@ public class Parse {
             doneWithToken = true;
             String[] token = new String[]{s[i], "0,"};
             cleanToken(token);
-            if (token[0].equals("")) {
+            if (token[0].equals("") || stopWords.contains(token[0].toLowerCase())) {
                 continue;
             }
             char firstCharOfToken = token[0].charAt(0);
@@ -123,7 +124,11 @@ public class Parse {
                         expressionFlag = true;
                         doneWithToken = false;
                         i = isTokenBetweenExpression(termsDict, token, s, i);
+                    } else {
+                        continue;
                     }
+                } else {
+                    continue;
                 }
             }
             if (!expressionFlag && checkIfNumber(token[0])) {           // might be an expression starting with number without '-'
@@ -921,7 +926,7 @@ public class Parse {
      * @param token : current token we are working with.
      */
     private void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
-        if (!stopWords.contains(token[0].toLowerCase())) {
+//        if (!stopWords.contains(token[0].toLowerCase())) {
             if (token[0].toLowerCase().endsWith("'s")) {
                 token[0] = token[0].substring(0, token[0].length() - 2);
             }
@@ -934,7 +939,7 @@ public class Parse {
 //                termsDict.put(token[0], token[1]);
                 addApearanceInDictionary(termsDict, token);
 //            }
-        }
+//        }
         if (doneWithToken) {
             token[0] = "";
         }
@@ -952,7 +957,7 @@ public class Parse {
             int x = (int) numerize(s);
             x++;
             String value = join(s,":");
-            termsDict.put(token[0], x + substring(value,indexOf(value,":"),lastIndexOf(value,":")) + ":"+currentPosition+","+s[s.length-1]);
+            termsDict.put(token[0], x + "," + substring(value,indexOf(value,":") + 1,lastIndexOf(value,":")) + ":"+currentPosition+","+s[s.length-1]);
         } else {
             termsDict.put(token[0],replaceOnceIgnoreCase(token[1],"0","1"));
         }
