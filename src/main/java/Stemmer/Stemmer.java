@@ -3,6 +3,7 @@ package Stemmer;
 import java.util.HashMap;
 import java.util.Map;
 
+import Controller.PropertiesFile;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.tartarus.snowball.SnowballStemmer;
@@ -18,7 +19,15 @@ public class Stemmer {
     private static Map<String, String> cache = new HashMap<>();
     private HashMap<String, String> stemmed;
     private SnowballStemmer snowballStemmer = new englishStemmer();
-    private final String poslistdel = "@";
+    private static String poslistdel = PropertiesFile.getProperty("stemmed.words.delimiter");
+
+
+    public static String getStemDelimiter() {
+        return poslistdel;
+    }
+
+
+
     /**
      * clears maps
      */

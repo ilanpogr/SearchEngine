@@ -1,11 +1,17 @@
 package Indexer;
 
 import java.util.LinkedHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Indexer {
 
     private static LinkedHashMap<String,String> tmpFileDic = new LinkedHashMap<>();
-    private static int mergedFilesCounter =0;
+
+    private static int tmpFilesCounter =0;
+
+
+
+
 
 }
 /*private static void testFileSize(int mb) throws IOException {

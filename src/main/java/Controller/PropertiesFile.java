@@ -17,10 +17,10 @@ public class PropertiesFile {
         String propertiesFileName = "project.properties";
         try {
             properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(propertiesFileName));
-            System.out.println("Properties file '" + propertiesFileName + "' loaded.\n");
+            //System.out.println("Properties file '" + propertiesFileName + "' loaded.\n");
         } catch (IOException e) {
             String message = "Exception while reading properties file '" + propertiesFileName + "':" + e.getLocalizedMessage();
-            System.out.println();
+            //System.out.println();
             throw new RuntimeException(message, e);
         }
         return properties;
@@ -36,7 +36,7 @@ public class PropertiesFile {
     public static String getProperty(String propertyName) {
         String ret = "";
         ret = properties.getProperty(propertyName);
-        System.out.println("Property " + propertyName + " :    value is '" + ret + "'");
+        //System.out.println("Property " + propertyName + " :    value is '" + ret + "'");
         return ret;
     }
 
@@ -56,20 +56,20 @@ public class PropertiesFile {
     public static void putProperty(String propertyName, String propertyValue) {
         if (properties.getProperty(propertyName) == null) {
             properties.put(propertyName, propertyValue);
-            System.out.println("new Property: " + propertyName + " , With value: " + propertyValue);
+            //System.out.println("new Property: " + propertyName + " , With value: " + propertyValue);
         } else {
             properties.setProperty(propertyName, propertyValue);
-            System.out.println("Property changed: " + propertyName + " , With value: " + propertyValue);
+            //System.out.println("Property changed: " + propertyName + " , With value: " + propertyValue);
         }
     }
 
     public static void updatePropertiesFile() {
         try {
             properties.store(new FileOutputStream("project.properties"), null);
-            System.out.println("Property file updated\n");
+            //System.out.println("Property file updated\n");
         } catch (IOException e) {
             String message = "Exception while reading properties file\n" + e.getLocalizedMessage();
-            System.out.println();
+            //System.out.println();
         }
     }
 }
