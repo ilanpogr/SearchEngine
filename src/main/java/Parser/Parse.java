@@ -2,12 +2,16 @@ package Parser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
 public class Parse {
 
+    private static Properties properties = new Properties();
+    private String parametersDelimiter;
+    private String gapDelimiter;
     private boolean doneWithToken = true;
     private static HashSet<Character> specialCharSet = initSpecialSet();
     private static HashSet<String> monthSet = initMonthSet();
@@ -98,7 +102,16 @@ public class Parse {
      * @param str : an Array containing 1 cell of the whole text.
      * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
      */
-    public HashMap<String, String> parse(String[] str) {
+    public HashMap<String, String> parse(String[] str){
+
+        try {    // load properties
+            properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("project.properties"));
+            parametersDelimiter = properties.getProperty("token.parameters.delimiter");
+            gapDelimiter = properties.getProperty("gaps.delimiter");
+        } catch (IOException e) {
+            parametersDelimiter = "^";
+            gapDelimiter = "#";
+        }
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
         return termsDict;
@@ -396,7 +409,7 @@ public class Parse {
         if (!checkIfNumber(expressionToken[1])) {
             token[0] += expressionToken[1];
         }
-        if (token[1].endsWith(",")) {
+        if (token[1].endsWith(parametersDelimiter)) {
             token[1] += currentPosition + ",0";
         }
         insertToDictionary(termsDict, token);
@@ -655,14 +668,14 @@ public class Parse {
                     token[0] = token[0] + "B";
                 }
             }
-            if (token[1].endsWith(",")) {
+            if (token[1].endsWith(parametersDelimiter)) {
                 token[1] += currentPosition + ",0";
             }
             insertToDictionary(termsDict, token);
             return i + 1;
         } catch (NumberFormatException e) {
             if (checkIfFracture(token[0])) {             // EXTREME CASE IF FRACTURE WITHOUT NUMBER BEFORE IT
-                if (token[1].endsWith(",")) {
+                if (token[1].endsWith(parametersDelimiter)) {
                     token[1] += currentPosition + ",0";
                 }
                 insertToDictionary(termsDict, token);
@@ -999,8 +1012,8 @@ public class Parse {
         if (token[0].toLowerCase().endsWith("'s")) {
             token[0] = token[0].substring(0, token[0].length() - 2);
         }
-        if (token[1].endsWith(",")) {
-            token[1] += currentPosition + (token[0].length() < 4 ? ",0" : ",1");
+        if (token[1].endsWith(parametersDelimiter)) {
+            token[1] += currentPosition + (token[0].length() < 4 ? parametersDelimiter + "0" : parametersDelimiter + "1");
         }
 //            if (termsDict.containsKey(token[0])) {
 //                addApearanceInDictionary(termsDict, token);
@@ -1025,8 +1038,8 @@ public class Parse {
      */
     private int getLastGap(HashMap<String, String> termsDict, String[] token) {
         int res = 0;
-        String positions = substringBetween(termsDict.get(token[0]), ",");
-        String[] toCount = split(positions, ":");
+        String positions = substringBetween(termsDict.get(token[0]), parametersDelimiter);
+        String[] toCount = split(positions, gapDelimiter);
         if (toCount.length == 1){
             numOfUniqueTerms--;
         }
@@ -1047,33 +1060,29 @@ public class Parse {
     private void addApearanceInDictionary(HashMap<String, String> termsDict, String[] token) {
         String[] s;
         if (termsDict.containsKey(token[0])) {
-            s = split(termsDict.get(token[0]), ",");
+            s = split(termsDict.get(token[0]), parametersDelimiter);
             int x = (int) numerize(s);
             x++;
-            String value = join(s, ":");
-//            if (substringBefore(termsDict.get(token[0]), ",").equals("1")) {
-//                numOfUniqueTerms--;
-//            }
+            String value = join(s, gapDelimiter);
 //            termsDict.put(token[0], x + "," + substring(value, indexOf(value, ":") + 1, lastIndexOf(value, ":")) + ":" + currentPosition + "," + s[s.length - 1]);
-            termsDict.put(token[0], x + "," + substring(value, indexOf(value, ":") + 1, lastIndexOf(value, ":")) + ":" + getLastGap(termsDict,token) + "," + s[s.length - 1]);
+            termsDict.put(token[0], x + parametersDelimiter + substring(value, indexOf(value, gapDelimiter) + 1, lastIndexOf(value, gapDelimiter)) + gapDelimiter + getLastGap(termsDict,token) + parametersDelimiter + s[s.length - 1]);
         } else {
             termsDict.put(token[0], replaceOnceIgnoreCase(token[1], "0", "1"));
             numOfUniqueTerms++;
         }
     }
 
-//    public static void main(String[] args) {
-//        Parse p = new Parse();
-//        System.out.println("-----------------------------------------------");
-//        String[] s = {"between 7 and 10, 7-10, babies yoyoyo yoyoyo babies 10 thousand-11 thousand, 5 million-parts, yoyo! yoyoyo! yoyo! between 7 and 10, 7-10, 10 thousand-11 thousand, 5 million-parts", ""};
-//        HashMap<String, String> map = p.parse(s);
-//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-//        }
-//        System.out.println(p.getNumOfUniqueTerms());
-//    }
+    public static void main(String[] args) {
+        Parse p = new Parse();
+        String[] s = {"between 7 and 10, 7-10, babies yoyoyo yoyoyo babies 10 thousand-11 thousand, 5 million-parts, yoyo! yoyoyo! yoyo! between 7 and 10, 7-10, 10 thousand-11 thousand, 5 million-parts", ""};
+        HashMap<String, String> map = p.parse(s);
+        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+        }
+        System.out.println(p.getNumOfUniqueTerms());
+    }
 
 
 }
