@@ -37,6 +37,7 @@ public class Parse {
         }
         while (s.hasNext()) stopWords.add(s.nextLine());
         stopWords.remove("between");
+        stopWords.remove("may");
         return stopWords;
     }
 
@@ -120,7 +121,7 @@ public class Parse {
             currentPosition = i;
             expressionFlag = false;
             doneWithToken = true;
-            String[] token = new String[]{s[i], ""};
+            String[] token = new String[]{s[i], parametersDelimiter};
             cleanToken(token);
             if (token[0].equals("") || stopWords.contains(token[0].toLowerCase())) {
                 continue;
@@ -219,7 +220,8 @@ public class Parse {
                             }
                         }
                     }
-                    checkCaseAndInsertToDictionary(termsDict, token);
+                    if (!token[0].toLowerCase().equals("may"))
+                        checkCaseAndInsertToDictionary(termsDict, token);
                     s[i] = "";
                     continue;
                 }
@@ -961,7 +963,7 @@ public class Parse {
         if (token[0].toLowerCase().endsWith("'s")) {
             token[0] = token[0].substring(0, token[0].length() - 2);
         }
-        if (!token[1].startsWith("0" + parametersDelimiter) && !token[1].startsWith("0" + parametersDelimiter)) {
+        if (!token[1].startsWith("0" + parametersDelimiter) && !token[1].startsWith("1" + parametersDelimiter)) {
             token[1] = (token[0].length() < 4 ? "0" + parametersDelimiter : "1" + parametersDelimiter) + currentPosition;
         }
         groupTokenPositions(termsDict, token);
@@ -1007,8 +1009,9 @@ public class Parse {
 
 
 //    public static void main(String[] args) {
+//
 //        Parse p = new Parse();
-//        String[] s = {"7 thousand dollars, 7000000$, 1 4/5 dollars", ""};
+//        String[] s = {"may May MAY MAy, May 1994, may between 7 and 66 1/2 may MAY 1994 may may", ""};
 //        HashMap<String, String> map = p.parse(s);
 //        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
 //        while (it.hasNext()) {
@@ -1016,6 +1019,4 @@ public class Parse {
 //            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
 //        }
 //    }
-
-
 }
