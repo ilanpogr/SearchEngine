@@ -1,3 +1,7 @@
+package Controller;
+
+import Controller.PropertiesFile;
+import Model.ModelMenu;
 import javafx.fxml.FXMLLoader;
 import View.IR_MenuView;
 
@@ -19,7 +23,6 @@ public class ControllerMenu implements Observer {
 
     private IR_MenuView ir_menuView;
     private ModelMenu modelMenu;
-    private PropertiesFile propertiesFile;
     private String[] propertyKeys = {"data.set.path", "save.files.path"};
 
     private boolean isStemmer = false;
@@ -40,10 +43,9 @@ public class ControllerMenu implements Observer {
         Scene scene = new Scene(root);
         scene.getStylesheets().add("menu/style_menu.css");
         stage.setScene(scene);
-//        modelMenu = new ModelMenu();
+//        modelMenu = new Model.ModelMenu();
         ir_menuView = fxmlLoader.getController();
         ir_menuView.addObserver(this);
-        propertiesFile = new PropertiesFile(properties_file_name);
     }
 
     /**
@@ -58,9 +60,9 @@ public class ControllerMenu implements Observer {
             return;
         } else {
             if (operation == 0) {
-                propertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath());
+                PropertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath());
             } else {
-                propertiesFile.putProperty(propertyKeys[1], selectedDirectory.getAbsolutePath());
+                PropertiesFile.putProperty(propertyKeys[1], selectedDirectory.getAbsolutePath());
             }
         }
     }
@@ -81,7 +83,7 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {
-                propertiesFile.resetProperties(propertyKeys);
+                PropertiesFile.resetProperties(propertyKeys);
                 ir_menuView.start_bttn.setDisable(true);
             }
         }
