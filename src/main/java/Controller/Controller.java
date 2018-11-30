@@ -4,24 +4,36 @@ import Parser.Parse;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
-import Stemmer.Stemmer;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.StringUtils.*;
 
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.countMatches;
+import static org.apache.commons.lang3.StringUtils.lowerCase;
+import static org.apache.commons.lang3.StringUtils.substring;
+
 public class Controller {
 
-    private static boolean isStemMode=true;
+    private static boolean isStemMode = true;
     private static ArrayList<Doc> filesList;
     private static LinkedHashMap<String, String> cache = new LinkedHashMap<>();
-    private static LinkedHashMap<String, String> fileDic = new LinkedHashMap<>();
-    private static LinkedHashMap<String, String> docDic = new LinkedHashMap<>();
     private static TreeMap<String, String> sortedTermsDic = new TreeMap<>();
     private static String tmpFilesPath;
     private static int maxTTF = -1;
     private static String maxTTFS = "";
     private static String currPath;
+    private static StringBuilder stringBuilder = new StringBuilder();
+
+    private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
+    private static LinkedHashMap<String, String> termDic = new LinkedHashMap<>();
+    private static String corpusPath;
+    private static String targetDirPath;
+    private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
+
+    public static String getTargetDirPath() {
+        return targetDirPath;
+    }
 
     public static void main(String[] args) {
         double mainStartTime = System.currentTimeMillis();
@@ -29,9 +41,10 @@ public class Controller {
 
         int j = 0, f = 0, ii = 0;
         try {
-            String path = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
+            targetDirPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir";
+            corpusPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
             filesList = new ArrayList<>();
-            ReadFile readFile = new ReadFile(path);
+            ReadFile readFile = new ReadFile(corpusPath);
             Parse p = new Parse();
             double fileparse = 0;
             double singleparse = 0;
@@ -46,17 +59,19 @@ public class Controller {
 //                        System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ii);
 //                    handleFile(filesList.get(i).text())
                     HashMap<String, String> map = p.parse(filesList.get(i).text());
-                    Stemmer stemmer = new Stemmer();
-                    docDic.putAll(map);
-                    HashMap<String,String> stemmed = stemmer.stem(map);
-                    docDic.forEach((s, s2) -> sortedTermsDic.putIfAbsent(s,currPath));
+                    handleFile(map);
+//                    Stemmer stemmer = new Stemmer();
+//                    termDic.putAll(map);
+//                    HashMap<String, String> stemmed = stemmer.stem(map);
+
+//                    termDic.forEach((s, s2) -> sortedTermsDic.putIfAbsent(s,currPath));
 //                    ArrayList<String> sm = new ArrayList<>(map.keySet());
 //                    Collections.sort(sm);
 //                    System.out.println(sm.toString());
 //                    ArrayList<String> sst = new ArrayList<>(stemmed.keySet());
 //                    Collections.sort(sst);
 //                    System.out.println(sst.toString());
-                    updateDocsMaxTf(filesList.get(i), map);
+//                    updateDocsMaxTf(filesList.get(i), map);
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
                     fileparse += (parseend - parsestart) / 1000;
@@ -64,11 +79,13 @@ public class Controller {
                     ii = i;
 
                 }
-//                if (f % 18 == 0)
-                System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")");
+                if (f % 18 == 0)
+                    termDic.clear();
+                System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")");
                 filesList.clear();
             }
-            System.out.println("\nTime took to run main: " + (System.currentTimeMillis() - mainStartTime) / 1000 + " seconds");
+            int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);
+            System.out.println("\nTime took to run main: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds");
         } catch (Exception e) {
             System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ii);
             e.printStackTrace();
@@ -95,20 +112,50 @@ public class Controller {
         doc.addAttributes(new String[]{"MAX-TF", maxKey + ":" + max + ""});
     }
 
+    private static void handleFile(HashMap<String, String> parsedDic) {
+        if (isStemMode) {
+            Stemmer stemmer = new Stemmer();
+            HashMap<String, String> stemmed = stemmer.stem(parsedDic);
+            mergeDicts(stemmed);
+        } else {
+            parsedDic.forEach((key, value) -> value = substring(value,2));
+            mergeDicts(parsedDic);
+        }
+    }
 
-//# The function that merges the final dictionaries. Called from handle files.  It iterates through the dictionary and
-//# # adds new terms or updates new ones that weren't seen before.
-//# def __update_and_merge_dictionaries(doc_id, term_dictionary_ref, documents_dictionary_ref_ref, check_this_dictionary):
-//#     max_tf = 0
-//#     length = 0
-//#     for key, value in check_this_dictionary.items():
-//#         if key in term_dictionary_ref:
-//#             term_dictionary_ref[key] += __docs_delimiter + doc_id + __docs_delimiter + str(value)
-//#         else:
-//#             term_dictionary_ref[key] = doc_id + __docs_delimiter + str(value)
-//#
-//#         if value > max_tf:
-//#             max_tf = value
-//#         length += value
-//#     documents_dictionary_ref_ref[doc_id] = (max_tf, length)
+    private static void mergeDicts(HashMap<String, String> map) {
+        int maxTf = 0, length = 0;
+        for (Map.Entry<String, String> term : map.entrySet()
+        ) {
+            stringBuilder.setLength(0);
+            int termFrequency = countMatches(term.getValue(), Stemmer.getStemDelimiter().charAt(0));
+            String termKey = lowerCase(term.getKey());
+            boolean isUpperCase = false;
+            if (termFrequency == 0)
+                termFrequency++;
+            termFrequency += countMatches(term.getValue(), Parse.getGapDelimiter().charAt(0));
+            if (Character.isUpperCase(term.getKey().charAt(0))) {
+                isUpperCase = true;
+            }
+            if (isUpperCase){
+                if (termDic.containsKey(termKey)) {
+                    stringBuilder.append(termDic.get(termKey)).append(fileDelimiter);
+                    isUpperCase = false;
+                }
+            }
+            if (termDic.containsKey(term.getKey()) && !isUpperCase){
+                stringBuilder.append(termDic.remove(term.getKey())).append(fileDelimiter);
+                termDic.put(termKey,stringBuilder.toString());
+            }
+            if (termDic.containsKey(termKey)) {
+                stringBuilder.append(termDic.get(termKey)).append(fileDelimiter);
+                isUpperCase = false;
+            }
+            stringBuilder.append(currPath).append(fileDelimiter).append(term.getValue());
+            termDic.put(term.getKey(),stringBuilder.toString()); //TODO- put matching case
+            maxTf = Integer.max(termFrequency, maxTf);
+            length += termFrequency;
+        }
+        DocDic.put(currPath, ""+maxTf+","+length);
+    }
 }

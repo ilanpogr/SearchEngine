@@ -10,14 +10,22 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class Parse {
 
-    private String parametersDelimiter;
-    private String gapDelimiter;
+//    parametersDelimiter = PropertiesFile.getProperty("");
+//    gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
+
+    private static String parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
+    private static String gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
     private boolean doneWithToken = true;
     private static HashSet<Character> specialCharSet = initSpecialSet();
     private static HashSet<String> monthSet = initMonthSet();
     private static HashSet<String> stopWords = initStopWords();
     private static HashMap<String, String> monthDictionary = initMonthMap();
     private int currentPosition = 0;
+
+
+    public static String getGapDelimiter() {
+        return gapDelimiter;
+    }
 
     /**
      * TODO - initStopWords(String path) that will get from the model (using the properties)
@@ -99,8 +107,6 @@ public class Parse {
      * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
      */
     public HashMap<String, String> parse(String[] str) {
-        parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
-        gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
         return termsDict;

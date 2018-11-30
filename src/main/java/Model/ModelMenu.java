@@ -1,10 +1,11 @@
 package Model;
 
+import Controller.PropertiesFile;
 import Parser.Parse;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
-import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -13,13 +14,15 @@ public class ModelMenu {
     private static boolean isStemMode = true;
     private static ArrayList<Doc> filesList = new ArrayList<>();
     private static LinkedHashMap<String, String> cache = new LinkedHashMap<>();
-    private static LinkedHashMap<String, String> fileDic = new LinkedHashMap<>();
+    private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> termDic = new LinkedHashMap<>();
+    private static String targetDirPath;
     private static String currPath;
     private String corpusPath;
-    private String targetDirPath;
-//    private static int maxTTF = -1;
-//    private static String maxTTFS = "";
+    private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
+
+
+    private StringBuilder stringBuilder = new StringBuilder();
 
 
     public ModelMenu(String corpusPath, String targetDirPath) {
@@ -60,40 +63,32 @@ public class ModelMenu {
     }
 
     private void handleFile(HashMap<String, String> parsedDic) {
-        if (isStemMode){
+        if (isStemMode) {
             Stemmer stemmer = new Stemmer();
             HashMap<String, String> stemmed = stemmer.stem(parsedDic);
-//            mergeDicts(stemmed);
+            mergeDicts(stemmed);
         } else {
-
+            parsedDic.forEach((key, value) -> value = StringUtils.substring(value, 2));
+            mergeDicts(parsedDic);
         }
     }
 
-    private void mergeDicts(HashMap<String, MutablePair<Integer, String>> map) {
+    private void mergeDicts(HashMap<String, String> map) {
         int maxTf = 0, length = 0;
-        for (Map.Entry<String, MutablePair<Integer, String>> term: map.entrySet()
-             ) {
-            if (termDic.containsKey(term.getKey())){
-
-            }
+        for (Map.Entry<String, String> term : map.entrySet()
+        ) {
+            stringBuilder.setLength(0);
+            int termFrequency = StringUtils.countMatches(term.getValue(), Stemmer.getStemDelimiter().charAt(0));
+            if (termFrequency == 0)
+                termFrequency++;
+            termFrequency += StringUtils.countMatches(term.getValue(), Parse.getGapDelimiter().charAt(0));
+            if (termDic.containsKey(term.getKey()))
+                stringBuilder.append(termDic.get(term.getKey())).append(fileDelimiter);
+            stringBuilder.append(currPath).append(fileDelimiter).append(term.getValue());
+            termDic.put(term.getKey(), stringBuilder.toString());
+            maxTf = Integer.max(termFrequency, maxTf);
+            length += termFrequency;
         }
+        DocDic.put(currPath, "" + maxTf + "," + length);
     }
-
-
-//# The function that merges the final dictionaries. Called from handle files.  It iterates through the dictionary and
-//# # adds new terms or updates new ones that weren't seen before.
-//# def __update_and_merge_dictionaries(doc_id, term_dictionary_ref, documents_dictionary_ref_ref, check_this_dictionary):
-//#     max_tf = 0
-//#     length = 0
-//#     for key, value in check_this_dictionary.items():
-//#         if key in term_dictionary_ref:
-//#             term_dictionary_ref[key] += __docs_delimiter + doc_id + __docs_delimiter + str(value)
-//#         else:
-//#             term_dictionary_ref[key] = doc_id + __docs_delimiter + str(value)
-//#
-//#         if value > max_tf:
-//#             max_tf = value
-//#         length += value
-//#     documents_dictionary_ref_ref[doc_id] = (max_tf, length)
 }
-
