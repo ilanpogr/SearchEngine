@@ -1,3 +1,5 @@
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -60,5 +62,9 @@ public class PropertiesFile {
             properties.setProperty(propertyName, propertyValue);
             System.out.println("Property changed: " + propertyName + " , With value: " + propertyValue);
         }
+    }
+
+    public void updatePropertiesFile() throws IOException {
+        properties.store(new FileOutputStream("xyz.properties"), null);
     }
 }
