@@ -5,7 +5,6 @@ import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
 import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -61,13 +60,22 @@ public class ModelMenu {
     }
 
     private void handleFile(HashMap<String, String> parsedDic) {
-        int maxTf = 0, length = 0;
         if (isStemMode){
             Stemmer stemmer = new Stemmer();
-            HashMap<String, MutablePair<Integer, String>> stemmed = stemmer.stem(parsedDic);
-
+            HashMap<String, String> stemmed = stemmer.stem(parsedDic);
+//            mergeDicts(stemmed);
         } else {
 
+        }
+    }
+
+    private void mergeDicts(HashMap<String, MutablePair<Integer, String>> map) {
+        int maxTf = 0, length = 0;
+        for (Map.Entry<String, MutablePair<Integer, String>> term: map.entrySet()
+             ) {
+            if (termDic.containsKey(term.getKey())){
+
+            }
         }
     }
 

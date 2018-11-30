@@ -16,9 +16,9 @@ import static org.apache.commons.lang3.StringUtils.*;
 public class Stemmer {
 
     private static Map<String, String> cache = new HashMap<>();
-    private HashMap<String, MutablePair<Integer,String>> stemmed;
+    private HashMap<String, String> stemmed;
     private SnowballStemmer snowballStemmer = new englishStemmer();
-
+    private final String poslistdel = "@";
     /**
      * clears maps
      */
@@ -34,12 +34,12 @@ public class Stemmer {
      * @return HashMap: key - String, the term from the Doc;
      * value - Integer, the term frequency within the given Doc.
      */
-    public HashMap<String, MutablePair<Integer, String>> stem(HashMap<String, String> parsedDic) {
+    public HashMap<String, String> stem(HashMap<String, String> parsedDic) {
         stemmed = new HashMap<>();
         for (Map.Entry<String, String> term : parsedDic.entrySet()
         ) {
             if (term.getValue().endsWith("0")) {    //if there is no need to stem it,
-                stemmed.put(term.getKey(), toPair(term.getValue())); //add it to the dictionary
+                stemmed.put(term.getKey(), substring(term.getValue(),2)); //add it to the dictionary
                 continue;
             }
             boolean isUppercase = false;
@@ -52,12 +52,12 @@ public class Stemmer {
                         s = lowerCase(s);    //convert it to lowercase
                         cache.put(term.getKey(), cache.get(lowerCase(s)));// and add it to cache, from now on the term will be stemmed to lowercase
                     }
-                    stemmed.put(cache.get(s), toPair(term.getValue()));   //add it to the dictionary
+                    stemmed.put(cache.get(s), substring(term.getValue(),2));   //add it to the dictionary
                     continue;
                 }
             }
             if (cache.containsKey(s)) {  //if we stemmed this term
-                stemmed.put(cache.get(s), toPair(term.getValue()));//add it to the dictionary
+                stemmed.put(cache.get(s), substring(term.getValue(),2));//add it to the dictionary
                 continue;
             }
             if (s.contains(" ")) {//if the term has more than 1 word
@@ -85,9 +85,9 @@ public class Stemmer {
                 stemmedTerm.append(isUppercase ? upperCase(snowballStemmer.getCurrent()) : snowballStemmer.getCurrent());
             }
             if (stemmed.containsKey(stemmedTerm.toString())) {// if we stemmed the word in this doc
-                sumFrequency(stemmed, stemmedTerm, toPair(replaceChars(stemmed.get(stemmedTerm.toString()).toString(),"()","")), toPair(term.getValue()));//sum the values
+                sumFrequency(stemmed, stemmedTerm, stemmed.get(stemmedTerm.toString()), substring(term.getValue(),2),currentStemmed);//sum the values
             } else {
-                stemmed.put(isUppercase ? upperCase(stemmedTerm.toString()) : stemmedTerm.toString(), toPair(term.getValue()));
+                stemmed.put(isUppercase ? upperCase(stemmedTerm.toString()) : stemmedTerm.toString(), substring(term.getValue(),2));
             }
             cache.put(isUppercase ? upperCase(s) : s, stemmedTerm.toString());
 
@@ -117,15 +117,33 @@ public class Stemmer {
 
     /**
      * adds the given value to the term's value in the dictionary
+     * if two words are stemmed to the same word - we append their position list:
+     * first position_list_length<delimiter>position_list{}second position_list_length<delimiter>position_list...
+     * for example: let "walks" and "walking" be stemmed to the same word "walk".
+     *      "walks" came with values: "1:34:6" and "walking" came with values: "12:45:6:8"
+     *      then "walk" value will be: "6<>4:12:38<>12:45:6:8"
+     *
      * @param stemmed        - the Map after stem.
      * @param stemmedTerm    - the stemmed term to sum it's value.
      * @param currentStemmedValue - the value that need to be added.
      * @param value          - the value that need to be added to.
+     * @param valueBuilder   - stringBuilder to append strings faster
      */
-    private void sumFrequency(HashMap<String, MutablePair<Integer, String>> stemmed, StringBuilder stemmedTerm, MutablePair<Integer, String> currentStemmedValue, Pair<Integer,String> value) {
+    private void sumFrequency(HashMap<String, String> stemmed, StringBuilder stemmedTerm, String currentStemmedValue, String value, StringBuilder valueBuilder) {
         try {
-            currentStemmedValue.setLeft(currentStemmedValue.getLeft()+value.getLeft());
-            stemmed.put(stemmedTerm.toString(), currentStemmedValue );
+            valueBuilder.setLength(0);
+            if (contains(stemmedTerm,poslistdel)){
+                valueBuilder.append(stemmedTerm);
+            }
+            else {
+                valueBuilder.append(stemmedTerm.length());
+                valueBuilder.append(poslistdel);
+                valueBuilder.append(stemmedTerm);
+            }
+            valueBuilder.append(value.length());
+            valueBuilder.append(poslistdel);
+            valueBuilder.append(value);
+            stemmed.put(stemmedTerm.toString(), valueBuilder.toString() );
         } catch (Exception e) {
             e.printStackTrace();
         }
