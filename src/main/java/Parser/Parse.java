@@ -109,8 +109,8 @@ public class Parse {
             parametersDelimiter = properties.getProperty("token.parameters.delimiter");
             gapDelimiter = properties.getProperty("gaps.delimiter");
         } catch (IOException e) {
-            parametersDelimiter = "^";
-            gapDelimiter = "#";
+            System.out.println("ERROR: --> PARSE: There is a problem with reading properties file...");
+            return null;
         }
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
@@ -1072,17 +1072,17 @@ public class Parse {
         }
     }
 
-    public static void main(String[] args) {
-        Parse p = new Parse();
-        String[] s = {"between 7 and 10, 7-10, babies yoyoyo yoyoyo babies 10 thousand-11 thousand, 5 million-parts, yoyo! yoyoyo! yoyo! between 7 and 10, 7-10, 10 thousand-11 thousand, 5 million-parts", ""};
-        HashMap<String, String> map = p.parse(s);
-        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-        }
-        System.out.println(p.getNumOfUniqueTerms());
-    }
+//    public static void main(String[] args) {
+//        Parse p = new Parse();
+//        String[] s = {"between 7 and 10, 7-10, babies yoyoyo yoyoyo babies 10 thousand-11 thousand, 5 million-parts, yoyo! yoyoyo! yoyo! between 7 and 10, 7-10, 10 thousand-11 thousand, 5 million-parts", ""};
+//        HashMap<String, String> map = p.parse(s);
+//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+//        while (it.hasNext()) {
+//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+//        }
+//        System.out.println(p.getNumOfUniqueTerms());
+//    }
 
 
 }
