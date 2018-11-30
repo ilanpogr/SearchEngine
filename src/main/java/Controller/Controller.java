@@ -1,3 +1,5 @@
+package Controller;
+
 import Parser.Parse;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
