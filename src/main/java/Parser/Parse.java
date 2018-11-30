@@ -961,7 +961,7 @@ public class Parse {
         if (token[0].toLowerCase().endsWith("'s")) {
             token[0] = token[0].substring(0, token[0].length() - 2);
         }
-        if (!token[1].startsWith("0" + parametersDelimiter) && !token[1].startsWith("0" + parametersDelimiter)) {
+        if (!token[1].startsWith("0" + parametersDelimiter) && !token[1].startsWith("1" + parametersDelimiter)) {
             token[1] = (token[0].length() < 4 ? "0" + parametersDelimiter : "1" + parametersDelimiter) + currentPosition;
         }
         groupTokenPositions(termsDict, token);

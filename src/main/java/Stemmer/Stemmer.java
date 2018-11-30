@@ -38,10 +38,11 @@ public class Stemmer {
         stemmed = new HashMap<>();
         for (Map.Entry<String, String> term : parsedDic.entrySet()
         ) {
-            if (term.getValue().endsWith("0")) {    //if there is no need to stem it,
+            if (startsWith(term.getValue(),"0")) {    //if there is no need to stem it,
                 stemmed.put(term.getKey(), substring(term.getValue(),2)); //add it to the dictionary
                 continue;
             }
+
             boolean isUppercase = false;
             StringBuilder stemmedTerm = new StringBuilder(), currentStemmed = new StringBuilder();
             String s = term.getKey();
@@ -132,13 +133,13 @@ public class Stemmer {
     private void sumFrequency(HashMap<String, String> stemmed, StringBuilder stemmedTerm, String currentStemmedValue, String value, StringBuilder valueBuilder) {
         try {
             valueBuilder.setLength(0);
-            if (contains(stemmedTerm,poslistdel)){
-                valueBuilder.append(stemmedTerm);
+            if (contains(currentStemmedValue,poslistdel)){
+                valueBuilder.append(currentStemmedValue);
             }
             else {
-                valueBuilder.append(stemmedTerm.length());
+                valueBuilder.append(currentStemmedValue.length());
                 valueBuilder.append(poslistdel);
-                valueBuilder.append(stemmedTerm);
+                valueBuilder.append(currentStemmedValue);
             }
             valueBuilder.append(value.length());
             valueBuilder.append(poslistdel);
