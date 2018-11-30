@@ -1,15 +1,15 @@
 package Parser;
 
+import Controller.PropertiesFile;
+
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
 public class Parse {
 
-    private static Properties properties = new Properties();
     private String parametersDelimiter;
     private String gapDelimiter;
     private boolean doneWithToken = true;
@@ -18,11 +18,6 @@ public class Parse {
     private static HashSet<String> stopWords = initStopWords();
     private static HashMap<String, String> monthDictionary = initMonthMap();
     private int currentPosition = 0;
-    private int numOfUniqueTerms = 0;
-
-    public int getNumOfUniqueTerms() {
-        return numOfUniqueTerms;
-    }
 
     /**
      * TODO - initStopWords(String path) that will get from the model (using the properties)
@@ -32,8 +27,8 @@ public class Parse {
      */
     private static HashSet<String> initStopWords() {
         String baseDir = (String) System.getProperties().get("user.dir");
-        String filesPath = baseDir + "/src/main/resources/stop_words.txt";
-        stopWords = new HashSet<String>();
+        String filesPath = baseDir + PropertiesFile.getProperty("stop.words.path");
+        stopWords = new HashSet<>();
         Scanner s = null;
         try {
             s = new Scanner(new File(filesPath));
@@ -102,16 +97,9 @@ public class Parse {
      * @param str : an Array containing 1 cell of the whole text.
      * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
      */
-    public HashMap<String, String> parse(String[] str){
-
-        try {    // load properties
-            properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("project.properties"));
-            parametersDelimiter = properties.getProperty("token.parameters.delimiter");
-            gapDelimiter = properties.getProperty("gaps.delimiter");
-        } catch (IOException e) {
-            System.out.println("ERROR: --> PARSE: There is a problem with reading properties file...");
-            return null;
-        }
+    public HashMap<String, String> parse(String[] str) {
+        parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
+        gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
         return termsDict;
@@ -126,49 +114,19 @@ public class Parse {
      * @param str       : Array with one cell, containing the text.
      */
     private void parseTokens(HashMap<String, String> termsDict, String[] str) {
-//        String[] s = str[0].split(" ");
-//        StringBuilder stringBuilder = new StringBuilder(str[0]);
         String[] s = split(str[0], " ");
         boolean expressionFlag;
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             currentPosition = i;
             expressionFlag = false;
             doneWithToken = true;
-            String[] token = new String[]{s[i], "0,"};
+            String[] token = new String[]{s[i], ""};
             cleanToken(token);
             if (token[0].equals("") || stopWords.contains(token[0].toLowerCase())) {
                 continue;
             }
             char firstCharOfToken = token[0].charAt(0);
-//            if (Character.isUpperCase(firstCharOfToken)) { // might be continues words with Upper Case letter.
-//                boolean isCuntinuesUpperCaseWords = false;
-//                int firstOfContinuesWordsIndex = i;
-//                StringBuilder totalToken = new StringBuilder();
-//                totalToken.append(token[0]);
-//                while (i + 1 < s.length) {
-//                    String[] next = {s[i+1]};
-//                    cleanToken(next);
-//                    firstCharOfToken = next[0].charAt(0);
-//                    if (Character.isUpperCase(firstCharOfToken)) { // continues words with Upper Case letter.
-//                        currentPosition = i;
-//                        doneWithToken = false;
-//                        checkCaseAndInsertToDictionary(termsDict,next);
-//                        totalToken.append(" "+next[0]);
-//                        isCuntinuesUpperCaseWords = true;
-//                    } else {
-//                        break;
-//                    }
-//                    i++;
-//                }
-//                if (isCuntinuesUpperCaseWords){
-//                    if (token[1].endsWith(",")) {
-//                        token[1] += firstOfContinuesWordsIndex + ",0";
-//                    }
-//                    insertToDictionary(termsDict,token);
-//                    i = firstOfContinuesWordsIndex;
-//                    continue;
-//                }
-//            }
+
             if (token[0].toLowerCase().equals("between")) {  // expression --> between # and #
                 if (i + 1 < s.length) {
                     String[] check = {s[i + 1]};
@@ -224,7 +182,7 @@ public class Parse {
                     double tok = numerize(token);
                     if (tok != -1) {                                             //2.1. if token is a number
                         if (i < lastIndex) {                                     //2.1.1. if token has next
-                            String[] nextToken = {s[i + 1], "0,"};
+                            String[] nextToken = {s[i + 1], ""};
                             if (!token[0].contains(".")) {                       //2.1.1.1. if token is an Integer
                                 if (isTokenADay(tok)) {                           //2.1.1.1.1. if token is a Day
                                     if (monthSet.contains(nextToken[0].toUpperCase())) {
@@ -243,7 +201,7 @@ public class Parse {
                     if (Character.isUpperCase(firstCharOfToken)) {               //3.1. if token starts with an UPPERCASE letter
                         if (monthSet.contains(token[0].toUpperCase())) {         //3.1.1. if token is a Month
                             if (i < lastIndex) {                                 //3.1.1.1. if token has next
-                                String[] nextToken = {s[i + 1], "0,"};
+                                String[] nextToken = {s[i + 1], ""};
                                 double nextT = numerize(nextToken);
                                 if (nextT != -1) {                               //3.1.1.1.1. if token is a number
                                     if (isTokenADay(nextT)) {                    //3.1.1.1.1.1. if next token is a day (1-31)  MM-DD
@@ -280,8 +238,8 @@ public class Parse {
      * @return : the current index of handled token in 's'
      */
     private int isTokenBetweenExpression(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
-        String[] betweenExpression = {"", "0," + currentPosition + ",0"};
-        String[] numInBetweenExpession = {s[i + 1], "0,"};
+        String[] betweenExpression = {"", "0" + parametersDelimiter + currentPosition};
+        String[] numInBetweenExpession = {s[i + 1], ""};
         cleanToken(numInBetweenExpession);
         i++;
         i = checkIfTokenIsNum(termsDict, numInBetweenExpession, i, s);
@@ -289,7 +247,6 @@ public class Parse {
         if (i + 1 < s.length && s[i].toLowerCase().equals("and")) {
             numInBetweenExpession[0] = s[i + 1];
             cleanToken(numInBetweenExpession);
-//            numInBetweenExpession[0] = numInBetweenExpession[0].replace(",", "");
             numInBetweenExpession[0] = replace(numInBetweenExpession[0], ",", "");
             i++;
             i = checkIfTokenIsNum(termsDict, numInBetweenExpession, i, s);
@@ -313,9 +270,9 @@ public class Parse {
         String[] tokenByDelimiter = split(token[0], "-");
         if (checkIfNumber(tokenByDelimiter[1]) || checkIfFracture(tokenByDelimiter[1])) {
 
-            String[] tmpToken = {tokenByDelimiter[1], "0,"};
+            String[] tmpToken = {tokenByDelimiter[1], ""};
             checkIfTokenIsNum(termsDict, tmpToken, i, s);
-            String[] finalToken = {tokenByDelimiter[0] + "-" + tmpToken[0], "0," + currentPosition + ",0"};
+            String[] finalToken = {tokenByDelimiter[0] + "-" + tmpToken[0], "0" + parametersDelimiter + currentPosition};
             insertToDictionary(termsDict, finalToken);
             if (i + 1 < s.length) {
                 String[] check = {s[i + 1]};
@@ -341,9 +298,8 @@ public class Parse {
      */
     private int expressionStartsWithSlash(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
         String[] strTmp = {token[0], token[1]};
-        String[] finalToken = {"", "0,"};
+        String[] finalToken = {"", ""};
         cleanToken(strTmp);
-//        strTmp[0] = strTmp[0].replace(",", "");
         strTmp[0] = replace(strTmp[0], ",", "");
         String[] expressionTokens = split(strTmp[0], "-");
         strTmp[0] = expressionTokens[0];
@@ -353,7 +309,6 @@ public class Parse {
             String[] changeToken = split(token[0], "-");
             token[0] = strTmp[0] + "-";
             for (int j = 1; j < changeToken.length; j++) {
-//                token[0] += changeToken[j];
                 token[0] += changeToken[j];
                 if (j < changeToken.length - 1) {
                     token[0] += "-";
@@ -364,11 +319,11 @@ public class Parse {
             finalToken[0] = expressionTokens[0];
             if (!checkIfNumber(expressionTokens[1]) && !checkIfFracture(expressionTokens[1])) {    // expression of words: w-w-w-w-......
                 for (int j = 1; j < expressionTokens.length; j++) {
-                    String[] oneWordFromExpression = {expressionTokens[j], "0,"};
+                    String[] oneWordFromExpression = {expressionTokens[j], ""};
                     finalToken[0] += "-" + oneWordFromExpression[0];
                     checkCaseAndInsertToDictionary(termsDict, oneWordFromExpression);
                 }
-                finalToken[1] += currentPosition + ",0";
+                finalToken[1] = "0" + parametersDelimiter + currentPosition;
                 insertToDictionary(termsDict, finalToken);
                 return i;
             }
@@ -377,7 +332,7 @@ public class Parse {
             strTmp[0] = expressionTokens[1];
             finalToken[0] += "-" + strTmp[0];
             checkCaseAndInsertToDictionary(termsDict, strTmp);
-            finalToken[1] += currentPosition + ",0";
+            finalToken[1] = "0" + parametersDelimiter + currentPosition;
             insertToDictionary(termsDict, finalToken);
         }
         return i;
@@ -396,9 +351,9 @@ public class Parse {
         String[] strTmp = {strings[i + 1]};
         cleanToken(strTmp);
         strTmp[0] = replace(strTmp[0], ",", "");
-//        strTmp[0] = strTmp[0].replace(",", "");
+
         String[] expressionToken = split(strTmp[0], "-");
-        String[] tmpToken = {expressionToken[1], "0,"};
+        String[] tmpToken = {expressionToken[1], ""};
 
         if (checkIfNumber(expressionToken[1])) {
             checkIfTokenIsNum(termsDict, tmpToken, i + 1, strings);
@@ -410,7 +365,7 @@ public class Parse {
             token[0] += expressionToken[1];
         }
         if (token[1].endsWith(parametersDelimiter)) {
-            token[1] += currentPosition + ",0";
+            token[1] = "0" + parametersDelimiter + currentPosition;
         }
         insertToDictionary(termsDict, token);
         String[] check = {expressionToken[0]};
@@ -465,7 +420,6 @@ public class Parse {
             delta = checkIfTokenIsNum(termsDict, token, i, strings);
         }
         if (delta == i) {         // must be number if token apply to any rule
-//            delta = checkIfTokenHasPlace(termsDict, token, i, strings);
             checkCaseAndInsertToDictionary(termsDict, token);
             return i;
         }
@@ -541,9 +495,7 @@ public class Parse {
                 String[] s = {strings[i + 1]};
                 cleanToken(s);
                 if (checkIfFracture(s[0])) {
-//                    s[0] = s[0].replace(",", "");
                     s[0] = replace(s[0], ",", "");
-//                    token[0] += " " + strings[i + 1];
                     token[0] += " " + s[0];
                     return i + 1;
                 }
@@ -564,7 +516,7 @@ public class Parse {
         if (index != -1) {
             String rightSide = "";
             String leftSide = "";
-            rightSide = str[0].substring(index + 1, str[0].length());
+            rightSide = str[0].substring(index + 1);
             leftSide = str[0].substring(0, index);
             result[0] = leftSide;
             result[1] = rightSide;
@@ -668,15 +620,15 @@ public class Parse {
                     token[0] = token[0] + "B";
                 }
             }
-            if (token[1].endsWith(parametersDelimiter)) {
-                token[1] += currentPosition + ",0";
+            if (!token[1].startsWith("0" + parametersDelimiter)) {
+                token[1] = "0" + parametersDelimiter + currentPosition;
             }
             insertToDictionary(termsDict, token);
             return i + 1;
         } catch (NumberFormatException e) {
             if (checkIfFracture(token[0])) {             // EXTREME CASE IF FRACTURE WITHOUT NUMBER BEFORE IT
                 if (token[1].endsWith(parametersDelimiter)) {
-                    token[1] += currentPosition + ",0";
+                    token[1] = "0" + parametersDelimiter + currentPosition;
                 }
                 insertToDictionary(termsDict, token);
                 i++;
@@ -702,12 +654,12 @@ public class Parse {
             if (token[0].contains("%")) {
                 token[0] = replace(token[0], "%", "");
                 token[0] += "%";
-                token[1] += currentPosition + ",0";
+                token[1] = "0" + parametersDelimiter + currentPosition;
                 insertToDictionary(termsDict, token);
                 return i + 1;
             } else if (i < strings.length - 1 && (strings[i + 1].toLowerCase().startsWith("percent") || strings[i + 1].toLowerCase().startsWith("percentage"))) {
                 token[0] += "%";
-                token[1] += currentPosition + ",0";
+                token[1] = "0" + parametersDelimiter + currentPosition;
                 insertToDictionary(termsDict, token);
                 return i + 2;
             }
@@ -797,10 +749,10 @@ public class Parse {
             if (day[0].length() == 1) {
                 day[0] = "0" + day[0];
             }
-            String[] date = {month[0] + "-" + day[0], "0," + currentPosition + ",0"};
+            String[] date = {month[0] + "-" + day[0], "0" + parametersDelimiter + currentPosition};
             insertToDictionary(termsDict, date);
         } else if (year != null) {
-            String[] date = {year[0] + "-" + month[0], "0," + currentPosition + ",0"};
+            String[] date = {year[0] + "-" + month[0], "0" + parametersDelimiter + currentPosition};
             insertToDictionary(termsDict, date);
         }
     }
@@ -822,14 +774,14 @@ public class Parse {
             token[0] = replace(token[0], "$", "");      //$# or #$
             i = addQuantityToToken(termsDict, token, i, strings, true);
             token[0] += " Dollars";
-            token[1] += currentPosition + ",0";
+            token[1] = "0" + parametersDelimiter + currentPosition;
             insertToDictionary(termsDict, token);
             return i + 1;
         } else if (i + 1 < strings.length && strings[i + 1].toLowerCase().startsWith("dollar")) {    //# dollars
             if (checkIfNumber(token[0]) || token[0].toLowerCase().endsWith("m") || token[0].toLowerCase().endsWith("bn")) {
                 i = addQuantityToToken(termsDict, token, i, strings, true);
                 token[0] += " Dollars";
-                token[1] += currentPosition + ",0";
+                token[1] = "0" + parametersDelimiter + currentPosition;
                 insertToDictionary(termsDict, token);
                 return i + 2;
             }
@@ -840,7 +792,7 @@ public class Parse {
                 if (num[0].length() <= 5) {  // less of million (might have fraction)
                     if (checkIfFracture(strings[i + 1]) && i + 2 < strings.length && strings[i + 2].toLowerCase().startsWith("dollar")) {
                         token[0] += " " + strings[i + 1] + " Dollars";
-                        token[1] += currentPosition + ",0";
+                        token[1] = "0" + parametersDelimiter + currentPosition;
                         insertToDictionary(termsDict, token);
                         return i + 3;
                     }
@@ -854,7 +806,7 @@ public class Parse {
                         if (strings[j].toLowerCase().startsWith("dollar")) {
                             addQuantityToToken(termsDict, token, i, strings, true);
                             token[0] += " Dollars";
-                            token[1] += currentPosition + ",0";
+                            token[1] = "0" + parametersDelimiter + currentPosition;
                             insertToDictionary(termsDict, token);
                             return j + 1;
                         }
@@ -892,7 +844,7 @@ public class Parse {
         if (i == 0) {
             String[] num = cutDecimal(token);
             boolean flag = false;
-            if (num[1].equals("0,")) {
+            if (!token[0].equals(num[0]) && !token[1].equals(num[1])) {
                 flag = true;
             }
             if (!num[0].contains(" ") && num[0].length() >= 7) {
@@ -934,8 +886,6 @@ public class Parse {
                 return i;
             }
             if (token[0].toLowerCase().endsWith("b") || token[0].toLowerCase().endsWith("bn")) {
-//                token[0] = token[0].replace("b", "");
-//                token[0] = token[0].replace("n", "");
                 token[0] = replace(token[0], "b", "");
                 token[0] = replace(token[0], "n", "");
                 moneyParse(token, 3);
@@ -1008,20 +958,13 @@ public class Parse {
      * @param token     : current token we are working with.
      */
     private void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
-//        if (!stopWords.contains(token[0].toLowerCase())) {
         if (token[0].toLowerCase().endsWith("'s")) {
             token[0] = token[0].substring(0, token[0].length() - 2);
         }
-        if (token[1].endsWith(parametersDelimiter)) {
-            token[1] += currentPosition + (token[0].length() < 4 ? parametersDelimiter + "0" : parametersDelimiter + "1");
+        if (!token[1].startsWith("0" + parametersDelimiter) && !token[1].startsWith("0" + parametersDelimiter)) {
+            token[1] = (token[0].length() < 4 ? "0" + parametersDelimiter : "1" + parametersDelimiter) + currentPosition;
         }
-//            if (termsDict.containsKey(token[0])) {
-//                addApearanceInDictionary(termsDict, token);
-//            } else {
-//                termsDict.put(token[0], token[1]);
-        addApearanceInDictionary(termsDict, token);
-//            }
-//        }
+        groupTokenPositions(termsDict, token);
         if (doneWithToken) {
             token[0] = "";
         }
@@ -1038,50 +981,40 @@ public class Parse {
      */
     private int getLastGap(HashMap<String, String> termsDict, String[] token) {
         int res = 0;
-        String positions = substringBetween(termsDict.get(token[0]), parametersDelimiter);
+        String positions = substringAfter(termsDict.get(token[0]), parametersDelimiter);
         String[] toCount = split(positions, gapDelimiter);
-        if (toCount.length == 1){
-            numOfUniqueTerms--;
+        for (String num : toCount) {
+            res += Integer.parseInt(num);
         }
-            for (String num : toCount) {
-                res += Integer.parseInt(num);
-            }
-            res = currentPosition - res;
-            return res;
-        }
+        res = currentPosition - res;
+        return res;
+    }
 
     /**
-     * if token already exists in the dictionary, ++ to the term counter.
-     * number of unique words in dictionary updated in this function.
+     * for each term add the position in the text (represented by gaps) and
+     * insert to dictionary
      *
      * @param termsDict : the Dictionary that will contain all the terms.
      * @param token     : current token we are working with.
      */
-    private void addApearanceInDictionary(HashMap<String, String> termsDict, String[] token) {
-        String[] s;
+    private void groupTokenPositions(HashMap<String, String> termsDict, String[] token) {
         if (termsDict.containsKey(token[0])) {
-            s = split(termsDict.get(token[0]), parametersDelimiter);
-            int x = (int) numerize(s);
-            x++;
-            String value = join(s, gapDelimiter);
-//            termsDict.put(token[0], x + "," + substring(value, indexOf(value, ":") + 1, lastIndexOf(value, ":")) + ":" + currentPosition + "," + s[s.length - 1]);
-            termsDict.put(token[0], x + parametersDelimiter + substring(value, indexOf(value, gapDelimiter) + 1, lastIndexOf(value, gapDelimiter)) + gapDelimiter + getLastGap(termsDict,token) + parametersDelimiter + s[s.length - 1]);
+            termsDict.put(token[0], termsDict.get(token[0]) + gapDelimiter + getLastGap(termsDict, token));
         } else {
-            termsDict.put(token[0], replaceOnceIgnoreCase(token[1], "0", "1"));
-            numOfUniqueTerms++;
+            termsDict.put(token[0], token[1]);
         }
     }
 
+
 //    public static void main(String[] args) {
 //        Parse p = new Parse();
-//        String[] s = {"between 7 and 10, 7-10, babies yoyoyo yoyoyo babies 10 thousand-11 thousand, 5 million-parts, yoyo! yoyoyo! yoyo! between 7 and 10, 7-10, 10 thousand-11 thousand, 5 million-parts", ""};
+//        String[] s = {"7 thousand dollars, 7000000$, 1 4/5 dollars", ""};
 //        HashMap<String, String> map = p.parse(s);
 //        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
 //        while (it.hasNext()) {
 //            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
 //            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
 //        }
-//        System.out.println(p.getNumOfUniqueTerms());
 //    }
 
 
