@@ -15,6 +15,8 @@ public class Controller {
     private static LinkedHashMap<String, String> cache = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> fileDic = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> docDic = new LinkedHashMap<>();
+    private static TreeMap<String, String> sortedTermsDic = new TreeMap<>();
+    private static String tmpFilesPath;
     private static int maxTTF = -1;
     private static String maxTTFS = "";
     private static String currPath;
@@ -43,23 +45,25 @@ public class Controller {
 //                    handleFile(filesList.get(i).text())
                     HashMap<String, String> map = p.parse(filesList.get(i).text());
                     Stemmer stemmer = new Stemmer();
-//                    HashMap<String, MutablePair<Integer, String>> stemmed = stemmer.stem(map);
+                    docDic.putAll(map);
+                    HashMap<String,String> stemmed = stemmer.stem(map);
+                    docDic.forEach((s, s2) -> sortedTermsDic.putIfAbsent(s,currPath));
 //                    ArrayList<String> sm = new ArrayList<>(map.keySet());
 //                    Collections.sort(sm);
 //                    System.out.println(sm.toString());
 //                    ArrayList<String> sst = new ArrayList<>(stemmed.keySet());
 //                    Collections.sort(sst);
 //                    System.out.println(sst.toString());
-//
                     updateDocsMaxTf(filesList.get(i), map);
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
                     fileparse += (parseend - parsestart) / 1000;
                     j++;
                     ii = i;
+
                 }
 //                if (f % 18 == 0)
-                    System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")");
+                System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")");
                 filesList.clear();
             }
             System.out.println("\nTime took to run main: " + (System.currentTimeMillis() - mainStartTime) / 1000 + " seconds");
