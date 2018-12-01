@@ -10,22 +10,14 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class Parse {
 
-//    parametersDelimiter = PropertiesFile.getProperty("");
-//    gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
-
-    private static String parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
-    private static String gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
+    private String parametersDelimiter;
+    private String gapDelimiter;
     private boolean doneWithToken = true;
     private static HashSet<Character> specialCharSet = initSpecialSet();
     private static HashSet<String> monthSet = initMonthSet();
     private static HashSet<String> stopWords = initStopWords();
     private static HashMap<String, String> monthDictionary = initMonthMap();
     private int currentPosition = 0;
-
-
-    public static String getGapDelimiter() {
-        return gapDelimiter;
-    }
 
     /**
      * TODO - initStopWords(String path) that will get from the model (using the properties)
@@ -107,6 +99,8 @@ public class Parse {
      * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
      */
     public HashMap<String, String> parse(String[] str) {
+        parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
+        gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
         return termsDict;
@@ -129,7 +123,7 @@ public class Parse {
             doneWithToken = true;
             String[] token = new String[]{s[i], parametersDelimiter};
             cleanToken(token);
-            if (token[0].equals("") || stopWords.contains(token[0].toLowerCase())) {
+            if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$')) {
                 continue;
             }
 
@@ -142,7 +136,7 @@ public class Parse {
             if (Character.isUpperCase(firstCharOfToken) && !specialCharSet.contains(ourRuleToken[0].charAt(ourRuleToken[0].length() - 1))) {
                 if (i + 1 < s.length) {
                     char firstCharOfNextToken = s[i + 1].charAt(0);
-                    if (Character.isUpperCase(firstCharOfNextToken) || s[i+1].toLowerCase().equals("of")) {          //    ADDITIONAL RULE: continues expression of upper case words.
+                    if (Character.isUpperCase(firstCharOfNextToken) || s[i + 1].toLowerCase().equals("of")) {          //    ADDITIONAL RULE: continues expression of upper case words.
                         continuesUpperCaseExpression(termsDict, token, s, i);
                         continue;
                     }
@@ -190,7 +184,6 @@ public class Parse {
             if (!expressionFlag && token[0].contains("-") && !token[0].contains("--")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
                 expressionFlag = true;
                 doneWithToken = false;
-//                token[0] = replace(token[0],",", "");
                 token[0] = replace(token[0], ",", "");
                 i = expressionStartsWithSlash(termsDict, token, s, i);
                 i = numberAfterSlashInExpressionStartsWithSlash(termsDict, token, s, i);
@@ -279,11 +272,11 @@ public class Parse {
         boolean stopFlag = false;
         while (!stopFlag && i + 1 < s.length) {
             String[] nextToken = {s[i + 1]};
-            if (nextToken[0].toUpperCase().equals("OF") && i + 2 < s.length ){
+            if (nextToken[0].toUpperCase().equals("OF") && i + 2 < s.length) {
                 i++;
                 nextToken[0] = s[i + 1];
             }
-            if ((Character.isUpperCase(nextToken[0].charAt(0)))&& !specialCharSet.contains(nextToken[0].charAt(0))) {
+            if ((Character.isUpperCase(nextToken[0].charAt(0))) && !specialCharSet.contains(nextToken[0].charAt(0))) {
                 if (specialCharSet.contains(nextToken[0].charAt(nextToken[0].length() - 1))) {
                     stopFlag = true;
                     cleanToken(nextToken);
@@ -376,6 +369,8 @@ public class Parse {
         strTmp[0] = replace(strTmp[0], ",", "");
         String[] expressionTokens = split(strTmp[0], "-");
         strTmp[0] = expressionTokens[0];
+        cleanToken(strTmp);
+        cleanToken(expressionTokens);
         if (checkIfNumber(expressionTokens[0]) || checkIfFracture(expressionTokens[0])) {      // expression starts with a num #-..
             checkIfTokenIsNum(termsDict, strTmp, 0, expressionTokens);
             finalToken[0] = strTmp[0];
@@ -388,11 +383,15 @@ public class Parse {
                 }
             }
         } else {                                                                              // expression starts with a num w-..
+            strTmp[0] = replace(strTmp[0], "$", "");
+            expressionTokens[0] = replace(expressionTokens[0], "$", "");
             checkCaseAndInsertToDictionary(termsDict, strTmp);
             finalToken[0] = expressionTokens[0];
             if (!checkIfNumber(expressionTokens[1]) && !checkIfFracture(expressionTokens[1])) {    // expression of words: w-w-w-w-......
                 for (int j = 1; j < expressionTokens.length; j++) {
                     String[] oneWordFromExpression = {expressionTokens[j], ""};
+                    oneWordFromExpression[0] = replace(oneWordFromExpression[0], "$", "");
+                    cleanToken(oneWordFromExpression);
                     finalToken[0] += "-" + oneWordFromExpression[0];
                     checkCaseAndInsertToDictionary(termsDict, oneWordFromExpression);
                 }
@@ -403,6 +402,7 @@ public class Parse {
         }
         if (!checkIfNumber(expressionTokens[1]) && !checkIfFracture(expressionTokens[1])) {     // expression continues with word: #-w
             strTmp[0] = expressionTokens[1];
+            cleanToken(strTmp);
             finalToken[0] += "-" + strTmp[0];
             checkCaseAndInsertToDictionary(termsDict, strTmp);
             finalToken[1] = "0" + parametersDelimiter + currentPosition;
@@ -1076,16 +1076,15 @@ public class Parse {
     }
 
 
+    public static void main(String[] args) {
 
-//    public static void main(String[] args) {
-//
-//        Parse p = new Parse();
-//        String[] s = {"UNITED STATES of AMERICA, PEOPLE CAME of BEFORE ELVES! UNITED States of AMERICA", ""};
-//        HashMap<String, String> map = p.parse(s);
-//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-//        }
-//    }
+        Parse p = new Parse();
+        String[] s = {"$100-'\"mil$lion$", ""};
+        HashMap<String, String> map = p.parse(s);
+        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+        }
+    }
 }
