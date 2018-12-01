@@ -1,14 +1,13 @@
 package TextContainers;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class City {
 
     private String cityName;
     private String countryName;
     private String currency;
-    private String docName;
+    private ArrayList<String> docNames;
     private ArrayList<Integer> possitions;
     private double population;
 
@@ -26,8 +25,8 @@ public class City {
         return countryName;
     }
 
-    public String getDocName() {
-        return docName;
+    public ArrayList<String> getDocName() {
+        return docNames;
     }
 
     public ArrayList<Integer> getPossition() {
