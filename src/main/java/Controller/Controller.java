@@ -34,7 +34,7 @@ public class Controller {
 
     public static void main(String[] args) {
         double mainStartTime = System.currentTimeMillis();
-        int j = 0, f = 0, ii = 0;
+        int j = 0, f = 191, ii = 0, term_count = 0;
         try {
             targetDirPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
             corpusPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
@@ -48,7 +48,7 @@ public class Controller {
                 f++;
                 double read = System.currentTimeMillis();
                 filesList = readFile.getFileList();
-                for (int i = 35; i < filesList.size(); i++) {
+                for (int i = 279; i < filesList.size(); i++) {
                     double parsestart = System.currentTimeMillis();
                     currPath = filesList.get(i).docNum();
 
@@ -57,25 +57,31 @@ public class Controller {
                     handleFile(map);
 
 
+
+
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
                     fileparse += (parseend - parsestart) / 1000;
                     ii = i;
                     j++;
+                    term_count=tmpTermDic.size()+termDictionary.size();
 
                 }
                 if (f % 18 == 0) {
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
-                    tmpTermDic.forEach((k, v) ->termDictionary.putIfAbsent(k, ""));
+                    termDictionary.putAll(tmpTermDic);
+                    termDictionary.forEach((k,v)->termDictionary.replace(k,v,""));
                     tmpTermDic.clear();
                 }
-                System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size()+ "\t\t\tTotal Num of Terms: " + termDictionary.size());
+                System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size()+ "\t\t\tTotal Num of Terms: " + term_count);
                 filesList.clear();
+                indexer.mergePostingTempFiles(targetDirPath, termDictionary, cache);
+
             }
             int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);
             System.out.println("\nTime took to run main: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds");
         } catch (Exception e) {
-            System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ii);
+            System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ++ii);
             e.printStackTrace();
         }
     }
@@ -96,13 +102,16 @@ public class Controller {
         for (Map.Entry<String, String> term : map.entrySet()
         ) {
             stringBuilder.setLength(0);
+
+            if (term.getKey().length()<1)continue;
+
             int termFrequency = countMatches(term.getValue(), Stemmer.getStemDelimiter().charAt(0));
             String termKey = lowerCase(term.getKey());
             boolean isUpperCase = false;
             if (termFrequency == 0)
                 termFrequency++;
             termFrequency += countMatches(term.getValue(), Parse.getGapDelimiter().charAt(0));
-            if (Character.isUpperCase(term.getKey().charAt(0))) {
+            if (Character.isUpperCase(term.getKey().charAt(0)) ||Character.isUpperCase(term.getKey().charAt(termKey.length()-1))) {
                 isUpperCase = true;
             }
             if (isUpperCase) {
@@ -110,7 +119,7 @@ public class Controller {
                     stringBuilder.append(tmpTermDic.get(termKey)).append(fileDelimiter);
                     isUpperCase = false;
                 }
-            } else if (!isUpperCase && tmpTermDic.containsKey(upperCase(term.getKey()))) {
+            } else if (tmpTermDic.containsKey(upperCase(term.getKey()))) {
                 stringBuilder.append(tmpTermDic.remove(upperCase(term.getKey()))).append(fileDelimiter);
                 stringBuilder.trimToSize();
                 tmpTermDic.put(termKey, stringBuilder.toString());
@@ -123,7 +132,7 @@ public class Controller {
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
-        DocDic.put(currPath, "" + maxTf + "," + length);
+        DocDic.put(currPath, "" + maxTf + fileDelimiter + length);
         map.clear();
     }
 

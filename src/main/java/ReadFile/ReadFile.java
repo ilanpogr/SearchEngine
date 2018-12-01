@@ -29,7 +29,7 @@ public class ReadFile {
     private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
     private ArrayList<Doc> docList; //a list of Docs, from a single File
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
-    private static int fileCounter = 1;
+    private static int fileCounter = 191;
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
 //    private Map<String,String> docMap = new M
@@ -174,7 +174,7 @@ public class ReadFile {
      * @param delimiter - tag's name to extract
      */
     private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
-//        String[] tmp = document[0].split(delimiter + ">", 3);
+//      String[] tmp = document[0].split(delimiter + ">", 3);
         String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
         if (tmp.length < 3) {
             element.delete(0, element.length());
