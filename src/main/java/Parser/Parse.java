@@ -338,6 +338,7 @@ public class Parse {
 
             String[] tmpToken = {tokenByDelimiter[1], ""};
             checkIfTokenIsNum(termsDict, tmpToken, i, s);
+            tokenByDelimiter[0] = replace(tokenByDelimiter[0], "$","");
             String[] finalToken = {tokenByDelimiter[0] + "-" + tmpToken[0], "0" + parametersDelimiter + currentPosition};
             insertToDictionary(termsDict, finalToken);
             if (i + 1 < s.length) {
@@ -396,6 +397,7 @@ public class Parse {
                     checkCaseAndInsertToDictionary(termsDict, oneWordFromExpression);
                 }
                 finalToken[1] = "0" + parametersDelimiter + currentPosition;
+                finalToken[0] = replace(finalToken[0], "--", "-");
                 insertToDictionary(termsDict, finalToken);
                 return i;
             }
@@ -403,6 +405,7 @@ public class Parse {
         if (!checkIfNumber(expressionTokens[1]) && !checkIfFracture(expressionTokens[1])) {     // expression continues with word: #-w
             strTmp[0] = expressionTokens[1];
             cleanToken(strTmp);
+            strTmp[0] = replace(strTmp[0],"$","");
             finalToken[0] += "-" + strTmp[0];
             checkCaseAndInsertToDictionary(termsDict, strTmp);
             finalToken[1] = "0" + parametersDelimiter + currentPosition;
@@ -1009,6 +1012,9 @@ public class Parse {
      * @param token     : current token we are working with.
      */
     private void checkCaseAndInsertToDictionary(HashMap<String, String> termsDict, String[] token) {
+        if (token[0].length() < 1){
+            return;
+        }
         if (Character.isLowerCase(token[0].charAt(0))) {
             if (termsDict.containsKey(token[0].toUpperCase())) {
                 convertToLowerCase(termsDict, token);
@@ -1079,7 +1085,7 @@ public class Parse {
     public static void main(String[] args) {
 
         Parse p = new Parse();
-        String[] s = {"$100-'\"mil$lion$", ""};
+        String[] s = {"100-$20", ""};
         HashMap<String, String> map = p.parse(s);
         Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
         while (it.hasNext()) {
