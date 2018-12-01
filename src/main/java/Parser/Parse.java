@@ -251,11 +251,25 @@ public class Parse {
     }
 
     /**
+     * Rule: Grouping all tokens that are continues with upper cases. in exception if the token "of"
+     * appear check the next token after, same rules are applied.
+     * continues expression stops when symbol appear after the word.
+     * next iteretion position will increase in 1 and the substring of continues expression will also be applied.
+     * For example the String : "UNITED STATES of AMERICA, Bacon Rules!
+     * Tokens:
+     * UNITED STATES AMERICA
+     * STATES AMERICA
+     * BACON RULES
+     * UNITED
+     * STATES
+     * AMERICA
+     * BACON
+     * RULES
      *
-     * @param termsDict
-     * @param token
-     * @param s
-     * @param i
+     * @param termsDict : the Dictionary that will contain all the terms
+     * @param token     : the current token we are working with
+     * @param s         : an Array containing all tokens of the text (pointer)
+     * @param i         : current index in 's'
      */
     private void continuesUpperCaseExpression(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
         doneWithToken = false;
@@ -1062,15 +1076,15 @@ public class Parse {
     }
 
 
-    public static void main(String[] args) {
-
-        Parse p = new Parse();
-        String[] s = {"UNITED STATES of AMERICA, PEOPLE CAME of BEFORE ELVES! UNITED States of AMERICA", ""};
-        HashMap<String, String> map = p.parse(s);
-        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-        }
-    }
+//    public static void main(String[] args) {
+//
+//        Parse p = new Parse();
+//        String[] s = {"UNITED STATES of AMERICA, PEOPLE CAME of BEFORE ELVES! UNITED States of AMERICA", ""};
+//        HashMap<String, String> map = p.parse(s);
+//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+//        while (it.hasNext()) {
+//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+//        }
+//    }
 }
