@@ -250,18 +250,19 @@ public class Parse {
     }
 
     /**
-     * Rule: Grouping all tokens that are continues with upper cases. in exception if the token "of"
+     * Rule: Grouping all tokens that are continues with upper cases. in exception if the token "of"/"the"
      * appear check the next token after, same rules are applied.
      * continues expression stops when symbol appear after the word.
      * next iteretion position will increase in 1 and the substring of continues expression will also be applied.
-     * For example the String : "UNITED STATES of AMERICA, Bacon Rules!
-     * Tokens:
+     * For example the String : "PRESIDENT of the UNITED STATES of AMERICA, Bacon Rules!
+     * PRESIDENT UNITED STATES AMERICA
      * UNITED STATES AMERICA
      * STATES AMERICA
-     * BACON RULES
+     * PRESIDENT
      * UNITED
      * STATES
      * AMERICA
+     * BACON RULES
      * BACON
      * RULES
      *
@@ -279,7 +280,7 @@ public class Parse {
             String[] tokenOne = {splitToken[0], ""};
             String[] tokenTwo = {splitToken[1], ""};
             if (!stopWords.contains(tokenOne[0].toLowerCase())) {
-                insertToDictionary(termsDict, tokenOne);
+
                 continuesExpression.append(tokenOne[0]).append(" ");
             }
             if (!stopWords.contains(tokenTwo[0].toLowerCase())) {
@@ -288,11 +289,12 @@ public class Parse {
             }
         } else {
             insertToDictionary(termsDict, token);
+            continuesExpression.append(token[0]).append(" ");
         }
         boolean stopFlag = false;
         while (!stopFlag && i + 1 < s.length) {
             String[] nextToken = {s[i + 1]};
-            if ((nextToken[0].equalsIgnoreCase("of") || nextToken[0].equalsIgnoreCase("the")) && i + 2 < s.length) {
+            while ((nextToken[0].equalsIgnoreCase("of") || nextToken[0].equalsIgnoreCase("the")) && i + 2 < s.length) {
                 i++;
                 nextToken[0] = s[i + 1];
             }
@@ -1105,7 +1107,7 @@ public class Parse {
     public static void main(String[] args) {
 
         Parse p = new Parse();
-        String[] s = {"BRAZILIAN-THE ARMY OF ALL", ""};
+        String[] s = {"PRESIDENT of the UNITED STATES of AMERICA, Bacon Rules", ""};
         HashMap<String, String> map = p.parse(s);
         Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
         while (it.hasNext()) {
