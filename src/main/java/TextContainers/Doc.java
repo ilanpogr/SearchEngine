@@ -13,7 +13,9 @@ public class Doc {
 //    public final int length;
     private int length;
     private int max_tf;
-    private int fpCounter;
+    private boolean hasCity=false;
+    private String language;
+    private ArrayList<String> cityPositions;
     private Map<String, String> attributes;
 
 //    public Doc(StringBuilder docNum, StringBuilder text) {
@@ -28,7 +30,6 @@ public class Doc {
         this.attributes = new HashMap<>();
         max_tf=-1;
         length=0;
-        fpCounter=101;
     }
 
     public int getMax_tf() {
@@ -74,28 +75,32 @@ public class Doc {
         return attributes.values().toString();
     }
 
-    public void addAttributes(String[] tags) {
+    public void addAttributes(String... tags) {
+        if (!hasCity && tags.length<3){
+            if (tags[0].charAt(0)=='F' || tags[0].charAt(0)=='f'){
+                hasCity = true;
+                return;
+            }
+        }
         for (int i = 0; i < tags.length - 1; i++) {
-//            if (tags[i].equalsIgnoreCase("f"))
-//                tags[i] =appendIfMissing(tags[i],""+fpCounter++);
-//            if (tags[i].equalsIgnoreCase("f104"))
-//                tags[i]="COUNTRY";
             attributes.put(tags[i++], tags[i]);
         }
     }
 
     public void addAttributes(ArrayList<String> tags) {
+        if (!hasCity){
+            if (tags.get(0).charAt(0) == 'F' || tags.get(0).charAt(0) == 'f'){
+                hasCity = true;
+                return;
+            }
+        }
         for (int i = 0; i < tags.size() - 1; i++) {
             attributes.put(tags.get(i++), tags.get(i));
         }
     }
 
     public String getAttribute(String key){
-        try{
-            return attributes.get(key);
-        } catch (Exception e){
-         return "";
-        }
+            return attributes.getOrDefault(key,"");
     }
 
     public String docNum() {
@@ -104,5 +109,33 @@ public class Doc {
 
     public String [] text() {
         return new String[]{attributes.getOrDefault("TEXT","")};
+    }
+
+    public boolean hasCity() {
+        return hasCity;
+    }
+
+
+    private static void validateArgs(final String[] argument) {
+                if (argument == null) {
+            throw new NullPointerException("Args must not be null");
+        }
+
+        if (argument.length == 0) {
+            throw new IllegalArgumentException(
+                    "At least one Args must be defined");
+        }
+
+        for (String extension : argument) {
+            if (extension == null) {
+                throw new NullPointerException(
+                        "Args must not be null");
+            }
+
+            if (extension.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Args must not be empty");
+            }
+        }
     }
 }

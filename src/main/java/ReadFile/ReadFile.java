@@ -29,7 +29,7 @@ public class ReadFile {
     private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
     private ArrayList<Doc> docList; //a list of Docs, from a single File
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
-    private static int fileCounter = 0;
+    private static int fileCounter = 1495;
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
 //    private Map<String,String> docMap = new M
@@ -110,6 +110,7 @@ public class ReadFile {
             unInstancedDocList.remove(unInstancedDocList.size() - 1);
             createDocList();
             stringBuilder.setLength(0);
+            unInstancedDocList.clear();
             return docList;
 //            extractDocNums();
 //            extractText();
@@ -128,13 +129,6 @@ public class ReadFile {
     private void createDocList() {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
-//            StringBuilder docNum = new StringBuilder();
-//            StringBuilder docText = new StringBuilder();
-//            extractTag(docNum, document, "docno");
-//            extractTag(docText, document, "text");
-//            Doc curr = new Doc(docNum, docText);
-//            docNum.setLength(0);
-//            docText.setLength(0);
             Doc curr = new Doc();
             String[] docArr = split(document.toString(), '\n');
             StringBuilder line = new StringBuilder(), tag = new StringBuilder();
@@ -142,69 +136,35 @@ public class ReadFile {
                 docArr[i] = trim(docArr[i]);
                 if (startsWith(docArr[i],"<")) {
                     String[] lineArr = splitPreserveAllTokens(docArr[i],">", 2);
-//                    String[] lineArr = split(docArr[i], ">", 2);
                     docArr[i] = trim(lineArr[1]);
                     if (line.length() > 0 && docArr[i].isEmpty()) {
                         if (!lineArr[0].contains("/")) continue;
-//                        tag = lineArr[0].split("/")[1].toUpperCase();
-//                        tag.append(upperCase(split(lineArr[0], "/")[1]));
                         tag.append(upperCase(splitPreserveAllTokens(lineArr[0],"/")[1]));
-                        curr.addAttributes(new String[]{trim(tag.toString()), trim(line.toString())});
+                        curr.addAttributes(trim(tag.toString()), trim(line.toString()));
                         tag.setLength(0);
                         line.setLength(0);
                     }
                     if (docArr[i].endsWith(">")) {
                         docArr[i] = trim(splitPreserveAllTokens(docArr[i],"<", 2)[0]);
-//                        docArr[i] = trim(split(docArr[i], "<", 2)[0]);
                     }
                 }
                 if (docArr[i].isEmpty()) continue;
                 line.append(" ").append(docArr[i]);
             }
-//            int x=0;
-//            if (curr.getAttribute("COUNTRY")!=null || curr.getAttribute("F101")!=null)
-//                x++;
+            if (curr.hasCity()){
+                createAndUpdateCity(curr,line,tag.append(document));
+            }
             docList.add(curr);
 
         }
     }
-//private void createDocList() {
-//        for (String doc : unInstancedDocList) {
-//            String[] document = {Jsoup.parse(doc).toString()};
-//            String[] docNum = new String[1];
-//            String[] docText = new String[1];
-//            extractTag(docNum, document, "docno");
-//            extractTag(docText, document, "text");
-//            Doc curr = new Doc(docNum, docText);
-//            String[] docArr = split(document[0],"\n");
-//            String line = "", tag = "";
-//            for (int i = 0; i < docArr.length; i++) {
-//                docArr[i] = trim(docArr[i]);
-//                if (docArr[i].startsWith("<")) {
-////                    String[] lineArr = docArr[i].split(">", 2);
-//                    String[] lineArr = split(docArr[i],">", 2);
-//                    if (lineArr.length==2) {
-//                        docArr[i] = trim(lineArr[1]);
-//                        if (!line.isEmpty() && docArr[i].isEmpty()) {
-//                            if (!lineArr[0].contains("/")) continue;
-////                        tag = lineArr[0].split("/")[1].toUpperCase();
-//                            tag = upperCase(split(lineArr[0], "/")[1]);
-//                            curr.addAttributes(new String[]{trim(tag), trim(line)});
-//                            tag = "";
-//                            line = "";
-//                        }
-//                    }
-//                    if (docArr[i].endsWith(">")) {
-////                        docArr[i] = trim(docArr[i].split("<", 2)[0]);
-//                        docArr[i] = trim(split(docArr[i],"<", 2)[0]);
-//                    }
-//                }
-//                if (docArr[i].isEmpty()) continue;
-//                line += " " + docArr[i];
-//            }
-//            docList.add(curr);
-//        }
-//    }
+
+    private void createAndUpdateCity(Doc doc, StringBuilder document, StringBuilder stringBuilder) {
+        stringBuilder.setLength(0);
+        extractTag(stringBuilder,document,"<F P=104>");
+        doc.addAttributes("City",stringBuilder.toString());
+    }
+
 
     /**
      * extracts a given tag from a document string.
