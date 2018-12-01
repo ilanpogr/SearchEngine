@@ -126,7 +126,6 @@ public class Parse {
             if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$')) {
                 continue;
             }
-
             if (token[0].toLowerCase().endsWith("'s")) {                        //  ADDITIONAL RULE: remove all " 's " from tokens
                 token[0] = token[0].substring(0, token[0].length() - 2);
             }
@@ -137,6 +136,7 @@ public class Parse {
                 if (i + 1 < s.length) {
                     char firstCharOfNextToken = s[i + 1].charAt(0);
                     if (Character.isUpperCase(firstCharOfNextToken) || s[i + 1].toLowerCase().equals("of")) {          //    ADDITIONAL RULE: continues expression of upper case words.
+                        token[0] = replace(token[0], "--", "-");
                         continuesUpperCaseExpression(termsDict, token, s, i);
                         continue;
                     }
@@ -161,7 +161,8 @@ public class Parse {
                 if (i + 1 < s.length) {
                     String[] check = {s[i + 1]};
                     cleanToken(check);
-                    if (check[0].contains("-") && !check[0].contains("--")) { // an expression --> first a number and then an expression
+                    if (check[0].contains("-")) { // an expression --> first a number and then an expression
+                        s[i + 1] = replace(s[i + 1], "--", "-");
                         check = split(s[i + 1], "-");
                         if (checkIfRepresentingNumber(check) || checkIfFracture(check[0])) {
                             expressionFlag = true;
@@ -181,7 +182,8 @@ public class Parse {
                     }
                 }
             }
-            if (!expressionFlag && token[0].contains("-") && !token[0].contains("--")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
+            if (!expressionFlag && token[0].contains("-")) {            // might be an expression containing a '-' and this expression is NOT registered in the dictionary
+                token[0] = replace(token[0], "--", "-");
                 expressionFlag = true;
                 doneWithToken = false;
                 token[0] = replace(token[0], ",", "");
@@ -267,12 +269,26 @@ public class Parse {
     private void continuesUpperCaseExpression(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
         doneWithToken = false;
         token[0] = token[0].toUpperCase();
-        insertToDictionary(termsDict, token);
-        StringBuilder continuesExpression = new StringBuilder(token[0]);
+        StringBuilder continuesExpression = new StringBuilder();
+        if (contains(token[0], "-")) {
+            String[] splitToken = split(token[0], '-');
+            String[] tokenOne = {splitToken[0], ""};
+            String[] tokenTwo = {splitToken[1], ""};
+            if (!stopWords.contains(tokenOne[0].toLowerCase())) {
+                insertToDictionary(termsDict, tokenOne);
+                continuesExpression.append(tokenOne[0]).append(" ");
+            }
+            if (!stopWords.contains(tokenTwo[0].toLowerCase())) {
+                insertToDictionary(termsDict, tokenTwo);
+                continuesExpression.append(tokenTwo[0]);
+            }
+        } else {
+            insertToDictionary(termsDict, token);
+        }
         boolean stopFlag = false;
         while (!stopFlag && i + 1 < s.length) {
             String[] nextToken = {s[i + 1]};
-            if (nextToken[0].toUpperCase().equals("OF") && i + 2 < s.length) {
+            if ((nextToken[0].equalsIgnoreCase("of") || nextToken[0].equalsIgnoreCase("the")) && i + 2 < s.length) {
                 i++;
                 nextToken[0] = s[i + 1];
             }
@@ -282,7 +298,8 @@ public class Parse {
                     cleanToken(nextToken);
                 }
                 nextToken[0] = nextToken[0].toUpperCase();
-                continuesExpression.append(' ').append(nextToken[0]);
+                nextToken[0] = replace(nextToken[0], "--", "-");
+                continuesExpression.append(nextToken[0]).append(' ');
                 i++;
             } else {
                 stopFlag = true;
@@ -338,6 +355,7 @@ public class Parse {
 
             String[] tmpToken = {tokenByDelimiter[1], ""};
             checkIfTokenIsNum(termsDict, tmpToken, i, s);
+            tokenByDelimiter[0] = replace(tokenByDelimiter[0], "$", "");
             String[] finalToken = {tokenByDelimiter[0] + "-" + tmpToken[0], "0" + parametersDelimiter + currentPosition};
             insertToDictionary(termsDict, finalToken);
             if (i + 1 < s.length) {
@@ -396,6 +414,7 @@ public class Parse {
                     checkCaseAndInsertToDictionary(termsDict, oneWordFromExpression);
                 }
                 finalToken[1] = "0" + parametersDelimiter + currentPosition;
+                finalToken[0] = replace(finalToken[0], "--", "-");
                 insertToDictionary(termsDict, finalToken);
                 return i;
             }
@@ -403,6 +422,7 @@ public class Parse {
         if (!checkIfNumber(expressionTokens[1]) && !checkIfFracture(expressionTokens[1])) {     // expression continues with word: #-w
             strTmp[0] = expressionTokens[1];
             cleanToken(strTmp);
+            strTmp[0] = replace(strTmp[0], "$", "");
             finalToken[0] += "-" + strTmp[0];
             checkCaseAndInsertToDictionary(termsDict, strTmp);
             finalToken[1] = "0" + parametersDelimiter + currentPosition;
@@ -1009,6 +1029,9 @@ public class Parse {
      * @param token     : current token we are working with.
      */
     private void checkCaseAndInsertToDictionary(HashMap<String, String> termsDict, String[] token) {
+        if (token[0].length() < 1) {
+            return;
+        }
         if (Character.isLowerCase(token[0].charAt(0))) {
             if (termsDict.containsKey(token[0].toUpperCase())) {
                 convertToLowerCase(termsDict, token);
@@ -1034,6 +1057,7 @@ public class Parse {
         if (!token[1].startsWith("0" + parametersDelimiter) && !token[1].startsWith("1" + parametersDelimiter)) {
             token[1] = (token[0].length() < 4 ? "0" + parametersDelimiter : "1" + parametersDelimiter) + currentPosition;
         }
+        cleanToken(token);
         groupTokenPositions(termsDict, token);
         if (doneWithToken) {
             token[0] = "";
@@ -1079,7 +1103,7 @@ public class Parse {
     public static void main(String[] args) {
 
         Parse p = new Parse();
-        String[] s = {"$100-'\"mil$lion$", ""};
+        String[] s = {"BRAZILIAN-THE ARMY OF ALL", ""};
         HashMap<String, String> map = p.parse(s);
         Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
         while (it.hasNext()) {
