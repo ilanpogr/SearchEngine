@@ -126,7 +126,22 @@ public class Parse {
             if (token[0].equals("") || stopWords.contains(token[0].toLowerCase())) {
                 continue;
             }
+
+            if (token[0].toLowerCase().endsWith("'s")) {                        //  ADDITIONAL RULE: remove all " 's " from tokens
+                token[0] = token[0].substring(0, token[0].length() - 2);
+            }
             char firstCharOfToken = token[0].charAt(0);
+
+            String[] ourRuleToken = {s[i]};
+            if (Character.isUpperCase(firstCharOfToken) && !specialCharSet.contains(ourRuleToken[0].charAt(ourRuleToken[0].length() - 1))) {
+                if (i + 1 < s.length) {
+                    char firstCharOfNextToken = s[i + 1].charAt(0);
+                    if (Character.isUpperCase(firstCharOfNextToken) || s[i+1].toLowerCase().equals("of")) {          //    ADDITIONAL RULE: continues expression of upper case words.
+                        continuesUpperCaseExpression(termsDict, token, s, i);
+                        continue;
+                    }
+                }
+            }
 
             if (token[0].toLowerCase().equals("between")) {  // expression --> between # and #
                 if (i + 1 < s.length) {
@@ -227,6 +242,42 @@ public class Parse {
                 }
             }
         }
+    }
+
+    /**
+     *
+     * @param termsDict
+     * @param token
+     * @param s
+     * @param i
+     */
+    private void continuesUpperCaseExpression(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
+        doneWithToken = false;
+        token[0] = token[0].toUpperCase();
+        insertToDictionary(termsDict, token);
+        StringBuilder continuesExpression = new StringBuilder(token[0]);
+        boolean stopFlag = false;
+        while (!stopFlag && i + 1 < s.length) {
+            String[] nextToken = {s[i + 1]};
+            if (nextToken[0].toUpperCase().equals("OF") && i + 2 < s.length ){
+                i++;
+                nextToken[0] = s[i + 1];
+            }
+            if ((Character.isUpperCase(nextToken[0].charAt(0)))&& !specialCharSet.contains(nextToken[0].charAt(0))) {
+                if (specialCharSet.contains(nextToken[0].charAt(nextToken[0].length() - 1))) {
+                    stopFlag = true;
+                    cleanToken(nextToken);
+                }
+                nextToken[0] = nextToken[0].toUpperCase();
+                continuesExpression.append(' ').append(nextToken[0]);
+                i++;
+            } else {
+                stopFlag = true;
+            }
+        }
+        String[] finalToken = {continuesExpression.toString(), ""};
+        finalToken[1] = "0" + parametersDelimiter + currentPosition;
+        insertToDictionary(termsDict, finalToken);
     }
 
     /**
@@ -960,9 +1011,6 @@ public class Parse {
      * @param token     : current token we are working with.
      */
     private void insertToDictionary(HashMap<String, String> termsDict, String[] token) {
-        if (token[0].toLowerCase().endsWith("'s")) {
-            token[0] = token[0].substring(0, token[0].length() - 2);
-        }
         if (!token[1].startsWith("0" + parametersDelimiter) && !token[1].startsWith("1" + parametersDelimiter)) {
             token[1] = (token[0].length() < 4 ? "0" + parametersDelimiter : "1" + parametersDelimiter) + currentPosition;
         }
@@ -1008,15 +1056,15 @@ public class Parse {
     }
 
 
-//    public static void main(String[] args) {
-//
-//        Parse p = new Parse();
-//        String[] s = {"may May MAY MAy, May 1994, may between 7 and 66 1/2 may MAY 1994 may may", ""};
-//        HashMap<String, String> map = p.parse(s);
-//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-//        }
-//    }
+    public static void main(String[] args) {
+
+        Parse p = new Parse();
+        String[] s = {"UNITED STATES of AMERICA, PEOPLE CAME of BEFORE ELVES! UNITED States of AMERICA", ""};
+        HashMap<String, String> map = p.parse(s);
+        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+        }
+    }
 }
