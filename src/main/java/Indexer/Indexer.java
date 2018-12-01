@@ -1,18 +1,25 @@
 package Indexer;
 
-import java.util.LinkedHashMap;
+import Controller.PropertiesFile;
+
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Indexer {
 
-    private static LinkedHashMap<String,String> tmpFileDic = new LinkedHashMap<>();
-
-    private static int tmpFilesCounter =0;
-
-
+    private static String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
+    private static int tmpFilesCounter = 0;
+    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
 
 
-
+    public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
+        StringBuilder tmpPostFile = new StringBuilder();
+        sortedTermsDic.forEach((k, v) ->
+                tmpPostFile.append(k).append(termSeperator).append(v).append("\n"));
+        tmpPostFile.trimToSize();
+        tmpDicQueue.addLast(tmpPostFile);
+        WrieFile.createTempPostingFile(tmpPostFile);
+    }
 }
 /*private static void testFileSize(int mb) throws IOException {
         File file = File.createTempFile("test", ".txt");
