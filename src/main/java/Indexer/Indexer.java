@@ -2,6 +2,12 @@ package Indexer;
 
 import Controller.PropertiesFile;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -19,6 +25,38 @@ public class Indexer {
         tmpPostFile.trimToSize();
         tmpDicQueue.addLast(tmpPostFile);
         WrieFile.createTempPostingFile(tmpPostFile);
+        tmpFilesCounter++;
+    }
+
+    public void mergePostingTempFiles(String targetDirPath, LinkedHashMap<String, String> termDictionary, LinkedHashMap<String, String> cache) {
+        int currFileNum = WrieFile.getFileNum();
+        StringBuilder stringBuilder = new StringBuilder(targetDirPath);
+        ArrayList<String> termKeys = new ArrayList<>();
+        ArrayList<String> termValues = new ArrayList<>();
+        ArrayList<File> tmpFiles = new ArrayList<>();
+        for (int i = 0; i < currFileNum; i++) {
+            stringBuilder.append((i+1)).append(".post").trimToSize();
+            checkOrMakeDir(targetDirPath);
+            tmpFiles.add(new File(stringBuilder.toString()));
+            getFirstTerms(termKeys,termValues,i);
+
+        }
+
+    }
+
+    private void getFirstTerms(ArrayList<String> termKeys, ArrayList<String> termValues, int i) {
+    }
+
+    private void checkOrMakeDir(String targetDirPath) {
+        try {
+            Path path =Paths.get(targetDirPath);
+            if (Files.notExists(path)){
+                Files.createDirectory(path);
+            }
+        } catch (Exception e){
+            System.out.println("couldn't find or open: "+targetDirPath);
+            e.printStackTrace();
+        }
     }
 }
 /*private static void testFileSize(int mb) throws IOException {

@@ -11,7 +11,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 public class Parse {
 
     private String parametersDelimiter;
-    private String gapDelimiter;
+    private static String gapDelimiter;
     private boolean doneWithToken = true;
     private static HashSet<Character> specialCharSet = initSpecialSet();
     private static HashSet<String> monthSet = initMonthSet();
@@ -90,6 +90,10 @@ public class Parse {
         }
 
         return specialCharSet;
+    }
+
+    public static CharSequence getGapDelimiter() {
+        return gapDelimiter;
     }
 
     /**
@@ -1029,9 +1033,7 @@ public class Parse {
      * @param token     : current token we are working with.
      */
     private void checkCaseAndInsertToDictionary(HashMap<String, String> termsDict, String[] token) {
-        if (token[0].length() < 1) {
-            return;
-        }
+        if (token[0].length()<1) return;
         if (Character.isLowerCase(token[0].charAt(0))) {
             if (termsDict.containsKey(token[0].toUpperCase())) {
                 convertToLowerCase(termsDict, token);
