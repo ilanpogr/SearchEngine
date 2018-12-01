@@ -34,10 +34,10 @@ public class Controller {
 
     public static void main(String[] args) {
         double mainStartTime = System.currentTimeMillis();
-        int j = 0, f = 191, ii = 0, term_count = 0;
+        int j = 0, f = 0, ii = 0, term_count = 0;
         try {
-            targetDirPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
-            corpusPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
+            targetDirPath = "D:\\Documents\\school\\semester e 3\\Ihzur\\Project\\Files\\writerDir\\";
+            corpusPath = "D:\\Documents\\school\\semester e 3\\Ihzur\\Project\\Files\\corpus";
             filesList = new ArrayList<>();
             ReadFile readFile = new ReadFile(corpusPath);
             Parse p = new Parse();
@@ -48,7 +48,7 @@ public class Controller {
                 f++;
                 double read = System.currentTimeMillis();
                 filesList = readFile.getFileList();
-                for (int i = 279; i < filesList.size(); i++) {
+                for (int i = 0; i < filesList.size(); i++) {
                     double parsestart = System.currentTimeMillis();
                     currPath = filesList.get(i).docNum();
 
