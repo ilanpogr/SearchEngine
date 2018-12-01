@@ -48,7 +48,7 @@ public class Controller {
                 f++;
                 double read = System.currentTimeMillis();
                 filesList = readFile.getFileList();
-                for (int i = 0; i < filesList.size(); i++) {
+                for (int i = 35; i < filesList.size(); i++) {
                     double parsestart = System.currentTimeMillis();
                     currPath = filesList.get(i).docNum();
 
