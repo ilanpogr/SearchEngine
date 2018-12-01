@@ -132,6 +132,7 @@ public class Parse {
             }
             if (token[0].toLowerCase().endsWith("'s")) {                        //  ADDITIONAL RULE: remove all " 's " from tokens
                 token[0] = token[0].substring(0, token[0].length() - 2);
+                cleanToken(token);
             }
             char firstCharOfToken = token[0].charAt(0);
 
@@ -406,7 +407,7 @@ public class Parse {
                     token[0] += "-";
                 }
             }
-        } else {                                                                              // expression starts with a num w-..
+        } else {
             strTmp[0] = replace(strTmp[0], "$", "");
             expressionTokens[0] = replace(expressionTokens[0], "$", "");
             checkCaseAndInsertToDictionary(termsDict, strTmp);
