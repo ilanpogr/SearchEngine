@@ -65,18 +65,18 @@ public class Controller {
                     term_count = tmpTermDic.size() + termDictionary.size();
 
                 }
-                if (f % 3 == 0) {
+                if (f % 18 == 0) {
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     termDictionary.putAll(tmpTermDic);
-                    if (Runtime.getRuntime().freeMemory() < Runtime.getRuntime().totalMemory() / 10)
+                    if (Runtime.getRuntime().freeMemory() < Runtime.getRuntime().totalMemory() / 100)
                         termDictionary.forEach((k, v) -> termDictionary.replace(k, v, ""));
                     tmpTermDic.clear();
                 }
                 System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size() + "\t\t\tTotal Num of Terms: " + term_count);
                 filesList.clear();
-//                indexer.mergePostingTempFiles(targetDirPath, termDictionary, cache);
-
+                if (f==180)break;
             }
+                indexer.mergePostingTempFiles(targetDirPath, termDictionary, cache);
             int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);
             System.out.println("\nTime took to run main: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds");
         } catch (Exception e) {
