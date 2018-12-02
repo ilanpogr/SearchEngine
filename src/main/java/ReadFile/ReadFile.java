@@ -170,7 +170,6 @@ public class ReadFile {
         String tag = trim(substringBetween(document.toString(),">","<"));
         if (!tag.equals("")) {
             CityInfo cityInfo = CityInfo.getInstance();
-            cityInfo.setInfo(tag, doc);
 //            doc.addAttributes("City", stringBuilder.toString());
         }
     }
