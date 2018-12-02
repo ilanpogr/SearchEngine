@@ -31,12 +31,11 @@ public class WrieFile {
         return fileNum.get();
     }
 
-    public static void addPostLine(LinkedHashMap<String, BufferedWriter> mergedFilesDic, String mergedFileName, StringBuilder stringBuilder) {
+    public static void addPostLine(LinkedHashMap<String, BufferedWriter> mergedFilesDic, String mergedFileName, String stringBuilder) {
         try{
-            stringBuilder.append("\n");
-            mergedFilesDic.get(mergedFileName).append(stringBuilder.toString());
+            mergedFilesDic.get(mergedFileName).append(stringBuilder);
         } catch (Exception e){
-            System.out.println("Couldn't write the line" + stringBuilder + "to the file Named: " +mergedFileName);
+            System.out.println("Couldn't write the line: " + stringBuilder + " to the file Named: " +mergedFileName);
             e.printStackTrace();
         }
     }
