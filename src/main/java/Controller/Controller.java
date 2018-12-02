@@ -85,7 +85,7 @@ public class Controller {
                 }
                 System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size() + "\t\t\tTotal Num of Terms: " + term_count);
                 filesList.clear();
-//                if (f == tmpFileNum) break;
+                if (f == tmpFileNum*4) break;
             }
             indexer.mergePostingTempFiles(targetDirPath, termDictionary, cache);
             int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);

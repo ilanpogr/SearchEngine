@@ -83,6 +83,7 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic);
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize =tmpFiles.size();
+        int othersFilesCounter = 1;
         while (mergedFilesCounter < tmpFilesCounter) {
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
@@ -129,19 +130,23 @@ public class Indexer {
             if (totalTf > minNumberOfTf) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (maxIdfForCache < idf || df == 1) {
-                    termDictionary.put(minTerm, totalTf + "," + df + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer);
+                    termDictionary.put(minTerm, totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer);
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
                     cache.put(minTerm, cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName));
-                    termDictionary.put(minTerm, totalTf + "," + df + "," + mergedFilesCounterDic.get(mergedFileName));
+                    termDictionary.put(minTerm, totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName));
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
             } else {
                 termDictionary.remove(minTerm);
             }
+//            if (mergedFilesCounterDic.get("others")>10000){
+//                FileUtils.getFile(targetPath+"others.post").renameTo(new File(targetPath + "others" + othersFilesCounter + ".post"));
+//                mergedFilesCounterDic.replace("others",1);
+//            }
         }
         try {
             for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
@@ -162,6 +167,7 @@ public class Indexer {
             sliceIndex = Integer.max(--sliceIndex, 2);
         }
         return new String[]{join(forCache, fileDelimiter, 0, sliceIndex), join(forCache, fileDelimiter, sliceIndex, forCache.length)};//TODO- Check!!!
+
     }
 
     private String getFileName(char first) {
