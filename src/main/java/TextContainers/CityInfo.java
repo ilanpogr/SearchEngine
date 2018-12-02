@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -17,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 public class CityInfo {
 
     private static CityInfo cityInfo_instance = null;
+    private static HashMap<String, String[]> citiesInfo_map = null;
 
     private JsonElement entries;
 
@@ -24,6 +26,7 @@ public class CityInfo {
     public static CityInfo getInstance() {
         if (cityInfo_instance == null) {
             cityInfo_instance = new CityInfo();
+            citiesInfo_map = new HashMap<>();
         }
         return cityInfo_instance;
     }
@@ -74,12 +77,14 @@ public class CityInfo {
      * problems with Hong Kong.. so We'll put it manually
      *
      * @param tag : <<F P=104> tag from files -> inside the city name.
-     * @return info: [0] - city name, [1] - country, [2] - population, [3] - currencies
+     * @return info: [0] - country, [1] - population, [2] - currencies
      */
-    public String[] getInfo(String tag) {
+    public void setInfo(String tag, Doc doc) {
         if (tag != null && !tag.equals("")) {
-            if (containsIgnoreCase(tag,"Hong Kong")){
-                return new String[] {"HONG KONG", "Hong Kong", "7.39M", "Hong Kong Dollar"};
+            if (containsIgnoreCase(tag, "Hong Kong")) {
+                doc.setCity("HONG KONG");
+                citiesInfo_map.put("HONG KONG",new String[] {"Hong Kong", "7.39M", "Hong Kong Dollar"});
+                return;
             }
             String cityNameShort = "";
             String cityNameLong = "";
@@ -90,38 +95,37 @@ public class CityInfo {
             } else {
                 cityNameShort = Character.toUpperCase(tag.charAt(0)) + substring(lowerCase(tag), 1);
             }
-
+            if (citiesInfo_map.containsKey(upperCase(cityNameShort))) {
+                doc.setCity(upperCase(cityNameShort));
+                return;
+            }
+            if (citiesInfo_map.containsKey(upperCase(cityNameLong))) {
+                doc.setCity(upperCase(cityNameLong));
+                return;
+            }
             if (entries != null) {
                 String[] info = {"", "", "", ""};
                 JsonArray fullDetailsArray = entries.getAsJsonArray();
+                String capitalCity;
                 for (int i = 0; i < fullDetailsArray.size(); i++) {
                     JsonObject citiesInfo = (JsonObject) (fullDetailsArray.get(i));
-                    String capitalCity = citiesInfo.get("capital").getAsString();
+                    capitalCity = citiesInfo.get("capital").getAsString();
                     if ((!cityNameShort.equals("") && capitalCity.equals(cityNameShort)) || (!cityNameLong.equals("") && capitalCity.equals(cityNameLong))) {
-                        info[0] = upperCase(citiesInfo.get("name").getAsString());
-                        info[1] = capitalCity;
-                        info[2] = parsePopulation(citiesInfo.get("population").getAsString());
+                        info[0] = citiesInfo.get("name").getAsString();
+                        info[1] = parsePopulation(citiesInfo.get("population").getAsString());
                         JsonArray JE = citiesInfo.getAsJsonArray("currencies");
                         for (Object o : JE) {
                             JsonObject jsonLineItem = (JsonObject) o;
                             JsonElement val = jsonLineItem.get("code");
-                            info[3] = val.getAsString();
+                            info[2] = val.getAsString();
                         }
-                        return info;
+                        doc.setCity(upperCase(capitalCity));
+                        citiesInfo_map.put(upperCase(capitalCity),info);
                     }
                 }
             }
         }
-        return null;
     }
 
-    public static void main(String[] args) {
-        CityInfo c = getInstance();
-        String[] info = c.getInfo("Hong Kong ZHONGGUO TONGXUN SHEO");
-        if (info != null) {
-            for (String s : info) {
-                System.out.println(s);
-            }
-        }
-    }
+
 }

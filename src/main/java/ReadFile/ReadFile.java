@@ -128,13 +128,17 @@ public class ReadFile {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
             Doc curr = new Doc();
+            StringBuilder docCity = new StringBuilder(0);
             String[] docArr = split(document.toString(), '\n');
             StringBuilder line = new StringBuilder(), tag = new StringBuilder();
             for (int i = 0; i < docArr.length; i++) {
                 docArr[i] = trim(docArr[i]);
                 if (startsWith(docArr[i],"<")) {
-                    String[] lineArr = splitPreserveAllTokens(docArr[i],">", 2);
-                    docArr[i] = trim(lineArr[1]);
+                    if (containsIgnoreCase(docArr[i],"f p=\"104\"")) {
+                        docCity = new StringBuilder(docArr[i] + docArr[i+1] + docArr[i+2]);
+                    }
+                        String[] lineArr = splitPreserveAllTokens(docArr[i], ">", 2);
+                        docArr[i] = trim(lineArr[1]);
                     if (line.length() > 0 && docArr[i].isEmpty()) {
                         if (!lineArr[0].contains("/")) continue;
                         tag.append(upperCase(splitPreserveAllTokens(lineArr[0],"/")[1]));
@@ -150,17 +154,24 @@ public class ReadFile {
                 line.append(" ").append(docArr[i]);
             }
             if (curr.hasCity()){
-                createAndUpdateCity(curr,line,tag.append(document));
+                createAndUpdateCity(curr,docCity,tag.append(document));
             }
             docList.add(curr);
 
         }
     }
 
+    // todo - check with shawn both function below!
     private void createAndUpdateCity(Doc doc, StringBuilder document, StringBuilder stringBuilder) {
         stringBuilder.setLength(0);
-        extractTag(stringBuilder,document,"<F P=104>");
-        doc.addAttributes("City",stringBuilder.toString());
+//        extractTag(stringBuilder,document,"<F P=104>");
+//        String tag = stringBuilder.toString();
+        String tag = trim(substringBetween(document.toString(),">","<"));
+        if (!tag.equals("")) {
+            CityInfo cityInfo = CityInfo.getInstance();
+            cityInfo.setInfo(tag, doc);
+//            doc.addAttributes("City", stringBuilder.toString());
+        }
     }
 
 
