@@ -310,6 +310,7 @@ public class Parse {
                 }
                 nextToken[0] = nextToken[0].toUpperCase();
                 nextToken[0] = replace(nextToken[0], "--", "-");
+                nextToken[0] = replace(nextToken[0], "'S", "");
                 continuesExpression.append(nextToken[0]).append(' ');
                 i++;
             } else {
@@ -1119,10 +1120,14 @@ public class Parse {
         return population;
     }
 
-
-    public static void main(String[] args) throws Exception {
+    /**
+     * todo - city by name --> deal with name for url in this function!
+     * @param city
+     * @throws IOException
+     */
+    private void apiCities(String city) throws IOException {
         Parse p = new Parse();
-        URL geoByteUrl = new URL("http://gd.geobytes.com/GetCityDetails?callback=?&fqcn=tel&aAViv");
+        URL geoByteUrl = new URL("http://gd.geobytes.com/GetCityDetails?callback=?&fqcn="+city);
         URLConnection yc = geoByteUrl.openConnection();
         BufferedReader in = new BufferedReader(new InputStreamReader(
                 yc.getInputStream()));
@@ -1145,17 +1150,18 @@ public class Parse {
                 }
             }
         }
+    }
 
+
+    public static void main(String[] args) throws Exception {
+                Parse p = new Parse();
+        String[] s = {"PRESIDENT of the UNITED's STATES's of AMERICA's, Bacon's Rules's", ""};
+        HashMap<String, String> map = p.parse(s);
+        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+        }
     }
 }
-
-
-//        Parse p = new Parse();
-//        String[] s = {"PRESIDENT of the UNITED STATES of AMERICA, Bacon Rules", ""};
-//        HashMap<String, String> map = p.parse(s);
-//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-//        }
 
