@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -83,7 +84,7 @@ public class CityInfo {
         if (tag != null && !tag.equals("")) {
             if (containsIgnoreCase(tag, "Hong Kong")) {
                 doc.setCity("HONG KONG");
-                citiesInfo_map.put("HONG KONG",new String[] {"Hong Kong", "7.39M", "Hong Kong Dollar"});
+                citiesInfo_map.put("HONG KONG", new String[]{"Hong Kong", "7.39M", "Hong Kong Dollar"});
                 return;
             }
             String cityNameShort = "";
@@ -104,7 +105,7 @@ public class CityInfo {
                 return;
             }
             if (entries != null) {
-                String[] info = {"", "", "", ""};
+                String[] info = {"", "", ""};
                 JsonArray fullDetailsArray = entries.getAsJsonArray();
                 String capitalCity;
                 for (int i = 0; i < fullDetailsArray.size(); i++) {
@@ -120,10 +121,21 @@ public class CityInfo {
                             info[2] = val.getAsString();
                         }
                         doc.setCity(upperCase(capitalCity));
-                        citiesInfo_map.put(upperCase(capitalCity),info);
+                        citiesInfo_map.put(upperCase(capitalCity), info);
                     }
                 }
             }
+        }
+    }
+
+    public void printCities() {
+        for (String key : citiesInfo_map.keySet()){
+            System.out.print(key + " --> " );
+            String[] val = citiesInfo_map.get(key);
+            for (int i = 0; i < citiesInfo_map.get(key).length; i++) {
+                System.out.print(val[i]+" ; ");
+            }
+            System.out.println();
         }
     }
 
