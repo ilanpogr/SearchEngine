@@ -3,7 +3,7 @@ package Controller;
 import Controller.PropertiesFile;
 import Model.ModelMenu;
 import javafx.fxml.FXMLLoader;
-import view.IR_MenuView;
+import View.IR_MenuView;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
