@@ -1,9 +1,13 @@
 package Parser;
 
 import Controller.PropertiesFile;
+import org.json.simple.JSONObject;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -1036,7 +1040,7 @@ public class Parse {
      * @param token     : current token we are working with.
      */
     private void checkCaseAndInsertToDictionary(HashMap<String, String> termsDict, String[] token) {
-        if (token[0].length()<1) return;
+        if (token[0].length() < 1) return;
         if (Character.isLowerCase(token[0].charAt(0))) {
             if (termsDict.containsKey(token[0].toUpperCase())) {
                 convertToLowerCase(termsDict, token);
@@ -1104,16 +1108,54 @@ public class Parse {
         }
     }
 
-
-    public static void main(String[] args) {
-
-        Parse p = new Parse();
-        String[] s = {"PRESIDENT of the UNITED STATES of AMERICA, Bacon Rules", ""};
-        HashMap<String, String> map = p.parse(s);
-        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+    private String parsePopulation(String population){
+         if (population.length() <= 6) { // Thousand
+            population = substring(population,0, population.length() - 3) + '.' + truncate(substring(population,population.length() - 3),2)+ 'K';
+        } else if (population.length() <= 9) { // Million
+            population = population.substring(0, population.length() - 6)+'.'+ truncate(population.substring(population.length() - 6),2) + 'M';
+        } else { // more than Million --> represented with B (Billion)
+             population = population.substring(0, population.length() - 9) + '.' + truncate(population.substring(population.length() - 9),2) + 'B';
         }
+        return population;
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        Parse p = new Parse();
+        URL geoByteUrl = new URL("http://gd.geobytes.com/GetCityDetails?callback=?&fqcn=tel&aAViv");
+        URLConnection yc = geoByteUrl.openConnection();
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                yc.getInputStream()));
+        String inputLine = in.readLine();
+        in.close();
+        if (inputLine != null){
+            System.out.println(inputLine);
+            String[] info = split(inputLine, ",");
+            for (String s : info){
+                if (contains(s, "\"geobytescountry\"")) {
+                    s = substringBetween(s, ":\"", "\"");
+                    System.out.println("Country - " + s);
+                } else if (contains(s, "\"geobytespopulation\"")) {
+                    s = substringBetween(s, ":\"", "\"");
+                    System.out.println("Population BEFORE PARSE - " + s);
+                    System.out.println("Population - " + p.parsePopulation(s));
+                } else if (contains(s, "\"geobytescurrency\"")) {
+                    s = substringBetween(s, ":\"", "\"");
+                    System.out.println("Currency - " + s);
+                }
+            }
+        }
+
     }
 }
+
+
+//        Parse p = new Parse();
+//        String[] s = {"PRESIDENT of the UNITED STATES of AMERICA, Bacon Rules", ""};
+//        HashMap<String, String> map = p.parse(s);
+//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+//        while (it.hasNext()) {
+//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+//        }
+
