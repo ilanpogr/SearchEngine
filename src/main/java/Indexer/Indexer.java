@@ -4,6 +4,7 @@ import Controller.Controller;
 import Controller.PropertiesFile;
 import Parser.Parse;
 import Stemmer.Stemmer;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -20,15 +21,18 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Indexer {
 
-    private static double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
+    private static double totalPostingSizeByKB = 0;
+    private static int minNumberOfTf = (int) getPropertyAsDouble("min.tf.to.save");
     private static int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
+    private static double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
+    private static String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
 
     private static double getPropertyAsDouble(String s) {
         try {
             return Double.parseDouble(PropertiesFile.getProperty(s));
         } catch (Exception e) {
             System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
-            return 2.5;
+            return 1;
         }
     }
 
@@ -38,7 +42,6 @@ public class Indexer {
     private static int mergedFilesCounter = 0;
     private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
     private static String targetPath = null;
-    private static ArrayList<ImmutablePair<String, Triple<Integer, Integer, Integer>>> finalTermDic;
 
 
     public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
@@ -79,18 +82,26 @@ public class Indexer {
         LinkedHashMap<String, BufferedWriter> mergedFilesDic = new LinkedHashMap<>();
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic);
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
-        stringBuilder.setLength(0);
+        int tmpFilesInitialSize =tmpFiles.size();
         while (mergedFilesCounter < tmpFilesCounter) {
+            stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
-            for (int i = 1; i <= tmpFiles.size(); i++) {
-                if (!tmpFiles.containsKey(i)) continue;
+            for (int i = 1; i <= tmpFilesInitialSize; i++) {
+                if (!tmpFiles.containsKey(i)){
+                    continue;
+                }
                 String k = termKeys.get(i).left;
                 if (!termsSorter.containsKey(k)) {
                     termsSorter.put(k, new ArrayList<>());
+                    termsSorter.get(k).add(i);
                 }
-                termsSorter.get(k).add(i);
             }
-            String minTerm = termsSorter.firstKey();
+            String minTerm;
+            try {
+                minTerm = termsSorter.pollFirstEntry().getKey();
+            } catch (NullPointerException npe){
+                continue;
+            }
             int isUpperCase = 1;
             double logN = StrictMath.log10(Controller.getTermCount());
             for (Map.Entry<Integer, MutablePair<String, Integer>> term : termKeys.entrySet()
@@ -115,25 +126,42 @@ public class Indexer {
             }
             int df = sortedPosting.size();
             double idf = logN - StrictMath.log10(df);
-            finalTermDic = new ArrayList<>();
-            if (totalTf > 1) {
+            if (totalTf > minNumberOfTf) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (maxIdfForCache < idf || df == 1) {
-                    finalTermDic.add(new ImmutablePair<>(minTerm, new ImmutableTriple<>(totalTf, df, mergedFilesCounterDic.get(mergedFileName))));
+                    termDictionary.put(minTerm, totalTf + "," + df + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer);
+                    WrieFile.addPostLine(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
-                    WrieFile.addPostLine(mergedFilesDic, mergedFileName, stringBuilder);
                 } else {
-                    String[] cacheSplitedPost = splitToCachePost(stringBuilder, df);
+                    String[] cacheSplitedPost = splitToCachePost(stringBuilder);
+                    cache.put(minTerm, cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName));
+                    termDictionary.put(minTerm, totalTf + "," + df + "," + mergedFilesCounterDic.get(mergedFileName));
+                    WrieFile.addPostLine(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
+                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
+            } else {
+                termDictionary.remove(minTerm);
             }
-
         }
+        try {
+            for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
+                totalPostingSizeByKB += new File(targetDirPath + entry.getKey() + ".post").length();
+                entry.getValue().close();
+            }
+        } catch (Exception e) {
+            totalPostingSizeByKB = FileUtils.sizeOf(new File(targetDirPath));
+        }
+        System.out.println("Size of Posting Files: " + totalPostingSizeByKB/1024);
 
     }
 
-    private String[] splitToCachePost(StringBuilder stringBuilder, int df) {
+    private String[] splitToCachePost(StringBuilder stringBuilder) {
         String[] forCache = split(stringBuilder.toString(), fileDelimiter);
-        return new String[]{};
+        int sliceIndex = forCache.length / cacheSlice;
+        if (sliceIndex % 2 == 1) {
+            sliceIndex = Integer.max(--sliceIndex, 2);
+        }
+        return new String[]{join(forCache, fileDelimiter, 0, sliceIndex), join(forCache, fileDelimiter, sliceIndex, forCache.length)};//TODO- Check!!!
     }
 
     private String getFileName(char first) {
@@ -150,6 +178,14 @@ public class Indexer {
                 return "qrst";
             case 'u':
                 return "uvwxyz";
+            case '0':
+                return "0_1";
+            case '2':
+                return "2_3_4";
+            case '5':
+                return "5_6_7";
+            case '8':
+                return "8_9";
         }
         return "others";
     }
@@ -187,7 +223,7 @@ public class Indexer {
         addFileToList(mergedFilesDic, stringBuilder, fileName);
         stringBuilder = new StringBuilder(targetPath);
         checkOrMakeDir(stringBuilder.toString());
-        fileName = "ijklm";
+        fileName = "ijkl";
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
@@ -206,6 +242,30 @@ public class Indexer {
         stringBuilder = new StringBuilder(targetPath);
         checkOrMakeDir(stringBuilder.toString());
         fileName = "uvwxyz";
+        mergedFilesCounterDic.put(fileName, 1);
+        stringBuilder.append(fileName).append(".post");
+        addFileToList(mergedFilesDic, stringBuilder, fileName);
+        stringBuilder = new StringBuilder(targetPath);
+        checkOrMakeDir(stringBuilder.toString());
+        fileName = "0_1";
+        mergedFilesCounterDic.put(fileName, 1);
+        stringBuilder.append(fileName).append(".post");
+        addFileToList(mergedFilesDic, stringBuilder, fileName);
+        stringBuilder = new StringBuilder(targetPath);
+        checkOrMakeDir(stringBuilder.toString());
+        fileName = "2_3_4";
+        mergedFilesCounterDic.put(fileName, 1);
+        stringBuilder.append(fileName).append(".post");
+        addFileToList(mergedFilesDic, stringBuilder, fileName);
+        stringBuilder = new StringBuilder(targetPath);
+        checkOrMakeDir(stringBuilder.toString());
+        fileName = "5_6_7";
+        mergedFilesCounterDic.put(fileName, 1);
+        stringBuilder.append(fileName).append(".post");
+        addFileToList(mergedFilesDic, stringBuilder, fileName);
+        stringBuilder = new StringBuilder(targetPath);
+        checkOrMakeDir(stringBuilder.toString());
+        fileName = "8_9";
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
