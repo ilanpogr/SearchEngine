@@ -1,11 +1,9 @@
 package Parser;
 
 import Controller.PropertiesFile;
-import org.json.simple.JSONObject;
+import TextContainers.City;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
@@ -1109,59 +1107,16 @@ public class Parse {
         }
     }
 
-    private String parsePopulation(String population){
-         if (population.length() <= 6) { // Thousand
-            population = substring(population,0, population.length() - 3) + '.' + truncate(substring(population,population.length() - 3),2)+ 'K';
-        } else if (population.length() <= 9) { // Million
-            population = population.substring(0, population.length() - 6)+'.'+ truncate(population.substring(population.length() - 6),2) + 'M';
-        } else { // more than Million --> represented with B (Billion)
-             population = population.substring(0, population.length() - 9) + '.' + truncate(population.substring(population.length() - 9),2) + 'B';
-        }
-        return population;
-    }
 
-    /**
-     * todo - city by name --> deal with name for url in this function!
-     * @param city
-     * @throws IOException
-     */
-    private void apiCities(String city) throws IOException {
-        Parse p = new Parse();
-        URL geoByteUrl = new URL("http://gd.geobytes.com/GetCityDetails?callback=?&fqcn="+city);
-        URLConnection yc = geoByteUrl.openConnection();
-        BufferedReader in = new BufferedReader(new InputStreamReader(
-                yc.getInputStream()));
-        String inputLine = in.readLine();
-        in.close();
-        if (inputLine != null){
-            System.out.println(inputLine);
-            String[] info = split(inputLine, ",");
-            for (String s : info){
-                if (contains(s, "\"geobytescountry\"")) {
-                    s = substringBetween(s, ":\"", "\"");
-                    System.out.println("Country - " + s);
-                } else if (contains(s, "\"geobytespopulation\"")) {
-                    s = substringBetween(s, ":\"", "\"");
-                    System.out.println("Population BEFORE PARSE - " + s);
-                    System.out.println("Population - " + p.parsePopulation(s));
-                } else if (contains(s, "\"geobytescurrency\"")) {
-                    s = substringBetween(s, ":\"", "\"");
-                    System.out.println("Currency - " + s);
-                }
-            }
-        }
-    }
+//    public static void main(String[] args) throws Exception {
+//        String[] s = {"PRESIDENT of the UNITED's STATES's of AMERICA's, Bacon's Rules's", ""};
+//        HashMap<String, String> map = p.parse(s);
+//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
+//        while (it.hasNext()) {
+//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
+//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
+//        }
+//    }
 
-
-    public static void main(String[] args) throws Exception {
-                Parse p = new Parse();
-        String[] s = {"PRESIDENT of the UNITED's STATES's of AMERICA's, Bacon's Rules's", ""};
-        HashMap<String, String> map = p.parse(s);
-        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-        }
-    }
 }
 
