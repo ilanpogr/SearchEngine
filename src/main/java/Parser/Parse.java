@@ -124,7 +124,7 @@ public class Parse {
         String[] s = split(str[0], " ");
         boolean expressionFlag;
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
-            currentPosition = i;
+            currentPosition = i+1;
             expressionFlag = false;
             doneWithToken = true;
             String[] token = new String[]{s[i], parametersDelimiter};
