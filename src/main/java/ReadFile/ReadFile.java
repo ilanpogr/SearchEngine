@@ -1,8 +1,6 @@
 package ReadFile;
 
 import TextContainers.*;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
