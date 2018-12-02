@@ -11,7 +11,6 @@ public class Doc {
 //    public final String docNum;
 //    public final String text;
 //    public final int length;
-    private String city;
     private int length;
     private int max_tf;
     private boolean hasCity=false;
@@ -138,13 +137,5 @@ public class Doc {
                         "Args must not be empty");
             }
         }
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
     }
 }
