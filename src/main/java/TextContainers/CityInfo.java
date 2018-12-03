@@ -14,7 +14,10 @@ import java.util.HashMap;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
-
+/**
+ * Singleton class: contains the cities from corpus dictionary.
+ * controls  all operations containing dealing with city name, and it's info.
+ */
 public class CityInfo {
 
     private static CityInfo cityInfo_instance = null;
@@ -23,12 +26,26 @@ public class CityInfo {
     private HashMap<String, City> citiesInfo_map;
     private HashMap<String, String> infoEntries;
 
-
+    /**
+     * regular singleton
+     * @return the cityInfo instance
+     */
     public static CityInfo getInstance() {
         if (cityInfo_instance == null) {
             cityInfo_instance = new CityInfo();
         }
         return cityInfo_instance;
+    }
+
+    /**
+     * NO CLASS NEED AN ACCESS TO THE CITIES FROM CORPUS.
+     *
+     * @param key: city name
+     * @return: the city if map has it. else returning null as map
+     * does when get method called.
+     */
+    public City getValueFromCitiesDictionary(String key){
+        return citiesInfo_map.get(key);
     }
 
     /**
@@ -92,7 +109,7 @@ public class CityInfo {
     /**
      * finding the city name in all entries and inserting city in citiesInfo HashMap of all corpus by city name key.
      * problems with Hong Kong.. so We'll put it manually
-     * info: [0] - country , [1] - population , [2] - currency
+     * String[] info: [0] - country , [1] - population , [2] - currency
      *
      * @param tag : <<F P=104> tag from files (without the tag) -> inside might be the city name.
      */
@@ -134,7 +151,9 @@ public class CityInfo {
         }
     }
 
-
+    /**
+     * for debugging.. print all the cities registered from corpus.
+     */
     public void printCities() {
         for (String name : citiesInfo_map.keySet()) {
             System.out.println(name + "  -->  " + citiesInfo_map.get(name));

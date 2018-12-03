@@ -6,26 +6,18 @@ import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.split;
 
+/**
+ * class representing a doc in file.
+ */
 public class Doc {
 
-//    public final String docNum;
-//    public final String text;
-//    public final int length;
     private String city;
     private int length;
     private int max_tf;
     private boolean hasCity=false;
     private String language;
-    private ArrayList<String> cityPositions;
     private Map<String, String> attributes;
 
-//    public Doc(StringBuilder docNum, StringBuilder text) {
-//        this.docNum = String.valueOf(docNum);
-//        this.text = String.valueOf(text);
-//        this.length = split(String.valueOf(text), ' ').length;
-//        max_tf=-1;
-//        this.attributes = new HashMap<>();
-//    }
 
     public Doc(){
         this.attributes = new HashMap<>();
@@ -61,6 +53,10 @@ public class Doc {
         }
     }
 
+    /**
+     * returns all the tags contained in the doc's text in the file.
+     * @return: an String array containing the tags.
+     */
     public String[] getAllAttributes() {
         String[] att = new String[attributes.size()];
         int i = 0;
@@ -76,6 +72,11 @@ public class Doc {
         return attributes.values().toString();
     }
 
+    /**
+     * add an Attributes. if it representing the doc's city name,
+     * the doc has a flag that this docs have a city.
+     * @param tags: the tags..
+     */
     public void addAttributes(String... tags) {
         if (!hasCity && tags.length<3){
             if (tags[0].charAt(0)=='F' || tags[0].charAt(0)=='f'){
@@ -116,7 +117,6 @@ public class Doc {
         return hasCity;
     }
 
-
     private static void validateArgs(final String[] argument) {
                 if (argument == null) {
             throw new NullPointerException("Args must not be null");
@@ -146,5 +146,13 @@ public class Doc {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getLanguage() {
+        return language;
     }
 }
