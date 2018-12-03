@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
+
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
@@ -21,17 +22,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Indexer {
 
     private static double totalPostingSizeByKB = 0;
-    private static int minNumberOfTf = (int) getPropertyAsDouble("min.tf.to.save");
-    private static int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
-    private static double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
-    private static String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
-    private static String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
-    private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-    private static int tmpFilesCounter = 73;
-    private static int mergedFilesCounter = 0;
+    private static final int minNumberOfTf = (int) getPropertyAsDouble("min.tf.to.save");
+    private static final int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
+    private static final double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
+    private static final String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
+    private static final String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
+    private static final String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
     private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
+    private static int tmpFilesCounter = 0;
+    private static int mergedFilesCounter = 0;
     private static String targetPath = null;
-    private static AtomicInteger termCount=new AtomicInteger(0);
+    private static AtomicInteger termCount = new AtomicInteger(0);
     private static final double log2 = StrictMath.log10(2);
 
     /**
@@ -75,8 +76,7 @@ public class Indexer {
         double startIndexTime = System.currentTimeMillis();
         int last = 0;
         targetPath = targetDirPath;
-        int currFileNum = 73;
-//        int currFileNum = WrieFile.getFileNum();
+        int currFileNum = WrieFile.getFileNum();
         StringBuilder stringBuilder = new StringBuilder();
         LinkedHashMap<Integer, MutablePair<String, Integer>> termKeys = new LinkedHashMap<>();
         LinkedHashMap<Integer, String> termValues = new LinkedHashMap<>();
@@ -93,8 +93,7 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic);
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
-        int othersFilesCounter = 1;
-        double logN = StrictMath.log10(Controller.getDocCount())/log2;
+        double logN = StrictMath.log10(Controller.getDocCount()) / log2;
         while (mergedFilesCounter < tmpFilesCounter) {
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
@@ -115,7 +114,6 @@ public class Indexer {
                 continue;
             }
             int isUpperCase = 1;
-//            double logN = StrictMath.log10(Controller.getTermCount());
             for (Map.Entry<Integer, MutablePair<String, Integer>> term : termKeys.entrySet()
             ) {
                 if (equalsIgnoreCase(minTerm, term.getValue().left)) {
@@ -137,7 +135,7 @@ public class Indexer {
                 stringBuilder.append(d.right.left).append(fileDelimiter).append(d.right.right).append(fileDelimiter);
             }
             int df = sortedPosting.size();
-            double idf = logN - (StrictMath.log10(df)/log2);
+            double idf = logN - (StrictMath.log10(df) / log2);
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (isUpperCase == 1) {
@@ -158,7 +156,7 @@ public class Indexer {
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
             } else {
-//                termDictionary.remove(minTerm);
+                Controller.removeFromDictionary(minTerm);
             }
 
 
@@ -169,12 +167,16 @@ public class Indexer {
             }
         }
         try {
-            for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
-                totalPostingSizeByKB += new File(targetDirPath + entry.getKey() + ".post").length();
-                entry.getValue().close();
-            }
-        } catch (Exception e) {
             totalPostingSizeByKB = FileUtils.sizeOf(new File(targetDirPath));
+        } catch (Exception e) {
+            try {
+                for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
+                    totalPostingSizeByKB += new File(targetDirPath + entry.getKey() + ".post").length();
+                    entry.getValue().close();
+                }
+            } catch (Exception e2) {
+                totalPostingSizeByKB = Controller.getTermCount() * 1024;
+            }
         }
         System.out.println("Size of Posting Files: " + totalPostingSizeByKB / 1024);
 
@@ -244,26 +246,6 @@ public class Indexer {
                 return "uvwxyz";
             case 'z':
                 return "uvwxyz";
-//            case '0':
-//                return "0_1";
-//            case '1':
-//                return "0_1";
-//            case '2':
-//                return "2_3_4";
-//            case '3':
-//                return "2_3_4";
-//            case '4':
-//                return "2_3_4";
-//            case '5':
-//                return "5_6_7";
-//            case '6':
-//                return "5_6_7";
-//            case '7':
-//                return "5_6_7";
-//            case '8':
-//                return "8_9";
-//            case '9':
-//                return "8_9";
         }
         return "others";
     }
@@ -323,30 +305,6 @@ public class Indexer {
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
-//        stringBuilder = new StringBuilder(targetPath);
-//        checkOrMakeDir(stringBuilder.toString());
-//        fileName = "0_1";
-//        mergedFilesCounterDic.put(fileName, 1);
-//        stringBuilder.append(fileName).append(".post");
-//        addFileToList(mergedFilesDic, stringBuilder, fileName);
-//        stringBuilder = new StringBuilder(targetPath);
-//        checkOrMakeDir(stringBuilder.toString());
-//        fileName = "2_3_4";
-//        mergedFilesCounterDic.put(fileName, 1);
-//        stringBuilder.append(fileName).append(".post");
-//        addFileToList(mergedFilesDic, stringBuilder, fileName);
-//        stringBuilder = new StringBuilder(targetPath);
-//        checkOrMakeDir(stringBuilder.toString());
-//        fileName = "5_6_7";
-//        mergedFilesCounterDic.put(fileName, 1);
-//        stringBuilder.append(fileName).append(".post");
-//        addFileToList(mergedFilesDic, stringBuilder, fileName);
-//        stringBuilder = new StringBuilder(targetPath);
-//        checkOrMakeDir(stringBuilder.toString());
-//        fileName = "8_9";
-//        mergedFilesCounterDic.put(fileName, 1);
-//        stringBuilder.append(fileName).append(".post");
-//        addFileToList(mergedFilesDic, stringBuilder, fileName);
     }
 
     private void addFileToList(LinkedHashMap<Integer, BufferedReader> tmpFiles, StringBuilder stringBuilder, int i) {
@@ -384,7 +342,7 @@ public class Indexer {
                 termKeys.remove(i);
                 termValues.remove(i);
                 tmpFiles.remove(i).close();
-//                Files.delete(Paths.get(targetPath + i + ".post"));
+                Files.delete(Paths.get(targetPath + i + ".post"));
                 mergedFilesCounter++;
             }
         } catch (IOException e) {
@@ -405,41 +363,13 @@ public class Indexer {
             e.printStackTrace();
         }
     }
-//
-//    public void writeFinalDictionary(TreeMap<String, String> termDictionary) {
-//        try {
-//            StringBuilder s = new StringBuilder();
-//            termDictionary.forEach((term, value) -> s.append(term).append(termSeperator).append(value).append("\n"));
-//            s.trimToSize();
-//            WrieFile.writeFinalDictionary(s);
-//        } catch (OutOfMemoryError om) {     //if Map is too big
-//            try {
-//                ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(termDictionary.entrySet());
-//                lines.sort(new Comparator<Map.Entry<String, String>>() {
-//                    @Override
-//                    public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
-//                        return compareIgnoreCase(o1.getKey(), o2.getKey(), true);
-//                    }
-//                });
-//                indexTempFile(new TreeMap<>(termDictionary.tailMap(lines.get(lines.size() / 2).getKey())));
-//                indexTempFile(new TreeMap<>(termDictionary.headMap(lines.get(lines.size() / 2).getKey())));
-//            }catch (Exception e){
-//                termDictionary.forEach((term, value) -> {
-//                    StringBuilder s = new StringBuilder();
-//                    s.append(term).append(termSeperator).append(value).append("\n");
-//                    s.trimToSize();
-//                    WrieFile.writeFinalDictionary(s);
-//                });
-//            }
-//        }
-//    }
 
     public void writeToDictionary(TreeMap<String, String> cache, String dicName) {
         try {
             StringBuilder s = new StringBuilder();
             cache.forEach((term, value) -> s.append(term).append(termSeperator).append(value).append("\n"));
             s.trimToSize();
-            WrieFile.writeToDictionary(s,dicName);
+            WrieFile.writeToDictionary(s, dicName);
         } catch (OutOfMemoryError om) {     //if Map is too big
             try {
                 ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(cache.entrySet());
@@ -451,17 +381,16 @@ public class Indexer {
                 });
                 indexTempFile(new TreeMap<>(cache.tailMap(lines.get(lines.size() / 2).getKey())));
                 indexTempFile(new TreeMap<>(cache.headMap(lines.get(lines.size() / 2).getKey())));
-            }catch (Exception e){
+            } catch (Exception e) {
                 cache.forEach((term, value) -> {
                     StringBuilder s = new StringBuilder();
                     s.append(term).append(termSeperator).append(value).append("\n");
                     s.trimToSize();
-                    WrieFile.writeToDictionary(s,dicName);
+                    WrieFile.writeToDictionary(s, dicName);
                 });
             }
         }
     }
-
 
 
 }

@@ -6,6 +6,8 @@ import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.CityInfo;
 import TextContainers.Doc;
+import TextContainers.LanguagesInfo;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -21,7 +23,7 @@ public class Controller {
     private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> termDictionary = new LinkedHashMap<>();
-    private static boolean isStemMode = true;
+    private static boolean isStemMode = false;
     private static ArrayList<Doc> filesList;
     private static String targetDirPath;
     private static String corpusPath;
@@ -62,40 +64,41 @@ public class Controller {
             Indexer indexer = new Indexer();
             double fileparse = 0;
             double singleparse = 0;
-//            while (readFile.hasNextFile()) {
-//                f++;
-//                double read = System.currentTimeMillis();
-//                filesList = readFile.getFileList();
-//                for (int i = 0; i < filesList.size(); i++) {
-//                    double parsestart = System.currentTimeMillis();
-//                    currPath = filesList.get(i).docNum();
-//
-//                    HashMap<String, String> map = p.parse(filesList.get(i).text());
-//
-//                    handleFile(map);
-//
-//
-//                    double parseend = System.currentTimeMillis();
-//                    singleparse = (parseend - read) / 1000;
-//                    fileparse += (parseend - parsestart) / 1000;
-//                    ii = i;
-//                    j++;
-////                    term_count = tmpTermDic.size() + termDictionary.size();
-//
-//                }
-//                if (f % 9 == 0 || f == fileNum) {
-//                    indexer.indexTempFile(new TreeMap<>(tmpTermDic));
-////                    termDictionary.putAll(tmpTermDic);
-////                    if (Runtime.getRuntime().freeMemory() < Runtime.getRuntime().totalMemory() / 10)
-////                        termDictionary.forEach((k, v) -> termDictionary.replace(k, v, ""));
-//                    tmpTermDic.clear();
-//                    System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size() + "\t\t\tTotal Num of Terms: " + term_count);
-//                }
-//                filesList.clear();
-//                if (f == 600) break;
-//            }
+            while (readFile.hasNextFile()) {
+                f++;
+                double read = System.currentTimeMillis();
+                filesList = readFile.getFileList();
+                for (int i = 0; i < filesList.size(); i++) {
+                    double parsestart = System.currentTimeMillis();
+                    currPath = filesList.get(i).docNum();
+
+                    HashMap<String, String> map = p.parse(filesList.get(i).text());
+
+                    handleFile(map);
+
+
+                    double parseend = System.currentTimeMillis();
+                    singleparse = (parseend - read) / 1000;
+                    fileparse += (parseend - parsestart) / 1000;
+                    ii = i;
+                    j++;
+
+                }
+                if (f % (fileNum/tmpFileNum) == 0 || f == fileNum) {
+                    term_count += tmpTermDic.size();
+                    indexer.indexTempFile(new TreeMap<>(tmpTermDic));
+                    termDictionary.putAll(tmpTermDic);
+                    if (Runtime.getRuntime().freeMemory() < Runtime.getRuntime().totalMemory() / 10)
+                        termDictionary.forEach((k, v) -> termDictionary.replace(k, v, ""));
+                    tmpTermDic.clear();
+                    System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary before merging: " + term_count);
+                }
+                filesList.clear();
+                if (f == 45) break;
+            }
             indexer.mergePostingTempFiles(targetDirPath);
             double s = System.nanoTime();
+            indexer.writeToDictionary(new TreeMap<>(DocDic), "Documents Dictionary");
             indexer.writeToDictionary(new TreeMap<>(termDictionary),"Term Dictionary");
             indexer.writeToDictionary(new TreeMap<>(cache), "Cache Dictionary");
             System.out.println(System.nanoTime()-s);
@@ -106,6 +109,12 @@ public class Controller {
             System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ++ii);
             e.printStackTrace();
         }
+        LanguagesInfo l = LanguagesInfo.getInstance();
+        CityInfo c = CityInfo.getInstance();
+        System.out.println();
+        l.printLanguages();
+        System.out.println();
+        c.printCities();
     }
 
     private static void handleFile(HashMap<String, String> parsedDic) {
@@ -114,7 +123,7 @@ public class Controller {
             HashMap<String, String> stemmed = stemmer.stem(parsedDic);
             mergeDicts(stemmed);
         } else {
-            parsedDic.forEach((key, value) -> value = substring(value, 2));
+            parsedDic.replaceAll((k,v)->v=substring(v,2));
             mergeDicts(parsedDic);
         }
     }
@@ -171,5 +180,9 @@ public class Controller {
 
     public static int getDocCount() {
         return DocDic.size();
+    }
+
+    public static void removeFromDictionary(String minTerm) {
+        termDictionary.remove(minTerm);
     }
 }

@@ -1,5 +1,6 @@
 package ReadFile;
 
+import Controller.PropertiesFile;
 import TextContainers.*;
 import org.jsoup.Jsoup;
 
@@ -68,7 +69,8 @@ public class ReadFile {
                 fileList.add(filePath.toString());
                 filePath.setLength(0);
             }
-            System.out.println(fileCounter);
+//            System.out.println(fileCounter);
+            PropertiesFile.putProperty("number.of.files",""+fileList.size());
         } catch (Exception e) {
             e.printStackTrace();
         }
