@@ -6,6 +6,7 @@ import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.CityInfo;
 import TextContainers.Doc;
+import TextContainers.LanguagesInfo;
 
 import java.util.*;
 
@@ -54,8 +55,8 @@ public class Controller {
         double mainStartTime = System.currentTimeMillis();
         int j = 0, f = 0, ii = 0, term_count = 0;
         try {
-            targetDirPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
-            corpusPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
+            targetDirPath = "D:\\Documents\\school\\semester e 3\\Ihzur\\Project\\Files\\writerDir\\";
+            corpusPath = "D:\\Documents\\school\\semester e 3\\Ihzur\\Project\\Files\\corpus";
             filesList = new ArrayList<>();
             ReadFile readFile = new ReadFile(corpusPath);
             Parse p = new Parse();
@@ -74,7 +75,6 @@ public class Controller {
 
                     handleFile(map);
 
-
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
                     fileparse += (parseend - parsestart) / 1000;
@@ -92,8 +92,9 @@ public class Controller {
                     System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size() + "\t\t\tTotal Num of Terms: " + term_count);
                 }
                 filesList.clear();
-//                if (f == 600) break;
             }
+            LanguagesInfo l = LanguagesInfo.getInstance();
+            l.printLanguages();
             indexer.mergePostingTempFiles(targetDirPath);
 
             indexer.writeFinalDictionary(new TreeMap<>(termDictionary));
