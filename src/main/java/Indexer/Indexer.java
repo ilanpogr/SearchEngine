@@ -4,14 +4,10 @@ import Controller.Controller;
 import Controller.PropertiesFile;
 import Parser.Parse;
 import Stemmer.Stemmer;
+import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Triple;
-import sun.awt.OSInfo;
-
-import static com.sun.corba.se.impl.util.RepositoryId.cache;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
@@ -20,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Indexer {
 
@@ -34,6 +31,8 @@ public class Indexer {
     private static int mergedFilesCounter = 0;
     private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
     private static String targetPath = null;
+    private static AtomicInteger termCount=new AtomicInteger(0);
+    private static final double log2 = StrictMath.log10(2);
 
     /**
      * get a Property from properties file and convert it to double.
@@ -95,7 +94,7 @@ public class Indexer {
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         int othersFilesCounter = 1;
-        double logN = StrictMath.log10(3000000);
+        double logN = StrictMath.log10(Controller.getDocCount())/log2;
         while (mergedFilesCounter < tmpFilesCounter) {
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
@@ -138,8 +137,8 @@ public class Indexer {
                 stringBuilder.append(d.right.left).append(fileDelimiter).append(d.right.right).append(fileDelimiter);
             }
             int df = sortedPosting.size();
-            double idf = logN - StrictMath.log10(df);
-            if (totalTf > minNumberOfTf) {
+            double idf = logN - (StrictMath.log10(df)/log2);
+            if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (isUpperCase == 1) {
 //                    termDictionary.remove(minTerm);
@@ -162,10 +161,6 @@ public class Indexer {
 //                termDictionary.remove(minTerm);
             }
 
-//            if (mergedFilesCounterDic.get("others")>10000){
-//                FileUtils.getFile(targetPath+"others.post").renameTo(new File(targetPath + "others" + othersFilesCounter + ".post"));
-//                mergedFilesCounterDic.replace("others",1);
-//            }
 
             int total = (int) ((System.currentTimeMillis() - startIndexTime) / 1000);
             if (last < total) {
@@ -410,36 +405,63 @@ public class Indexer {
             e.printStackTrace();
         }
     }
+//
+//    public void writeFinalDictionary(TreeMap<String, String> termDictionary) {
+//        try {
+//            StringBuilder s = new StringBuilder();
+//            termDictionary.forEach((term, value) -> s.append(term).append(termSeperator).append(value).append("\n"));
+//            s.trimToSize();
+//            WrieFile.writeFinalDictionary(s);
+//        } catch (OutOfMemoryError om) {     //if Map is too big
+//            try {
+//                ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(termDictionary.entrySet());
+//                lines.sort(new Comparator<Map.Entry<String, String>>() {
+//                    @Override
+//                    public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
+//                        return compareIgnoreCase(o1.getKey(), o2.getKey(), true);
+//                    }
+//                });
+//                indexTempFile(new TreeMap<>(termDictionary.tailMap(lines.get(lines.size() / 2).getKey())));
+//                indexTempFile(new TreeMap<>(termDictionary.headMap(lines.get(lines.size() / 2).getKey())));
+//            }catch (Exception e){
+//                termDictionary.forEach((term, value) -> {
+//                    StringBuilder s = new StringBuilder();
+//                    s.append(term).append(termSeperator).append(value).append("\n");
+//                    s.trimToSize();
+//                    WrieFile.writeFinalDictionary(s);
+//                });
+//            }
+//        }
+//    }
 
-    public void writeFinalDictionary(TreeMap<String, String> termDictionary) {
+    public void writeToDictionary(TreeMap<String, String> cache, String dicName) {
         try {
-            StringBuilder s = new StringBuilder(5000000);
-            termDictionary.forEach((term, value) -> s.append(term).append(termSeperator).append(value).append("\n"));
-            WrieFile.writeFinalDictionary(s);
-        } catch (OutOfMemoryError om) {     //if Map is too big
-            try {
-                writeFinalDictionary(new TreeMap<>(termDictionary.headMap("M")));
-                writeFinalDictionary(new TreeMap<>(termDictionary.tailMap("M")));
-            } catch (OutOfMemoryError om2) {    //if "M" wasn't good enough
-                writeFinalDictionary(new TreeMap<>(termDictionary.headMap("a")));
-                writeFinalDictionary(new TreeMap<>(termDictionary.tailMap("a")));
-            }
-        }
-    }
-
-    public void writeCacheDictionary(TreeMap<String, String> cache) {
-        try {
-            StringBuilder s = new StringBuilder(5000000);
+            StringBuilder s = new StringBuilder();
             cache.forEach((term, value) -> s.append(term).append(termSeperator).append(value).append("\n"));
-            WrieFile.writeCacheDictionary(s);
+            s.trimToSize();
+            WrieFile.writeToDictionary(s,dicName);
         } catch (OutOfMemoryError om) {     //if Map is too big
             try {
-                writeCacheDictionary(new TreeMap<>(cache.headMap("M")));
-                writeCacheDictionary(new TreeMap<>(cache.tailMap("M")));
-            } catch (OutOfMemoryError om2) {    //if "M" wasn't good enough
-                writeCacheDictionary(new TreeMap<>(cache.headMap("a")));
-                writeCacheDictionary(new TreeMap<>(cache.tailMap("a")));
+                ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(cache.entrySet());
+                lines.sort(new Comparator<Map.Entry<String, String>>() {
+                    @Override
+                    public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
+                        return compareIgnoreCase(o1.getKey(), o2.getKey(), true);
+                    }
+                });
+                indexTempFile(new TreeMap<>(cache.tailMap(lines.get(lines.size() / 2).getKey())));
+                indexTempFile(new TreeMap<>(cache.headMap(lines.get(lines.size() / 2).getKey())));
+            }catch (Exception e){
+                cache.forEach((term, value) -> {
+                    StringBuilder s = new StringBuilder();
+                    s.append(term).append(termSeperator).append(value).append("\n");
+                    s.trimToSize();
+                    WrieFile.writeToDictionary(s,dicName);
+                });
             }
         }
     }
+
+
+
 }
