@@ -41,25 +41,34 @@ public class WrieFile {
         }
     }
 
-    public static void writeFinalDictionary(StringBuilder termDictionary) {
-        int fileName = fileNum.getAndIncrement()+1;
+//    public static void writeFinalDictionary(StringBuilder termDictionary) {
+//        int fileName = fileNum.getAndIncrement()+1;
+//        try {
+//            writeStringToFile(new File(targetPath+"Final Terms Dictionary"),termDictionary.toString(),true);
+//        } catch (IOException e) {
+//            System.out.println("create temp posting file filed in: " +fileName);
+//            e.printStackTrace();
+//        }
+//
+//    }
+//
+//    public static void writeCacheDictionary(StringBuilder cahce) {
+//        int fileName = fileNum.getAndIncrement()+1;
+//        try {
+//            writeStringToFile(new File(targetPath+"Cache Dictionary"),cahce.toString(),true);
+//        } catch (IOException e) {
+//            System.out.println("create temp posting file filed in: " +fileName);
+//            e.printStackTrace();
+//        }
+//
+//    }
+
+    public static void writeToDictionary(StringBuilder s, String fileName) {
         try {
-            writeStringToFile(new File(targetPath+"Final Terms Dictionary"),termDictionary.toString(),true);
+            writeStringToFile(new File(targetPath+fileName),s.toString(),true);
         } catch (IOException e) {
-            System.out.println("create temp posting file filed in: " +fileName);
+            System.out.println("create Dictionary file filed in: " +fileName);
             e.printStackTrace();
         }
-
-    }
-
-    public static void writeCacheDictionary(StringBuilder cahce) {
-        int fileName = fileNum.getAndIncrement()+1;
-        try {
-            writeStringToFile(new File(targetPath+"Cache Dictionary"),cahce.toString(),true);
-        } catch (IOException e) {
-            System.out.println("create temp posting file filed in: " +fileName);
-            e.printStackTrace();
-        }
-
     }
 }
