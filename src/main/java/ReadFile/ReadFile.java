@@ -155,45 +155,45 @@ public class ReadFile {
                 line.append(" ").append(docArr[i]);
             }
             if (curr.hasCity()){
-                createAndUpdateCity(curr,docCity,tag.append(document));
+                createAndUpdateCity(curr,docCity);
             }
             docList.add(curr);
 
         }
     }
 
-    // todo - check with shawn both function below!
-    private void createAndUpdateCity(Doc doc, StringBuilder document, StringBuilder stringBuilder) {
-        stringBuilder.setLength(0);
+    private void createAndUpdateCity(Doc doc, StringBuilder document) {
+//        stringBuilder.setLength(0);
 //        extractTag(stringBuilder,document,"<F P=104>");
 //        String tag = stringBuilder.toString();
         String tag = trim(substringBetween(document.toString(),">","<"));
-        if (!tag.equals("")) {
+        if (tag != null && !tag.equals("")) {
             CityInfo cityInfo = CityInfo.getInstance();
+            cityInfo.setInfo(tag, doc);
 //            doc.addAttributes("City", stringBuilder.toString());
         }
     }
 
 
-    /**
-     * extracts a given tag from a document string.
-     * the element cut from the document will be kept in 'element' for further use
-     * @param element - String holder (mutable)
-     * @param document - holding the document String (also mutable) and cuts the given key (optional)
-     * @param delimiter - tag's name to extract
-     */
-    private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
-//      String[] tmp = document[0].split(delimiter + ">", 3);
-        String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
-        if (tmp.length < 3) {
-            element.delete(0, element.length());
-            return;
-        }
-//        if (!delimiter.equalsIgnoreCase("text")) {
-//            document[0] = trim(substring(tmp[0],0, tmp[0].length() - 1))+ "\n " + trim(tmp[2]);
+//    /**
+//     * extracts a given tag from a document string.
+//     * the element cut from the document will be kept in 'element' for further use
+//     * @param element - String holder (mutable)
+//     * @param document - holding the document String (also mutable) and cuts the given key (optional)
+//     * @param delimiter - tag's name to extract
+//     */
+//    private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
+////      String[] tmp = document[0].split(delimiter + ">", 3);
+//        String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
+//        if (tmp.length < 3) {
+//            element.delete(0, element.length());
+//            return;
 //        }
-        element.append(trim(substring(tmp[1], 0, tmp[1].length() - 2)));
-    }
+////        if (!delimiter.equalsIgnoreCase("text")) {
+////            document[0] = trim(substring(tmp[0],0, tmp[0].length() - 1))+ "\n " + trim(tmp[2]);
+////        }
+//        element.append(trim(substring(tmp[1], 0, tmp[1].length() - 2)));
+//    }
 
     /**
      * get a list of 'Doc' from a single File.

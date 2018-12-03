@@ -19,8 +19,8 @@ public class City {
         this.countryName = countryName;
         this.currency = currency;
         this.population = population;
-        docNames = new ArrayList<>();
-        possitions = new ArrayList<>();
+//        docNames = new ArrayList<>();
+//        possitions = new ArrayList<>();
     }
 
     public String getCityName() {
@@ -47,6 +47,12 @@ public class City {
         for (int i : a) {
             possitions.add(i);
         }
+    }
+
+    @Override
+    public String toString(){
+        return "City: " + cityName + ", Country: " + countryName + ", Population: " + population + ", Currency: " + currency;
+//        return "Country: " + countryName + ", Population: " + population + ", Currency: " + currency;
     }
 
     public String getCurrency() {
