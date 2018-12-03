@@ -113,10 +113,8 @@ public class CityInfo {
         }
         if (citiesInfo_map.containsKey(cityNameShort)) {
             doc.setCity(cityNameShort);
-            return;
         } else if (citiesInfo_map.containsKey(cityNameLong)) {
             doc.setCity(cityNameLong);
-            return;
         } else {
             String cityName = "";
             boolean found = false;

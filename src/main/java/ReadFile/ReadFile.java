@@ -129,7 +129,7 @@ public class ReadFile {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
             Doc curr = new Doc();
-            StringBuilder docCity = new StringBuilder(0);
+            StringBuilder docCity = new StringBuilder();
             String[] docArr = split(document.toString(), '\n');
             StringBuilder line = new StringBuilder(), tag = new StringBuilder();
             for (int i = 0; i < docArr.length; i++) {
