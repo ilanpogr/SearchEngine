@@ -14,8 +14,8 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class Parse {
 
-    private String parametersDelimiter;
-    private static String gapDelimiter;
+    private static String parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
+    private static String gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
     private boolean doneWithToken = true;
     private static HashSet<Character> specialCharSet = initSpecialSet();
     private static HashSet<String> monthSet = initMonthSet();
@@ -107,8 +107,6 @@ public class Parse {
      * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
      */
     public HashMap<String, String> parse(String[] str) {
-        parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
-        gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
         HashMap<String, String> termsDict = new HashMap<>();
         parseTokens(termsDict, str);
         return termsDict;

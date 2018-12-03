@@ -6,24 +6,33 @@ import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
 
+import java.io.Writer;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
 public class Controller {
-    private static String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
-    private static boolean isStemMode = true;
-    private static ArrayList<Doc> filesList;
-    private static LinkedHashMap<String, String> cache = new LinkedHashMap<>();
-    private static LinkedHashMap<String, String> termDictionary = new LinkedHashMap<>();
-    private static String tmpFilesPath;
-    private static String currPath;
-    private static StringBuilder stringBuilder = new StringBuilder();
     private static int fileNum = getPropertyAsInt("number.of.files");
     private static int tmpFileNum = getPropertyAsInt("number.of.temp.files");
+    private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
+    private static String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
+    private static StringBuilder stringBuilder = new StringBuilder();
+    private static LinkedHashMap<String, String> cache = new LinkedHashMap<>();
+    private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
+    private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
+    private static LinkedHashMap<String, String> termDictionary = new LinkedHashMap<>();
+    private static boolean isStemMode = true;
+    private static ArrayList<Doc> filesList;
+    private static String targetDirPath;
+    private static String corpusPath;
+    private static String currPath;
 
-
-
+    /**
+     * get a Property from properties file and convert it to int.
+     * if it can't convert to Integer, it will return 5.
+     * @param s - the value of the property
+     * @return the value of the property
+     */
     private static int getPropertyAsInt(String s) {
         try {
             return Integer.parseInt(PropertiesFile.getProperty(s));
@@ -33,12 +42,10 @@ public class Controller {
         }
     }
 
-    private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
-    private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
-    private static String corpusPath;
-    private static String targetDirPath;
-    private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-
+    /**
+     * get the Path to the Directory that file will be written to
+     * @return String path
+     */
     public static String getTargetDirPath() {
         return targetDirPath;
     }
@@ -55,39 +62,44 @@ public class Controller {
             Indexer indexer = new Indexer();
             double fileparse = 0;
             double singleparse = 0;
-            while (readFile.hasNextFile()) {
-                f++;
-                double read = System.currentTimeMillis();
-                filesList = readFile.getFileList();
-                for (int i = 0; i < filesList.size(); i++) {
-                    double parsestart = System.currentTimeMillis();
-                    currPath = filesList.get(i).docNum();
+//            while (readFile.hasNextFile()) {
+//                f++;
+//                double read = System.currentTimeMillis();
+//                filesList = readFile.getFileList();
+//                for (int i = 0; i < filesList.size(); i++) {
+//                    double parsestart = System.currentTimeMillis();
+//                    currPath = filesList.get(i).docNum();
+//
+//                    HashMap<String, String> map = p.parse(filesList.get(i).text());
+//
+//                    handleFile(map);
+//
+//
+//                    double parseend = System.currentTimeMillis();
+//                    singleparse = (parseend - read) / 1000;
+//                    fileparse += (parseend - parsestart) / 1000;
+//                    ii = i;
+//                    j++;
+////                    term_count = tmpTermDic.size() + termDictionary.size();
+//
+//                }
+//                if (f % 25 == 0 || f == fileNum) {
+//                    indexer.indexTempFile(new TreeMap<>(tmpTermDic));
+////                    termDictionary.putAll(tmpTermDic);
+////                    if (Runtime.getRuntime().freeMemory() < Runtime.getRuntime().totalMemory() / 10)
+////                        termDictionary.forEach((k, v) -> termDictionary.replace(k, v, ""));
+//                    tmpTermDic.clear();
+//                    System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size() + "\t\t\tTotal Num of Terms: " + term_count);
+//                }
+//                filesList.clear();
+////                if (f == 600) break;
+//            }
+            indexer.mergePostingTempFiles(targetDirPath);
 
-                    HashMap<String, String> map = p.parse(filesList.get(i).text());
+            indexer.writeFinalDictionary(new TreeMap<>(termDictionary));
+            indexer.writeCacheDictionary(new TreeMap<>(cache));
 
-                    handleFile(map);
 
-
-                    double parseend = System.currentTimeMillis();
-                    singleparse = (parseend - read) / 1000;
-                    fileparse += (parseend - parsestart) / 1000;
-                    ii = i;
-                    j++;
-                    term_count = tmpTermDic.size() + termDictionary.size();
-
-                }
-                if (f % (fileNum/tmpFileNum) == 0) {
-                    indexer.indexTempFile(new TreeMap<>(tmpTermDic));
-                    termDictionary.putAll(tmpTermDic);
-                    if (Runtime.getRuntime().freeMemory() < Runtime.getRuntime().totalMemory() / 100)
-                        termDictionary.forEach((k, v) -> termDictionary.replace(k, v, ""));
-                    tmpTermDic.clear();
-                }
-                System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary: " + tmpTermDic.size() + "\t\t\tTotal Num of Terms: " + term_count);
-                filesList.clear();
-                if (f == tmpFileNum*4) break;
-            }
-            indexer.mergePostingTempFiles(targetDirPath, termDictionary, cache);
             int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);
             System.out.println("\nTime took to run main: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds");
         } catch (Exception e) {
@@ -107,6 +119,10 @@ public class Controller {
         }
     }
 
+    /**
+     * Merging the Dictionary of a single Document into the Main Dictionaries
+     * @param map - the Dictionary that will be merged
+     */
     private static void mergeDicts(HashMap<String, String> map) {
         int maxTf = 0, length = 0;
         for (Map.Entry<String, String> term : map.entrySet()
@@ -133,21 +149,6 @@ public class Controller {
                 stringBuilder.append(isUpperCase?"1":"0").append(termSeperator);
             }
             stringBuilder.append(currPath).append(fileDelimiter).append(term.getValue());
-//            if (isUpperCase) {
-//                if (tmpTermDic.containsKey(termKey)) {
-//                    stringBuilder.append(tmpTermDic.get(termKey)).append(fileDelimiter);
-//                    if (tmpTermDic.get(termKey).startsWith("0"))
-//                        isUpperCase = false;
-//                }
-//            } else if (tmpTermDic.containsKey(upperCase(term.getKey()))) {
-//                stringBuilder.append(tmpTermDic.remove(upperCase(term.getKey()))).append(fileDelimiter);
-//                stringBuilder.trimToSize();
-//                tmpTermDic.put(termKey, stringBuilder.toString());
-//            } else if (tmpTermDic.containsKey(termKey)) {
-//                stringBuilder.append(tmpTermDic.get(termKey)).append(fileDelimiter);
-//                isUpperCase = false;
-//            }
-//            stringBuilder.append(currPath).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
@@ -158,5 +159,13 @@ public class Controller {
 
     public static int getTermCount() {
         return termDictionary.size();
+    }
+
+    public static void addToFinalTermDictionary(String minTerm, String s) {
+        termDictionary.put(minTerm,s);
+    }
+
+    public static void addToCacheDictionary(String minTerm, String s) {
+        cache.put(minTerm,s);
     }
 }
