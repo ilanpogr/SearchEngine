@@ -6,14 +6,9 @@ import org.jsoup.Jsoup;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -130,6 +125,8 @@ public class ReadFile {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
             Doc curr = new Doc();
             StringBuilder docCity = new StringBuilder();
+            String docLang = "";
+            boolean isLanguage = false;
             String[] docArr = split(document.toString(), '\n');
             StringBuilder line = new StringBuilder(), tag = new StringBuilder();
             for (int i = 0; i < docArr.length; i++) {
@@ -137,6 +134,10 @@ public class ReadFile {
                 if (startsWith(docArr[i],"<")) {
                     if (containsIgnoreCase(docArr[i],"f p=\"104\"")) {
                         docCity = new StringBuilder(docArr[i] + docArr[i+1] + docArr[i+2]);
+                    }
+                    if (containsIgnoreCase(docArr[i],"f p=\"105\"")){
+                        docLang = trim(docArr[i+1]);
+                        isLanguage = true;
                     }
                         String[] lineArr = splitPreserveAllTokens(docArr[i], ">", 2);
                         docArr[i] = trim(lineArr[1]);
@@ -157,8 +158,19 @@ public class ReadFile {
             if (curr.hasCity()){
                 createAndUpdateCity(curr,docCity);
             }
+            if (isLanguage){
+                createAndUpdateLanguage(curr,docLang);
+            }
             docList.add(curr);
 
+        }
+    }
+
+    private void createAndUpdateLanguage(Doc curr, String docLang) {
+        if (!docLang.equals("")){
+            LanguagesInfo languagesInfo = LanguagesInfo.getInstance();
+            languagesInfo.addLanguageToList(docLang);
+            curr.setLanguage(docLang);
         }
     }
 

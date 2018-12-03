@@ -10,6 +10,11 @@ import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
+/**
+ * the class gets a string containing any text.
+ * by a set of rules pre decided, parsing the text and cerating a dictionary of
+ * all the terms inside this specific text.
+ */
 public class Parse {
 
     private static String parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
@@ -1104,17 +1109,6 @@ public class Parse {
             termsDict.put(token[0], token[1]);
         }
     }
-
-
-//    public static void main(String[] args) throws Exception {
-//        String[] s = {"PRESIDENT of the UNITED's STATES's of AMERICA's, Bacon's Rules's", ""};
-//        HashMap<String, String> map = p.parse(s);
-//        Iterator<Map.Entry<String, String>> it = map.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry<String, String> pair = (Map.Entry<String, String>) it.next();
-//            System.out.println(pair.getKey() + "  -->  " + pair.getValue());
-//        }
-//    }
 
 }
 
