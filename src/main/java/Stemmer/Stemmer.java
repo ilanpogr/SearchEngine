@@ -20,7 +20,22 @@ public class Stemmer {
     private HashMap<String, String> stemmed;
     private SnowballStemmer snowballStemmer = new englishStemmer();
     private static String poslistdel = PropertiesFile.getProperty("stemmed.words.delimiter");
+    private static int stemMultiWords = getPropertyAsInt("stem.multi.token.terms");
 
+    /**
+     * get a Property from properties file and convert it to int.
+     * if it can't convert to Integer, it will return 5.
+     * @param s - the value of the property
+     * @return the value of the property
+     */
+    private static int getPropertyAsInt(String s) {
+        try {
+            return Integer.parseInt(PropertiesFile.getProperty(s));
+        } catch (Exception e){
+            System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
+            return 0;
+        }
+    }
 
     public static String getStemDelimiter() {
         return poslistdel;
@@ -70,7 +85,7 @@ public class Stemmer {
                 stemmed.put(cache.get(s), substring(term.getValue(),2));//add it to the dictionary
                 continue;
             }
-            if (s.contains(" ")) {//if the term has more than 1 word
+            if (stemMultiWords>0 && s.contains(" ")) {//if the term has more than 1 word
                 String[] split = split(s, " "); //stem each part
                 for (String token : split
                 ) {
