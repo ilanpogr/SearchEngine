@@ -1,8 +1,6 @@
 package ReadFile;
 
 import TextContainers.*;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -131,13 +129,17 @@ public class ReadFile {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
             Doc curr = new Doc();
+            StringBuilder docCity = new StringBuilder(0);
             String[] docArr = split(document.toString(), '\n');
             StringBuilder line = new StringBuilder(), tag = new StringBuilder();
             for (int i = 0; i < docArr.length; i++) {
                 docArr[i] = trim(docArr[i]);
                 if (startsWith(docArr[i],"<")) {
-                    String[] lineArr = splitPreserveAllTokens(docArr[i],">", 2);
-                    docArr[i] = trim(lineArr[1]);
+                    if (containsIgnoreCase(docArr[i],"f p=\"104\"")) {
+                        docCity = new StringBuilder(docArr[i] + docArr[i+1] + docArr[i+2]);
+                    }
+                        String[] lineArr = splitPreserveAllTokens(docArr[i], ">", 2);
+                        docArr[i] = trim(lineArr[1]);
                     if (line.length() > 0 && docArr[i].isEmpty()) {
                         if (!lineArr[0].contains("/")) continue;
                         tag.append(upperCase(splitPreserveAllTokens(lineArr[0],"/")[1]));
@@ -153,39 +155,45 @@ public class ReadFile {
                 line.append(" ").append(docArr[i]);
             }
             if (curr.hasCity()){
-                createAndUpdateCity(curr,line,tag.append(document));
+                createAndUpdateCity(curr,docCity);
             }
             docList.add(curr);
 
         }
     }
 
-    private void createAndUpdateCity(Doc doc, StringBuilder document, StringBuilder stringBuilder) {
-        stringBuilder.setLength(0);
-        extractTag(stringBuilder,document,"<F P=104>");
-        doc.addAttributes("City",stringBuilder.toString());
-    }
-
-
-    /**
-     * extracts a given tag from a document string.
-     * the element cut from the document will be kept in 'element' for further use
-     * @param element - String holder (mutable)
-     * @param document - holding the document String (also mutable) and cuts the given key (optional)
-     * @param delimiter - tag's name to extract
-     */
-    private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
-//      String[] tmp = document[0].split(delimiter + ">", 3);
-        String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
-        if (tmp.length < 3) {
-            element.delete(0, element.length());
-            return;
+    private void createAndUpdateCity(Doc doc, StringBuilder document) {
+//        stringBuilder.setLength(0);
+//        extractTag(stringBuilder,document,"<F P=104>");
+//        String tag = stringBuilder.toString();
+        String tag = trim(substringBetween(document.toString(),">","<"));
+        if (tag != null && !tag.equals("")) {
+            CityInfo cityInfo = CityInfo.getInstance();
+            cityInfo.setInfo(tag, doc);
+//            doc.addAttributes("City", stringBuilder.toString());
         }
-//        if (!delimiter.equalsIgnoreCase("text")) {
-//            document[0] = trim(substring(tmp[0],0, tmp[0].length() - 1))+ "\n " + trim(tmp[2]);
-//        }
-        element.append(trim(substring(tmp[1], 0, tmp[1].length() - 2)));
     }
+
+
+//    /**
+//     * extracts a given tag from a document string.
+//     * the element cut from the document will be kept in 'element' for further use
+//     * @param element - String holder (mutable)
+//     * @param document - holding the document String (also mutable) and cuts the given key (optional)
+//     * @param delimiter - tag's name to extract
+//     */
+//    private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
+////      String[] tmp = document[0].split(delimiter + ">", 3);
+//        String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
+//        if (tmp.length < 3) {
+//            element.delete(0, element.length());
+//            return;
+//        }
+////        if (!delimiter.equalsIgnoreCase("text")) {
+////            document[0] = trim(substring(tmp[0],0, tmp[0].length() - 1))+ "\n " + trim(tmp[2]);
+////        }
+//        element.append(trim(substring(tmp[1], 0, tmp[1].length() - 2)));
+//    }
 
     /**
      * get a list of 'Doc' from a single File.
