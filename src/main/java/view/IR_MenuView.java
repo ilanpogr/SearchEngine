@@ -1,4 +1,4 @@
-package view;
+package View;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
@@ -33,5 +33,10 @@ public class IR_MenuView extends Observable {
     public void Reset(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("reset");
+    }
+
+    public void showDictionary(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("show");
     }
 }

@@ -205,7 +205,7 @@ public class Parse {
                     token[0] = token[0].substring(1) + token[0].charAt(0);
                     firstCharOfToken = token[0].charAt(0);
                 }
-                if (Character.isDigit(firstCharOfToken) || firstCharOfToken == '$') {                //2. if token starts with a digit
+                if (Character.isDigit(firstCharOfToken) || firstCharOfToken == '$' || firstCharOfToken=='%') {                //2. if token starts with a digit
                     double tok = numerize(token);
                     if (tok != -1) {                                             //2.1. if token is a number
                         if (i < lastIndex) {                                     //2.1.1. if token has next
@@ -256,7 +256,7 @@ public class Parse {
     }
 
     /**
-     * Rule: Grouping all tokens that are continues with upper cases. in exception if the token "of"/"the"
+     * Rule: Grouping up to 4 tokens that are continues with upper cases. in exception if the token "of"/"the"
      * appear check the next token after, same rules are applied.
      * continues expression stops when symbol appear after the word.
      * next iteretion position will increase in 1 and the substring of continues expression will also be applied.
@@ -298,7 +298,8 @@ public class Parse {
             continuesExpression.append(token[0]).append(" ");
         }
         boolean stopFlag = false;
-        while (!stopFlag && i + 1 < s.length) {
+        int counter = 0;
+        while (!stopFlag && i + 1 < s.length && counter < 2) {
             String[] nextToken = {s[i + 1]};
             while ((nextToken[0].equalsIgnoreCase("of") || nextToken[0].equalsIgnoreCase("the")) && i + 2 < s.length) {
                 i++;
@@ -314,6 +315,7 @@ public class Parse {
                 nextToken[0] = replace(nextToken[0], "'S", "");
                 continuesExpression.append(nextToken[0]).append(' ');
                 i++;
+                counter++;
             } else {
                 stopFlag = true;
             }
@@ -1109,6 +1111,5 @@ public class Parse {
             termsDict.put(token[0], token[1]);
         }
     }
-
 }
 
