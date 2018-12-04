@@ -2,6 +2,7 @@ package ReadFile;
 
 import Controller.PropertiesFile;
 import TextContainers.*;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -10,6 +11,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 
@@ -23,7 +25,7 @@ public class ReadFile {
     private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
     private ArrayList<Doc> docList; //a list of Docs, from a single File
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
-    private static int fileCounter = 0;
+    private static AtomicInteger fileCounter = new AtomicInteger(0);
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
 //    private Map<String,String> docMap = new M
@@ -189,26 +191,6 @@ public class ReadFile {
     }
 
 
-//    /**
-//     * extracts a given tag from a document string.
-//     * the element cut from the document will be kept in 'element' for further use
-//     * @param element - String holder (mutable)
-//     * @param document - holding the document String (also mutable) and cuts the given key (optional)
-//     * @param delimiter - tag's name to extract
-//     */
-//    private void extractTag(StringBuilder element, StringBuilder document, String delimiter) {
-////      String[] tmp = document[0].split(delimiter + ">", 3);
-//        String[] tmp = splitByWholeSeparator(document.toString(), appendIfMissing(delimiter, ">"));
-//        if (tmp.length < 3) {
-//            element.delete(0, element.length());
-//            return;
-//        }
-////        if (!delimiter.equalsIgnoreCase("text")) {
-////            document[0] = trim(substring(tmp[0],0, tmp[0].length() - 1))+ "\n " + trim(tmp[2]);
-////        }
-//        element.append(trim(substring(tmp[1], 0, tmp[1].length() - 2)));
-//    }
-
     /**
      * get a list of 'Doc' from a single File.
      * the function works as a queue, each time it's called it will return the next file
@@ -218,7 +200,7 @@ public class ReadFile {
     public ArrayList<Doc> getFileList() {
         if (hasNextFile()) {
             clearLists();
-            return readFromFile(rootPath.get(fileCounter++));
+            return readFromFile(rootPath.get(fileCounter.getAndIncrement()));
         }
         return null;
     }
@@ -227,9 +209,9 @@ public class ReadFile {
      * check if there are more files in the corpus
      * @return true if there are unread files, else false
      */
-    public boolean hasNextFile() {
+    public static boolean hasNextFile() {
 //        return fileCounter < 1000;
-        return fileCounter < rootPath.size();
+        return fileCounter.get() < rootPath.size();
     }
 
 }

@@ -1,28 +1,27 @@
 package Indexer;
 
 import Controller.Controller;
+
 import static org.apache.commons.io.FileUtils.*;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.io.*;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WrieFile {
 
     private static String targetPath = Controller.getTargetDirPath();
-    private static AtomicInteger fileNum=new AtomicInteger(0);
+    private static AtomicInteger fileNum = new AtomicInteger(0);
 
     public static void createTempPostingFile(StringBuilder poString) {
-        int fileName = fileNum.getAndIncrement()+1;
+        int fileName = fileNum.getAndIncrement() + 1;
         try {
-            writeStringToFile(new File(targetPath+fileName+".post"),poString.toString(),false);
+            writeStringToFile(new File(targetPath + fileName + ".post"), poString.toString(), false);
         } catch (IOException e) {
-            System.out.println("create temp posting file filed in: " +fileName);
+            System.out.println("create temp posting file filed in: " + fileName);
             e.printStackTrace();
         }
 
@@ -33,10 +32,10 @@ public class WrieFile {
     }
 
     public static void addPostLine(LinkedHashMap<String, BufferedWriter> mergedFilesDic, String mergedFileName, String stringBuilder) {
-        try{
+        try {
             mergedFilesDic.get(mergedFileName).append(stringBuilder);
-        } catch (Exception e){
-            System.out.println("Couldn't write the line: " + stringBuilder + " to the file Named: " +mergedFileName);
+        } catch (Exception e) {
+            System.out.println("Couldn't write the line: " + stringBuilder + " to the file Named: " + mergedFileName);
             e.printStackTrace();
         }
     }

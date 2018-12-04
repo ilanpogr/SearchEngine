@@ -19,10 +19,10 @@ public class Controller {
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
     private static String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static StringBuilder stringBuilder = new StringBuilder();
-    private static LinkedHashMap<String, String> cache = new LinkedHashMap<>();
+    private static TreeMap<String, String> cache = new TreeMap<>();
     private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
-    private static LinkedHashMap<String, String> termDictionary = new LinkedHashMap<>();
+    private static TreeMap<String, String> termDictionary = new TreeMap<>();
     private static boolean isStemMode = false;
     private static ArrayList<Doc> filesList;
     private static String targetDirPath;
@@ -87,20 +87,17 @@ public class Controller {
                 if (f % (fileNum/tmpFileNum) == 0 || f == fileNum) {
                     term_count += tmpTermDic.size();
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
-                    termDictionary.putAll(tmpTermDic);
-                    if (Runtime.getRuntime().freeMemory() < Runtime.getRuntime().totalMemory() / 10)
-                        termDictionary.forEach((k, v) -> termDictionary.replace(k, v, ""));
                     tmpTermDic.clear();
                     System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary before merging: " + term_count);
                 }
                 filesList.clear();
-                if (f == 45) break;
+//                if (f == 18) break;
             }
             indexer.mergePostingTempFiles(targetDirPath);
             double s = System.nanoTime();
-            indexer.writeToDictionary(new TreeMap<>(DocDic), "Documents Dictionary");
-            indexer.writeToDictionary(new TreeMap<>(termDictionary),"Term Dictionary");
-            indexer.writeToDictionary(new TreeMap<>(cache), "Cache Dictionary");
+//            indexer.writeToDictionary(new TreeMap<>(DocDic), "Documents Dictionary");
+//            indexer.writeToDictionary(termDictionary,"Term Dictionary");
+//            indexer.writeToDictionary(cache, "Cache Dictionary");
             System.out.println(System.nanoTime()-s);
 
             int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);
@@ -109,12 +106,12 @@ public class Controller {
             System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ++ii);
             e.printStackTrace();
         }
-        LanguagesInfo l = LanguagesInfo.getInstance();
-        CityInfo c = CityInfo.getInstance();
-        System.out.println();
-        l.printLanguages();
-        System.out.println();
-        c.printCities();
+//        LanguagesInfo l = LanguagesInfo.getInstance();
+//        CityInfo c = CityInfo.getInstance();
+//        System.out.println();
+//        l.printLanguages();
+//        System.out.println();
+//        c.printCities();
     }
 
     private static void handleFile(HashMap<String, String> parsedDic) {
@@ -172,6 +169,7 @@ public class Controller {
 
     public static void addToFinalTermDictionary(String minTerm, String s) {
         termDictionary.put(minTerm,s);
+
     }
 
     public static void addToCacheDictionary(String minTerm, String s) {
@@ -184,5 +182,12 @@ public class Controller {
 
     public static void removeFromDictionary(String minTerm) {
         termDictionary.remove(minTerm);
+    }
+
+    public static void writeToFreeSpace(Indexer indexer) {
+        indexer.writeToDictionary(termDictionary,"Term Dictionary");
+        indexer.writeToDictionary(cache, "Cache Dictionary");
+        cache.clear();
+        termDictionary.clear();
     }
 }

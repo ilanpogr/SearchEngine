@@ -26,5 +26,8 @@ public class ModelMenu {
         master_of_puppets = new Master();
     }
 
+    public static void main(String[] args) {
+        ModelMenu.master_of_puppets = new Master();
+    }
 
 }
