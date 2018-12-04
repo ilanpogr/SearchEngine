@@ -11,18 +11,28 @@ import static org.apache.commons.lang3.StringUtils.split;
  */
 public class Doc {
 
+    private String fileName;
     private String city;
     private int length;
     private int max_tf;
-    private boolean hasCity=false;
+    private boolean hasCity = false;
     private String language;
     private Map<String, String> attributes;
 
 
-    public Doc(){
+    public Doc() {
         this.attributes = new HashMap<>();
-        max_tf=-1;
-        length=0;
+        max_tf = -1;
+        length = 0;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        if (this.fileName == null)
+            this.fileName = fileName;
     }
 
     public int getMax_tf() {
@@ -34,16 +44,16 @@ public class Doc {
     }
 
     public void setLength() {
-        if (length==0) {
+        if (length == 0) {
             for (Map.Entry<String, String> att : attributes.entrySet()
             ) {
-                length+=split(att.getValue()," ").length+1;
+                length += split(att.getValue(), " ").length + 1;
             }
         }
     }
 
     public void setMax_tf(int max_tf) {
-        if (this.max_tf!=-1 || max_tf<0) return;
+        if (this.max_tf != -1 || max_tf < 0) return;
         this.max_tf = max_tf;
     }
 
@@ -55,6 +65,7 @@ public class Doc {
 
     /**
      * returns all the tags contained in the doc's text in the file.
+     *
      * @return: an String array containing the tags.
      */
     public String[] getAllAttributes() {
@@ -75,11 +86,12 @@ public class Doc {
     /**
      * add an Attributes. if it representing the doc's city name,
      * the doc has a flag that this docs have a city.
+     *
      * @param tags: the tags..
      */
     public void addAttributes(String... tags) {
-        if (!hasCity && tags.length<3){
-            if (tags[0].charAt(0)=='F' || tags[0].charAt(0)=='f'){
+        if (!hasCity && tags.length < 3) {
+            if (tags[0].charAt(0) == 'F' || tags[0].charAt(0) == 'f') {
                 hasCity = true;
                 return;
             }
@@ -90,8 +102,8 @@ public class Doc {
     }
 
     public void addAttributes(ArrayList<String> tags) {
-        if (!hasCity){
-            if (tags.get(0).charAt(0) == 'F' || tags.get(0).charAt(0) == 'f'){
+        if (!hasCity) {
+            if (tags.get(0).charAt(0) == 'F' || tags.get(0).charAt(0) == 'f') {
                 hasCity = true;
                 return;
             }
@@ -101,16 +113,16 @@ public class Doc {
         }
     }
 
-    public String getAttribute(String key){
-            return attributes.getOrDefault(key,"");
+    public String getAttribute(String key) {
+        return attributes.getOrDefault(key, "");
     }
 
     public String docNum() {
         return attributes.get("DOCNO");
     }
 
-    public String [] text() {
-        return new String[]{attributes.getOrDefault("TEXT","")};
+    public String[] text() {
+        return new String[]{attributes.getOrDefault("TEXT", "")};
     }
 
     public boolean hasCity() {
@@ -118,7 +130,7 @@ public class Doc {
     }
 
     private static void validateArgs(final String[] argument) {
-                if (argument == null) {
+        if (argument == null) {
             throw new NullPointerException("Args must not be null");
         }
 

@@ -4,8 +4,6 @@ import Controller.Controller;
 import Controller.PropertiesFile;
 import Parser.Parse;
 import Stemmer.Stemmer;
-import com.google.gson.Gson;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
@@ -17,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Indexer {
@@ -36,6 +33,9 @@ public class Indexer {
     private static String targetPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
     private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
+    private static TreeMap<Integer,String> mostCommonTerms = new TreeMap<>();
+    private static TreeMap<Integer,String> leastCommonTerms = new TreeMap<>();
+
 
     /**
      * get a Property from properties file and convert it to double.
@@ -104,7 +104,18 @@ public class Indexer {
         }
         LinkedHashMap<String, Integer> mergedFilesCounterDic = new LinkedHashMap<>();
         LinkedHashMap<String, BufferedWriter> mergedFilesDic = new LinkedHashMap<>();
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic);
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic,"others");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic,"ab");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "cd");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "ef");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "ghi");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "jkl");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "mn");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "op");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "qrs");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "tuvwxyz");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "Term Dictionary");
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "Cache Dictionary");
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         double logN = StrictMath.log10(Controller.getDocCount()) / log2;
@@ -154,6 +165,16 @@ public class Indexer {
             }
             int df = sortedPosting.size();
             double idf = logN - (StrictMath.log10(df) / log2);
+            if (!contains(minTerm, " ")){
+                if (mostCommonTerms.size()<1 || mostCommonTerms.firstKey()==null || mostCommonTerms.firstKey().compareTo(totalTf)<0){
+                    if (mostCommonTerms.size()>10) mostCommonTerms.pollFirstEntry();
+                    mostCommonTerms.put(totalTf,minTerm+termSeperator+totalTf + "," + df);
+                }
+                if (leastCommonTerms.size()<1 || leastCommonTerms.lastKey()==null || leastCommonTerms.lastKey().compareTo(totalTf)>0){
+                    if (leastCommonTerms.size()>10) leastCommonTerms.pollLastEntry();
+                    leastCommonTerms.put(totalTf,minTerm+leastCommonTerms+totalTf + "," + df);
+                }
+            }
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (isUpperCase == 1) {
@@ -196,6 +217,16 @@ public class Indexer {
         }
         System.out.println("Size of Posting Files: " + totalPostingSizeByKB / 1024);
 
+        writeToExcel();
+        System.out.println("\n\nMost Common Terms before stemming: \n");
+        mostCommonTerms.forEach(((integer, s) -> System.out.println(s)));
+        System.out.println("\n\nLeast Common Terms before stemming: \n");
+        leastCommonTerms.forEach(((integer, s) -> System.out.println(s)));
+
+    }
+
+    private void writeToExcel() {
+
     }
 
     private String[] splitToCachePost(StringBuilder stringBuilder) {
@@ -211,57 +242,57 @@ public class Indexer {
     private String getFileName(char first) {
         switch (first) {
             case 'a':
-                return "abc";
+                return "ab";
             case 'b':
-                return "abc";
+                return "ab";
             case 'c':
-                return "abc";
+                return "cd";
             case 'd':
-                return "defgh";
+                return "cd";
             case 'e':
-                return "defgh";
+                return "ef";
             case 'f':
-                return "defgh";
+                return "ef";
             case 'g':
-                return "defgh";
+                return "ghi";
             case 'h':
-                return "defgh";
+                return "ghi";
             case 'i':
-                return "ijkl";
+                return "ghi";
             case 'j':
-                return "ijkl";
+                return "jkl";
             case 'k':
-                return "ijkl";
+                return "jkl";
             case 'l':
-                return "ijkl";
+                return "jkl";
             case 'm':
-                return "mnop";
+                return "mn";
             case 'n':
-                return "mnop";
+                return "mn";
             case 'o':
-                return "mnop";
+                return "op";
             case 'p':
-                return "mnop";
+                return "op";
             case 'q':
-                return "qrst";
+                return "qrs";
             case 'r':
-                return "qrst";
+                return "qrs";
             case 's':
-                return "qrst";
+                return "qrs";
             case 't':
-                return "qrst";
+                return "tuvwxyz";
             case 'u':
-                return "uvwxyz";
+                return "tuvwxyz";
             case 'v':
-                return "uvwxyz";
+                return "tuvwxyz";
             case 'w':
-                return "uvwxyz";
+                return "tuvwxyz";
             case 'x':
-                return "uvwxyz";
+                return "tuvwxyz";
             case 'y':
-                return "uvwxyz";
+                return "tuvwxyz";
             case 'z':
-                return "uvwxyz";
+                return "tuvwxyz";
         }
         return "others";
     }
@@ -278,60 +309,11 @@ public class Indexer {
         toSort.sort((o1, o2) -> Integer.compare(o2.left, o1.left));
     }
 
-    private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic) {
+    private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic, String fileName) {
         StringBuilder stringBuilder = new StringBuilder(targetPath);
         checkOrMakeDir(stringBuilder.toString());
-        String fileName = "others";
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(".post");
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "abc";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName).append(".post");
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "defgh";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName).append(".post");
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "ijkl";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName).append(".post");
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "mnop";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName).append(".post");
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "qrst";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName).append(".post");
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "uvwxyz";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName).append(".post");
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "Term Dictionary";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName);
-        addFileToList(mergedFilesDic, stringBuilder, fileName);
-        stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(stringBuilder.toString());
-        fileName = "Cache Dictionary";
-        mergedFilesCounterDic.put(fileName, 1);
-        stringBuilder.append(fileName);
         addFileToList(mergedFilesDic, stringBuilder, fileName);
     }
 

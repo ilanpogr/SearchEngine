@@ -132,8 +132,17 @@ public class Parse {
             doneWithToken = true;
             String[] token = new String[]{s[i], parametersDelimiter};
             cleanToken(token);
-            if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$')) {
+            if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$') || containsOnly(token[0], '%')) {
                 continue;
+            }
+            if (contains(token[0],"%")){
+                String[] tmp = {replace(token[0],"%",""),""};
+                if (!checkIfNumber(tmp[0])){
+                    cleanToken(tmp);
+                    if (contains(token[0],"$"))
+                        tmp[0] = replace(tmp[0],"$","");
+                    token[0] = tmp[0];
+                }
             }
             if (token[0].toLowerCase().endsWith("'s")) {                        //  ADDITIONAL RULE: remove all " 's " from tokens
                 token[0] = token[0].substring(0, token[0].length() - 2);

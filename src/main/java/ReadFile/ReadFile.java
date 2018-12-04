@@ -2,12 +2,14 @@ package ReadFile;
 
 import Controller.PropertiesFile;
 import TextContainers.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +28,7 @@ public class ReadFile {
     private ArrayList<Doc> docList; //a list of Docs, from a single File
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
     private static AtomicInteger fileCounter = new AtomicInteger(0);
+
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
 //    private Map<String,String> docMap = new M
@@ -128,6 +131,7 @@ public class ReadFile {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
             Doc curr = new Doc();
+            curr.setFileName(substringAfterLast(rootPath.get(fileCounter.get()),"\\"));
             StringBuilder docCity = new StringBuilder();
             String docLang = "";
             boolean isLanguage = false;
