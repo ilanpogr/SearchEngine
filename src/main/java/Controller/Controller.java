@@ -106,12 +106,12 @@ public class Controller {
             System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ++ii);
             e.printStackTrace();
         }
-//        LanguagesInfo l = LanguagesInfo.getInstance();
-//        CityInfo c = CityInfo.getInstance();
-//        System.out.println();
-//        l.printLanguages();
-//        System.out.println();
-//        c.printCities();
+        LanguagesInfo l = LanguagesInfo.getInstance();
+        CityInfo c = CityInfo.getInstance();
+        System.out.println();
+        l.printLanguages();
+        System.out.println();
+        c.printCities();
     }
 
     private static void handleFile(HashMap<String, String> parsedDic) {

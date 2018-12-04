@@ -12,7 +12,7 @@ public class LanguagesInfo {
 
     private static HashSet<Character> specialCharSet;
 
-    private HashSet<String> citiesInfo_map;
+    private HashSet<String> languageInfo_map;
 
     /**
      * regular singleton
@@ -51,7 +51,7 @@ public class LanguagesInfo {
     }
 
     private LanguagesInfo() {
-        citiesInfo_map = new HashSet<>();
+        languageInfo_map = new HashSet<>();
         specialCharSet = initSpecialSet();
     }
 
@@ -59,11 +59,11 @@ public class LanguagesInfo {
         String[] tokens = split(language, " ");
         cleanToken(tokens);
         if (isAlpha(tokens[0]))
-            citiesInfo_map.add(tokens[0]);
+            languageInfo_map.add(tokens[0]);
     }
 
     public void printLanguages() {
-        for (String s : citiesInfo_map) {
+        for (String s : languageInfo_map) {
             System.out.println(s);
         }
     }
