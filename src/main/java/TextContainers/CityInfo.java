@@ -147,6 +147,8 @@ public class CityInfo {
                 String[] parameters = split(infoEntries.get(cityName), ",");
                 City city = new City(cityName, parameters[0], parameters[2], parameters[1]);
                 citiesInfo_map.put(cityName, city);
+            } else {
+                doc.setCity(cityNameShort);
             }
         }
     }
