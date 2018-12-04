@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import static org.apache.commons.io.FileUtils.sizeOf;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
@@ -28,12 +29,13 @@ public class Indexer {
     private static final String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
     private static final String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static final String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
-    private static int tmpFilesCounter = 0;
-    private static int mergedFilesCounter = 0;
-    private static String targetPath = null;
-    private static AtomicInteger termCount = new AtomicInteger(0);
+//    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
+    private static AtomicInteger tmpFilesCounter  = new AtomicInteger(0);
+//    private static AtomicInteger termCount = new AtomicInteger(0);
+    private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
+    private static String targetPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
     private static final double log2 = StrictMath.log10(2);
+    private static BufferedWriter inverter = null;
 
     /**
      * get a Property from properties file and convert it to double.
@@ -57,16 +59,27 @@ public class Indexer {
             StringBuilder tmpPostFile = new StringBuilder();
             sortedTermsDic.forEach((k, v) -> tmpPostFile.append(lowerCase(k)).append(termSeperator).append(v).append("\n"));
             tmpPostFile.trimToSize();
-            tmpDicQueue.addLast(tmpPostFile);
+//            tmpDicQueue.addLast(tmpPostFile);
             WrieFile.createTempPostingFile(tmpPostFile);
-            tmpFilesCounter++;
-        } catch (OutOfMemoryError om) {     //if Map is too big
+            tmpFilesCounter.incrementAndGet();
+        }  catch (OutOfMemoryError om) {     //if Map is too big
             try {
-                indexTempFile(new TreeMap<>(sortedTermsDic.tailMap("m")));
-                indexTempFile(new TreeMap<>(sortedTermsDic.headMap("m")));
-            } catch (OutOfMemoryError om2) {    //if "M" wasn't good enough
-                indexTempFile(new TreeMap<>(sortedTermsDic.tailMap("a")));
-                indexTempFile(new TreeMap<>(sortedTermsDic.headMap("a")));
+                ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(sortedTermsDic.entrySet());
+                lines.sort(new Comparator<Map.Entry<String, String>>() {
+                    @Override
+                    public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
+                        return compareIgnoreCase(o1.getKey(), o2.getKey(), true);
+                    }
+                });
+                indexTempFile(new TreeMap<>(sortedTermsDic.tailMap(lines.get(lines.size() / 2).getKey())));
+                indexTempFile(new TreeMap<>(sortedTermsDic.headMap(lines.get(lines.size() / 2).getKey())));
+            } catch (Exception e) {
+                sortedTermsDic.forEach((term, value) -> {
+                    StringBuilder s = new StringBuilder();
+                    s.append(term).append(termSeperator).append(value).append("\n");
+                    s.trimToSize();
+                    WrieFile.createTempPostingFile(s);
+                });
             }
         }
 
@@ -77,6 +90,7 @@ public class Indexer {
         int last = 0;
         targetPath = targetDirPath;
         int currFileNum = WrieFile.getFileNum();
+//        int currFileNum = 31;
         StringBuilder stringBuilder = new StringBuilder();
         LinkedHashMap<Integer, MutablePair<String, Integer>> termKeys = new LinkedHashMap<>();
         LinkedHashMap<Integer, String> termValues = new LinkedHashMap<>();
@@ -94,7 +108,11 @@ public class Indexer {
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         double logN = StrictMath.log10(Controller.getDocCount()) / log2;
-        while (mergedFilesCounter < tmpFilesCounter) {
+//        double logN = StrictMath.log10(472000) / log2;
+        while (mergedFilesCounter.get() < tmpFilesCounter.get()) {
+//            if (Runtime.getRuntime().freeMemory()<Runtime.getRuntime().totalMemory()/25){
+//                Controller.writeToFreeSpace(this);
+//            }
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
             for (int i = 1; i <= tmpFilesInitialSize; i++) {
@@ -143,15 +161,13 @@ public class Indexer {
                     minTerm = upperCase(minTerm);
                 }
                 if (maxIdfForCache < idf || df == 1) {
-                    Controller.addToFinalTermDictionary(minTerm, totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer);
-//                    termDictionary.put(minTerm, totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer);
+                    WrieFile.addPostLine(mergedFilesDic, "Term Dictionary", minTerm+termSeperator+totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName)+"\n");
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
-                    Controller.addToCacheDictionary(minTerm, cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName));
-//                    cache.put(minTerm, cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName));
-                    Controller.addToFinalTermDictionary(minTerm, totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName));
+                    WrieFile.addPostLine(mergedFilesDic, "Term Dictionary", minTerm+termSeperator+totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer+"\n");
+                    WrieFile.addPostLine(mergedFilesDic, "Cache Dictionary", minTerm+termSeperator+cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName)+"\n");
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
@@ -163,11 +179,11 @@ public class Indexer {
             int total = (int) ((System.currentTimeMillis() - startIndexTime) / 1000);
             if (last < total) {
                 last = total;
-                System.out.println("Time until now to index: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds");
+                System.out.println("Time until now to index: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds \t\t\tCurrent term: " + minTerm);
             }
         }
         try {
-            totalPostingSizeByKB = FileUtils.sizeOf(new File(targetDirPath));
+            totalPostingSizeByKB = sizeOf(new File(targetDirPath));
         } catch (Exception e) {
             try {
                 for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
@@ -305,6 +321,18 @@ public class Indexer {
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
+        stringBuilder = new StringBuilder(targetPath);
+        checkOrMakeDir(stringBuilder.toString());
+        fileName = "Term Dictionary";
+        mergedFilesCounterDic.put(fileName, 1);
+        stringBuilder.append(fileName);
+        addFileToList(mergedFilesDic, stringBuilder, fileName);
+        stringBuilder = new StringBuilder(targetPath);
+        checkOrMakeDir(stringBuilder.toString());
+        fileName = "Cache Dictionary";
+        mergedFilesCounterDic.put(fileName, 1);
+        stringBuilder.append(fileName);
+        addFileToList(mergedFilesDic, stringBuilder, fileName);
     }
 
     private void addFileToList(LinkedHashMap<Integer, BufferedReader> tmpFiles, StringBuilder stringBuilder, int i) {
@@ -342,8 +370,8 @@ public class Indexer {
                 termKeys.remove(i);
                 termValues.remove(i);
                 tmpFiles.remove(i).close();
-                Files.delete(Paths.get(targetPath + i + ".post"));
-                mergedFilesCounter++;
+//                Files.delete(Paths.get(targetPath + i + ".post"));
+                mergedFilesCounter.incrementAndGet();
             }
         } catch (IOException e) {
             System.out.println("couldn't find or open: ");
@@ -364,33 +392,44 @@ public class Indexer {
         }
     }
 
-    public void writeToDictionary(TreeMap<String, String> cache, String dicName) {
+    public void writeToDictionary(TreeMap<String, String> dic, String dicName) {
         try {
+            inverter = new BufferedWriter(new FileWriter(new File(targetPath+dicName),true));
             StringBuilder s = new StringBuilder();
-            cache.forEach((term, value) -> s.append(term).append(termSeperator).append(value).append("\n"));
-            s.trimToSize();
-            WrieFile.writeToDictionary(s, dicName);
+            dic.forEach((term, value) -> {
+                try {
+                    inverter.append(term).append(termSeperator).append(value).append("\n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+//            s.trimToSize();
+//            WrieFile.writeToDictionary(s, dicName);
         } catch (OutOfMemoryError om) {     //if Map is too big
             try {
-                ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(cache.entrySet());
+                ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(dic.entrySet());
                 lines.sort(new Comparator<Map.Entry<String, String>>() {
                     @Override
                     public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
                         return compareIgnoreCase(o1.getKey(), o2.getKey(), true);
                     }
                 });
-                indexTempFile(new TreeMap<>(cache.tailMap(lines.get(lines.size() / 2).getKey())));
-                indexTempFile(new TreeMap<>(cache.headMap(lines.get(lines.size() / 2).getKey())));
+                writeToDictionary(new TreeMap<>(dic.tailMap(lines.get(lines.size() / 2).getKey())),dicName);
+                writeToDictionary(new TreeMap<>(dic.headMap(lines.get(lines.size() / 2).getKey())),dicName);
             } catch (Exception e) {
-                cache.forEach((term, value) -> {
+                dic.forEach((term, value) -> {
                     StringBuilder s = new StringBuilder();
                     s.append(term).append(termSeperator).append(value).append("\n");
                     s.trimToSize();
-                    WrieFile.writeToDictionary(s, dicName);
+//                    WrieFile.writeToDictionary(s, dicName);
                 });
             }
+        }catch (IOException e){
+            e.printStackTrace();
         }
     }
 
-
+    public static int getTmpFilesCounter() {
+        return tmpFilesCounter.get();
+    }
 }
