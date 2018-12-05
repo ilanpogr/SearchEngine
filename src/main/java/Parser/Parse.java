@@ -92,9 +92,7 @@ public class Parse {
         specialCharSet = new HashSet<>();
         Character[] characters = new Character[]{' ', '\r', '\n', '[', '(', '{', '`', ')', '<', '|', '&', '~', '+', '^', '@', '*', '?', '.', '>', ';', '_', '\'', ':', ']', '/', '\\', '}', '!', '=', '#', ',', '"', '-'};
 
-        for (int i = 0; i < characters.length; ++i) {
-            specialCharSet.add(characters[i]);
-        }
+        specialCharSet.addAll(Arrays.asList(characters));
 
         return specialCharSet;
     }
@@ -168,7 +166,7 @@ public class Parse {
                     if ((checkIfFracture(check[0]) || checkIfNumber(check[0]))) {
                         expressionFlag = true;
                         doneWithToken = false;
-                        i = isTokenBetweenExpression(termsDict, token, s, i);
+                        i = isTokenBetweenExpression(termsDict, s, i);
                     } else {
                         continue;
                     }
@@ -206,7 +204,7 @@ public class Parse {
                 expressionFlag = true;
                 doneWithToken = false;
                 token[0] = replace(token[0], ",", "");
-                i = expressionStartsWithSlash(termsDict, token, s, i);
+                i = expressionStartsWithSlash(termsDict, token, i);
                 i = numberAfterSlashInExpressionStartsWithSlash(termsDict, token, s, i);
             }
             if (!expressionFlag) {
@@ -222,7 +220,7 @@ public class Parse {
                             if (!token[0].contains(".")) {                       //2.1.1.1. if token is an Integer
                                 if (isTokenADay(tok)) {                           //2.1.1.1.1. if token is a Day
                                     if (monthSet.contains(nextToken[0].toUpperCase())) {
-                                        insertDate(termsDict, token, nextToken, null, i);
+                                        insertDate(termsDict, token, nextToken, null);
                                         s[i] = token[0];
                                         s[++i] = nextToken[0];
                                         continue;
@@ -232,7 +230,6 @@ public class Parse {
                         }
                     }                                                    //2.3. if token is a code (3dj14s..)
                     i = insertTokenWithNext(termsDict, token, i, s);
-                    continue;
                 } else {                                                         //3. if token starts with a letter
                     if (Character.isUpperCase(firstCharOfToken)) {               //3.1. if token starts with an UPPERCASE letter
                         if (monthSet.contains(token[0].toUpperCase())) {         //3.1.1. if token is a Month
@@ -241,12 +238,12 @@ public class Parse {
                                 double nextT = numerize(nextToken);
                                 if (nextT != -1) {                               //3.1.1.1.1. if token is a number
                                     if (isTokenADay(nextT)) {                    //3.1.1.1.1.1. if next token is a day (1-31)  MM-DD
-                                        insertDate(termsDict, nextToken, token, null, i);
+                                        insertDate(termsDict, nextToken, token, null);
                                         s[i++] = "";
                                         s[i] = "";
                                         continue;
                                     } else if (isTokenAYear(nextT)) {            //3.1.1.1.1.2. if next token is a year         MM-YYYY
-                                        insertDate(termsDict, null, token, nextToken, i);
+                                        insertDate(termsDict, null, token, nextToken);
                                         s[i++] = "";
                                         s[i] = "";
                                         continue;
@@ -258,7 +255,6 @@ public class Parse {
                     if (!token[0].toLowerCase().equals("may"))
                         checkCaseAndInsertToDictionary(termsDict, token);
                     s[i] = "";
-                    continue;
                 }
             }
         }
@@ -339,12 +335,11 @@ public class Parse {
      * the tokens in the expression can be only numbers. they will be sent to the number rules handling function.
      *
      * @param termsDict : the Dictionary that will contain all the terms
-     * @param token     : the current token we are working with
      * @param s         : an Array containing all tokens of the text (pointer)
      * @param i         : current index in 's'
      * @return : the current index of handled token in 's'
      */
-    private int isTokenBetweenExpression(HashMap<String, String> termsDict, String[] token, String[] s, int i) {
+    private int isTokenBetweenExpression(HashMap<String, String> termsDict, String[] s, int i) {
         String[] betweenExpression = {"", "0" + parametersDelimiter + currentPosition};
         String[] numInBetweenExpession = {s[i + 1], ""};
         cleanToken(numInBetweenExpession);
@@ -404,7 +399,7 @@ public class Parse {
      * @param i         : current index in the text tokens array
      * @return : the current index of handled token in text tokens array
      */
-    private int expressionStartsWithSlash(HashMap<String, String> termsDict, String[] token, String[] strings, int i) {
+    private int expressionStartsWithSlash(HashMap<String, String> termsDict, String[] token, int i) {
         String[] strTmp = {token[0], token[1]};
         String[] finalToken = {"", ""};
         cleanToken(strTmp);
@@ -585,14 +580,19 @@ public class Parse {
      * @param s     : the number representation.
      */
     private void prepareNumberRepresentationForTerm(String[] token, String[] s) {
-        if (s[0].equals("thousand")) {
-            token[0] += 'K';
-        } else if (s[0].equals("million")) {
-            token[0] += 'M';
-        } else if (s[0].equals("billion")) {
-            token[0] += 'B';
-        } else if (s[0].equals("trillion")) {
-            token[0] += "000" + 'B';
+        switch (s[0]) {
+            case "thousand":
+                token[0] += 'K';
+                break;
+            case "million":
+                token[0] += 'M';
+                break;
+            case "billion":
+                token[0] += 'B';
+                break;
+            case "trillion":
+                token[0] += "000" + 'B';
+                break;
         }
     }
 
@@ -631,10 +631,8 @@ public class Parse {
         String[] result = new String[2];
         int index = str[0].indexOf('.');
         if (index != -1) {
-            String rightSide = "";
-            String leftSide = "";
-            rightSide = str[0].substring(index + 1);
-            leftSide = str[0].substring(0, index);
+            String rightSide = str[0].substring(index + 1);
+            String leftSide = str[0].substring(0, index);
             result[0] = leftSide;
             result[1] = rightSide;
             return result;
@@ -651,7 +649,7 @@ public class Parse {
      * @return s without the trailing zeroes
      */
     private String[] removeTrailingZero(String[] s) {
-        s[0] = s[0].indexOf(".") < 0 ? s[0] : s[0].replaceAll("0*$", "").replaceAll("\\.$", "");
+        s[0] = !s[0].contains(".") ? s[0] : s[0].replaceAll("0*$", "").replaceAll("\\.$", "");
         return s;
     }
 
@@ -843,7 +841,7 @@ public class Parse {
             String[] month = {strings[i + 1]};
             cleanToken(month);
             if (monthSet.contains(month[0].toUpperCase())) {
-                insertDate(termsDict, token, month, null, i);
+                insertDate(termsDict, token, month, null);
                 return i + 2;
             }
         }
@@ -858,9 +856,8 @@ public class Parse {
      * @param day       : the day
      * @param month     : the month
      * @param year      : th year
-     * @return : the current index of handled token in 'strings'
      */
-    private void insertDate(HashMap<String, String> termsDict, String[] day, String[] month, String[] year, int i) {
+    private void insertDate(HashMap<String, String> termsDict, String[] day, String[] month, String[] year) {
         month[0] = monthDictionary.get(month[0].toUpperCase());
         if (day != null) {
             if (day[0].length() == 1) {
@@ -883,20 +880,19 @@ public class Parse {
      * @param token     : the current token we are working with
      * @param strings   : an Array containing all tokens of the text (pointer)
      * @param i         : current index in 'strings'
-     * @return : the current index of handled token in 'strings'
      */
     private int checkIfTokenIsMoney(HashMap<String, String> termsDict, String[] token, int i, String[] strings) {
         if (token[0].contains("$")) {
 //            token[0] = token[0].replace("$", "");      //$# or #$
             token[0] = replace(token[0], "$", "");      //$# or #$
-            i = addQuantityToToken(termsDict, token, i, strings, true);
+            i = addQuantityToToken(token, i, strings);
             token[0] += " Dollars";
             token[1] = "0" + parametersDelimiter + currentPosition;
             insertToDictionary(termsDict, token);
             return i + 1;
         } else if (i + 1 < strings.length && strings[i + 1].toLowerCase().startsWith("dollar")) {    //# dollars
             if (checkIfNumber(token[0]) || token[0].toLowerCase().endsWith("m") || token[0].toLowerCase().endsWith("bn")) {
-                i = addQuantityToToken(termsDict, token, i, strings, true);
+                i = addQuantityToToken(token, i, strings);
                 token[0] += " Dollars";
                 token[1] = "0" + parametersDelimiter + currentPosition;
                 insertToDictionary(termsDict, token);
@@ -921,7 +917,7 @@ public class Parse {
                             j++;
                         }
                         if (strings[j].toLowerCase().startsWith("dollar")) {
-                            addQuantityToToken(termsDict, token, i, strings, true);
+                            addQuantityToToken(token, i, strings);
                             token[0] += " Dollars";
                             token[1] = "0" + parametersDelimiter + currentPosition;
                             insertToDictionary(termsDict, token);
@@ -987,16 +983,12 @@ public class Parse {
      * if money token is money' checks if represented with with quantity and the rules
      * are applied as specified for money quantity representation.
      *
-     * @param termsDict : the Dictionary that will contain all the terms
      * @param token     : the current token we are working with
      * @param strings   : an Array containing all tokens of the text (pointer)
      * @param i         : current index in 'strings'
-     * @param isMoney   : isTokenMoney
      * @return : the current index of handled token in 'strings'
      */
-    private int addQuantityToToken(HashMap<String, String> termsDict, String[] token, int i, String[] strings, boolean isMoney) {
-
-        if (isMoney) {
+    private int addQuantityToToken(String[] token, int i, String[] strings) {
             if (token[0].toLowerCase().endsWith("m")) {
                 token[0] = replace(token[0], "m", " M");
                 moneyParse(token, 0);
@@ -1026,8 +1018,6 @@ public class Parse {
             }
             moneyParse(token, 0);
             return i;
-        }
-        return i;
     }
 
     /**

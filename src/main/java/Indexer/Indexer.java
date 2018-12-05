@@ -60,6 +60,7 @@ public class Indexer {
      * @param sortedTermsDic
      */
     public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
+        checkOrMakeDir(getFileOrDirName(targetPath+"Dictionaries"));
         try {
             StringBuilder tmpPostFile = new StringBuilder();
             sortedTermsDic.forEach((k, v) -> tmpPostFile.append(lowerCase(k)).append(termSeperator).append(v).append("\n"));
@@ -479,7 +480,7 @@ public class Indexer {
                     StringBuilder s = new StringBuilder();
                     s.append(term).append(termSeperator).append(value).append("\n");
                     s.trimToSize();
-//                    WrieFile.writeToDictionary(s, dicName);
+                    WrieFile.writeToDictionary(s, dicName);
                 });
             }
         } catch (IOException e) {
@@ -487,7 +488,4 @@ public class Indexer {
         }
     }
 
-    public static int getTmpFilesCounter() {
-        return tmpFilesCounter.get();
-    }
 }
