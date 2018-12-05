@@ -2,11 +2,15 @@ package Indexer;
 
 import Controller.Controller;
 import Controller.PropertiesFile;
+import Master.Master;
 import Parser.Parse;
 import Stemmer.Stemmer;
+import TextContainers.CityInfo;
+import TextContainers.LanguagesInfo;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
-
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import static org.apache.commons.io.FileUtils.sizeOf;
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -125,6 +129,12 @@ public class Indexer {
         int tmpFilesInitialSize = tmpFiles.size();
 //        double logN = StrictMath.log10(Controller.getDocCount()) / log2;
         double logN = StrictMath.log10(472000) / log2;
+        BufferedWriter pw = null;
+        try {
+            pw = new BufferedWriter(new FileWriter("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\zipf.csv",true));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         while (mergedFilesCounter.get() < tmpFilesCounter.get()/* && last<=13*/) {
 //            if (Runtime.getRuntime().freeMemory()<Runtime.getRuntime().totalMemory()/25){
 //                Controller.writeToFreeSpace(this);
@@ -171,16 +181,30 @@ public class Indexer {
             int df = sortedPosting.size();
             double idf = logN - (StrictMath.log10(df) / log2);
             if (!contains(minTerm, " ")) {
-                if (mostCommonTerms.size() < 1 || mostCommonTerms.firstKey() == null || mostCommonTerms.firstKey().compareTo(totalTf) < 0) {
-                    if (mostCommonTerms.size() > 10) mostCommonTerms.pollFirstEntry();
-                    mostCommonTerms.put(totalTf, minTerm + " -> tf: " + totalTf + "    df: " + df/* + "    idf: " + idf*/);
+                try{
+                    if (isUpperCase == 1) {
+                        minTerm = upperCase(minTerm);
+                    }
+
+                    CSVPrinter csvPrinter = new CSVPrinter(pw, CSVFormat.DEFAULT.withHeader("Term", "tf")
+                            .withIgnoreHeaderCase()
+                            .withTrim());
+//                    pw.append(minTerm).append(",").append(String.valueOf(totalTf))/*.append(",").append(String.valueOf(df)).append(",").append(String.valueOf(idf))*/.append("\n");
+                    csvPrinter.printRecord(Arrays.asList(minTerm,totalTf));
+                }catch (IOException e){
+                    e.printStackTrace();
                 }
-                if (leastCommonTerms.size() < 1 || leastCommonTerms.firstKey() == null || leastCommonTerms.firstKey().compareTo(totalTf) >= 0) {
-                    if (leastCommonTerms.size() > 10) leastCommonTerms.pollFirstEntry();
-                    leastCommonTerms.put(totalTf, minTerm + " -> tf: " + totalTf + "    df: " + df/* + "    idf: " + idf*/);
-                }
+//                if (mostCommonTerms.size() < 1 || mostCommonTerms.firstKey() == null || mostCommonTerms.firstKey().compareTo(totalTf) < 0) {
+//                    if (mostCommonTerms.size() > 10) mostCommonTerms.pollFirstEntry();
+//                    mostCommonTerms.put(totalTf, minTerm + " -> tf: " + totalTf + "    df: " + df/* + "    idf: " + idf*/);
+//                }
+//                if (leastCommonTerms.size() < 1 || leastCommonTerms.firstKey() == null || leastCommonTerms.firstKey().compareTo(totalTf) >= 0) {
+//                    if (leastCommonTerms.size() > 10) leastCommonTerms.pollFirstEntry();
+//                    leastCommonTerms.put(totalTf, minTerm + " -> tf: " + totalTf + "    df: " + df/* + "    idf: " + idf*/);
+//                }
             }
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
+//            if (totalTf <2 && !containsAny(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ','/')) {
 //            if (containsOnly(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ') || (countMatches(minTerm,'/')-countMatches(minTerm,' ')<=1  && containsOnly(minTerm, '-','/', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (isUpperCase == 1) {
@@ -199,7 +223,7 @@ public class Indexer {
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
             } else {
-                Controller.removeFromDictionary(minTerm);
+                Master.removeFromDictionary(minTerm);
             }
 
 
@@ -220,6 +244,10 @@ public class Indexer {
         }
         try {
             totalPostingSizeByKB = sizeOf(new File(targetDirPath));
+            if (pw!=null){
+                pw.flush();
+                pw.close();
+            }
         } catch (Exception e) {
             try {
                 for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
@@ -228,7 +256,7 @@ public class Indexer {
                     entry.getValue().close();
                 }
             } catch (Exception e2) {
-                totalPostingSizeByKB = Controller.getTermCount() * 1024;
+                totalPostingSizeByKB = Master.getTermCount() * 1024;
             }
         }
         System.out.println("Size of Posting Files: " + totalPostingSizeByKB / 1024);
@@ -245,7 +273,7 @@ public class Indexer {
      * @return
      */
     private String getFileOrDirName(String fileName) {
-        return appendIfMissingIgnoreCase(fileName, " with" + (Controller.isStemMode() ? "" : "out") + " stemming");
+        return appendIfMissingIgnoreCase(fileName, " with" + (Master.isStemMode() ? "" : "out") + " stemming");
     }
 
     /**
@@ -456,6 +484,12 @@ public class Indexer {
                     e.printStackTrace();
                 }
             });
+            try {
+                inverter.flush();
+                inverter.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
 //            s.trimToSize();
 //            WrieFile.writeToDictionary(s, dicName);
         } catch (OutOfMemoryError om) {     //if Map is too big
@@ -476,5 +510,6 @@ public class Indexer {
             e.printStackTrace();
         }
     }
+
 
 }
