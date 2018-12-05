@@ -308,7 +308,7 @@ public class Parse {
         }
         boolean stopFlag = false;
         int counter = 0;
-        while (!stopFlag && i + 1 < s.length && counter < 2) {
+        while (!stopFlag && i + 1 < s.length/* && counter < 2*/) {
             String[] nextToken = {s[i + 1]};
             while ((nextToken[0].equalsIgnoreCase("of") || nextToken[0].equalsIgnoreCase("the")) && i + 2 < s.length) {
                 i++;
