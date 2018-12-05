@@ -42,7 +42,7 @@ public class Parse {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        while (s.hasNext()) stopWords.add(s.nextLine());
+        while (s!=null && s.hasNext()) stopWords.add(s.nextLine());
         stopWords.remove("between");
         stopWords.remove("may");
         return stopWords;
