@@ -3,6 +3,8 @@ package Controller;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 
@@ -44,9 +46,8 @@ public class PropertiesFile {
      * @return String - the value of the property
      */
     public static String getProperty(String propertyName) {
-        String ret = "";
-        ret = properties.getProperty(propertyName);
-        return ret;
+            return  new String(properties.getProperty(propertyName).getBytes(), StandardCharsets.UTF_8);
+
     }
 
     /**
@@ -72,7 +73,7 @@ public class PropertiesFile {
         if (properties.getProperty(propertyName) == null) {
             properties.put(propertyName, propertyValue);
         } else {
-            properties.setProperty(propertyName, propertyValue);
+                properties.setProperty(propertyName, new String(propertyValue.getBytes(), StandardCharsets.UTF_8));
         }
     }
 

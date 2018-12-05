@@ -31,7 +31,7 @@ public class Indexer {
         private static AtomicInteger tmpFilesCounter  = new AtomicInteger(0);
 //    private static AtomicInteger termCount = new AtomicInteger(0);
     private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
-    private static String targetPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
+    private static String targetPath = PropertiesFile.getProperty("save.files.path");
     private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
     private static TreeMap<Integer, String> mostCommonTerms = new TreeMap<>();
@@ -60,6 +60,7 @@ public class Indexer {
      * @param sortedTermsDic
      */
     public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
+//        PropertiesFile.putProperty("save.files.path",getFileOrDirName(targetPath+"Dictionaries"));
         checkOrMakeDir(getFileOrDirName(targetPath+"Dictionaries"));
         try {
             StringBuilder tmpPostFile = new StringBuilder();
@@ -71,12 +72,7 @@ public class Indexer {
         } catch (OutOfMemoryError om) {     //if Map is too big
             try {
                 ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(sortedTermsDic.entrySet());
-                lines.sort(new Comparator<Map.Entry<String, String>>() {
-                    @Override
-                    public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
-                        return compareIgnoreCase(o1.getKey(), o2.getKey(), true);
-                    }
-                });
+                lines.sort((o1, o2) -> compareIgnoreCase(o1.getKey(), o2.getKey(), true));
                 indexTempFile(new TreeMap<>(sortedTermsDic.tailMap(lines.get(lines.size() / 2).getKey())));
                 indexTempFile(new TreeMap<>(sortedTermsDic.headMap(lines.get(lines.size() / 2).getKey())));
             } catch (Exception e) {
@@ -93,12 +89,11 @@ public class Indexer {
 
     /**
      * the inverter function. takes all temp files and merges them.
-     * @param targetDirPath - the directory to write the files in
      */
-    public void mergePostingTempFiles(String targetDirPath) {
+    public void mergePostingTempFiles() {
         double startIndexTime = System.currentTimeMillis();
         int last = 0;
-        targetPath = targetDirPath;
+        String targetDirPath = targetPath;
         int currFileNum = WrieFile.getFileNum();
 //        int currFileNum = 202;
         StringBuilder stringBuilder = new StringBuilder();
@@ -108,7 +103,7 @@ public class Indexer {
         for (int i = 1; i <= currFileNum; i++) {
             stringBuilder.setLength(0);
             stringBuilder.append(targetDirPath).append((i)).append(".post").trimToSize();
-            checkOrMakeDir(getFileOrDirName(targetDirPath+"Dictionaries"));
+            checkOrMakeDir(targetDirPath);
             addFileToList(tmpFiles, stringBuilder, i);
             getFirstTerms(tmpFiles, termKeys, termValues, i);
         }
@@ -215,7 +210,6 @@ public class Indexer {
             }
         }
         for (Map.Entry<String, BufferedWriter> mapEntry : mergedFilesDic.entrySet()) {
-            String key = mapEntry.getKey();
             BufferedWriter bufferedWriter = mapEntry.getValue();
             try {
                 bufferedWriter.flush();
@@ -247,7 +241,7 @@ public class Indexer {
 
     /**
      * appends with/without stemming to the file/dir name
-     * @param fileName
+     * @param fileName the files
      * @return
      */
     private String getFileOrDirName(String fileName) {
@@ -357,7 +351,7 @@ public class Indexer {
      */
     private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic, String fileName) {
         StringBuilder stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(getFileOrDirName(stringBuilder.toString()+" Dictionaries"));
+        checkOrMakeDir(getFileOrDirName(stringBuilder.toString()+"Dictionaries"));
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(contains(fileName, " ") ? "" : ".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
@@ -387,6 +381,7 @@ public class Indexer {
     private void addFileToList(LinkedHashMap<String, BufferedWriter> tmpFiles, StringBuilder stringBuilder, String name) {
         try {
             File file = new File(stringBuilder.toString());
+            //noinspection ResultOfMethodCallIgnored
             file.createNewFile();
             tmpFiles.put(name, new BufferedWriter(new FileWriter(file, true)));
         } catch (FileNotFoundException e) {
@@ -407,7 +402,6 @@ public class Indexer {
      */
     private void getFirstTerms(LinkedHashMap<Integer, BufferedReader> tmpFiles, LinkedHashMap<Integer, MutablePair<String, Integer>> termKeys, LinkedHashMap<Integer, String> termValues, int i) {
         try {
-            BufferedReader file = tmpFiles.get(i);
             String line = tmpFiles.get(i).readLine();
             if (!isEmpty(line)) {
                 String[] term = split(line, termSeperator, 3);
@@ -436,10 +430,11 @@ public class Indexer {
             Path path = Paths.get(targetDirPath);
             if (Files.notExists(path) && !createdFolder) {
                 Files.createDirectory(path);
-                targetPath = targetDirPath+"\\";
-                createdFolder=true;
+                PropertiesFile.putProperty("save.files.path",targetDirPath+"\\");
+                targetPath = PropertiesFile.getProperty("save.files.path");
                 createdFolder=true;
             }
+            WrieFile.setTargetPath(targetPath);
         } catch (Exception e) {
             System.out.println("couldn't find or open: " + targetDirPath);
             e.printStackTrace();
@@ -454,7 +449,6 @@ public class Indexer {
     public void writeToDictionary(TreeMap<String, String> dic, String dicName) {
         try {
             inverter = new BufferedWriter(new FileWriter(new File(targetPath + dicName), true));
-            StringBuilder s = new StringBuilder();
             dic.forEach((term, value) -> {
                 try {
                     inverter.append(term).append(termSeperator).append(value).append("\n");
@@ -467,12 +461,7 @@ public class Indexer {
         } catch (OutOfMemoryError om) {     //if Map is too big
             try {
                 ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(dic.entrySet());
-                lines.sort(new Comparator<Map.Entry<String, String>>() {
-                    @Override
-                    public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
-                        return compareIgnoreCase(o1.getKey(), o2.getKey(), true);
-                    }
-                });
+                lines.sort((o1, o2) -> compareIgnoreCase(o1.getKey(), o2.getKey(), true));
                 writeToDictionary(new TreeMap<>(dic.tailMap(lines.get(lines.size() / 2).getKey())), dicName);
                 writeToDictionary(new TreeMap<>(dic.headMap(lines.get(lines.size() / 2).getKey())), dicName);
             } catch (Exception e) {

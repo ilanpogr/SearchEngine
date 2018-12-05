@@ -76,7 +76,7 @@ public class Master {
                 filesList.clear();
 //                if (f == 18) break;
             }
-            indexer.mergePostingTempFiles(targetDirPath);
+            indexer.mergePostingTempFiles();
             double s = System.nanoTime();
             indexer.writeToDictionary(new TreeMap<>(DocDic), "Documents Dictionary");
 //            indexer.writeToDictionary(termDictionary,"Term Dictionary");
