@@ -25,6 +25,7 @@ public class Controller {
     private static TreeMap<String, String> termDictionary = new TreeMap<>();
     private static boolean isStemMode = false;
     private static ArrayList<Doc> filesList;
+
     private static String targetDirPath;
     private static String corpusPath;
     private static String currPath;
@@ -89,19 +90,19 @@ public class Controller {
 
                 }
                 if (f % (fileNum / tmpFileNum) == 0 || f == fileNum) {
-//                    term_count += tmpTermDic.size();
+                    term_count += tmpTermDic.size();
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
                     System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary before merging: " + term_count);
                 }
                 filesList.clear();
-//                if (f == 18) break;
+//                if (f == 9) break;
             }
             indexer.mergePostingTempFiles(targetDirPath);
             double s = System.nanoTime();
-            indexer.writeToDictionary(new TreeMap<>(DocDic), "Documents Dictionary");
-//            indexer.writeToDictionary(termDictionary,"Term Dictionary");
-//            indexer.writeToDictionary(cache, "Cache Dictionary");
+            indexer.writeToDictionary(new TreeMap<>(DocDic), "3. Documents Dictionary");
+//            indexer.writeToDictionary(termDictionary,"1. Term Dictionary");
+//            indexer.writeToDictionary(cache, "2. Cache Dictionary");
             System.out.println(System.nanoTime() - s);
 
             int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);
@@ -110,14 +111,14 @@ public class Controller {
             System.out.println("Current File: " + currPath + " (number " + f + ") in Doc number: " + ++ii);
             e.printStackTrace();
         }
-        LanguagesInfo l = LanguagesInfo.getInstance();
-        CityInfo c = CityInfo.getInstance();
-        System.out.println();
-        l.printLanguages();
-        System.out.println();
-        c.printCities();
-        HashSet cities = new HashSet(CityInfo.getInstance().getCitiesNotAPI());
-        cities.forEach(System.out::println);
+//        LanguagesInfo l = LanguagesInfo.getInstance();
+//        CityInfo c = CityInfo.getInstance();
+//        System.out.println();
+//        l.printLanguages();
+//        System.out.println();
+//        c.printCities();
+//        HashSet cities = new HashSet(CityInfo.getInstance().getCitiesNotAPI());
+//        cities.forEach(System.out::println);
     }
 
     private static void handleFile(HashMap<String, String> parsedDic) {
@@ -137,7 +138,7 @@ public class Controller {
      * @param map - the Dictionary that will be merged
      */
     private static void mergeDicts(HashMap<String, String> map) {
-        int maxTf = 0, length = 0;
+        int maxTf = 0, length = 0, docNum = 0;
         for (Map.Entry<String, String> term : map.entrySet()
         ) {
             stringBuilder.setLength(0);
@@ -167,7 +168,7 @@ public class Controller {
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
-        DocDic.put(currPath, "" + maxTf + "," + length);
+        DocDic.put(currPath, "" + maxTf + "," + length+ "," + filesList.get(docNum++).getFileName());
         map.clear();
     }
 
@@ -193,8 +194,8 @@ public class Controller {
     }
 
     public static void writeToFreeSpace(Indexer indexer) {
-        indexer.writeToDictionary(termDictionary, "Term Dictionary");
-        indexer.writeToDictionary(cache, "Cache Dictionary");
+        indexer.writeToDictionary(termDictionary, "1. Term Dictionary");
+        indexer.writeToDictionary(cache, "2. Cache Dictionary");
         cache.clear();
         termDictionary.clear();
     }

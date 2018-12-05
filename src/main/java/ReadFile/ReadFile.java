@@ -27,7 +27,7 @@ public class ReadFile {
     private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
     private ArrayList<Doc> docList; //a list of Docs, from a single File
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
-    private static AtomicInteger fileCounter = new AtomicInteger(13);
+    private static AtomicInteger fileCounter = new AtomicInteger(0);
 
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;

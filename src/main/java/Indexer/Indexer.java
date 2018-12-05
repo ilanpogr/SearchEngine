@@ -36,6 +36,7 @@ public class Indexer {
     private static BufferedWriter inverter = null;
     private static TreeMap<Integer, String> mostCommonTerms = new TreeMap<>();
     private static TreeMap<Integer, String> leastCommonTerms = new TreeMap<>();
+    private static boolean createdFolder = false;
 
 
     /**
@@ -106,7 +107,7 @@ public class Indexer {
         for (int i = 1; i <= currFileNum; i++) {
             stringBuilder.setLength(0);
             stringBuilder.append(targetDirPath).append((i)).append(".post").trimToSize();
-            checkOrMakeDir(getFileOrDirName(targetDirPath));
+            checkOrMakeDir(getFileOrDirName(targetDirPath+"Dictionaries"));
             addFileToList(tmpFiles, stringBuilder, i);
             getFirstTerms(tmpFiles, termKeys, termValues, i);
         }
@@ -122,8 +123,8 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "op");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "qrs");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "tuvwxyz");
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("Term Dictionary"));
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("Cache Dictionary"));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("1. Term Dictionary"));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
 //        double logN = StrictMath.log10(Controller.getDocCount()) / log2;
@@ -191,13 +192,13 @@ public class Indexer {
                     minTerm = upperCase(minTerm);
                 }
                 if (maxIdfForCache < idf || df == 1) {
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
+                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("Cache Dictionary"), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
+                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
+                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
@@ -355,7 +356,7 @@ public class Indexer {
      */
     private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic, String fileName) {
         StringBuilder stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(getFileOrDirName(stringBuilder.toString()));
+        checkOrMakeDir(getFileOrDirName(stringBuilder.toString()+" Dictionaries"));
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(contains(fileName, " ") ? "" : ".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
@@ -415,7 +416,7 @@ public class Indexer {
                 termKeys.remove(i);
                 termValues.remove(i);
                 tmpFiles.remove(i).close();
-//                Files.delete(Paths.get(targetPath + i + ".post"));
+                Files.delete(Paths.get(targetPath + i + ".post"));
                 mergedFilesCounter.incrementAndGet();
             }
         } catch (IOException e) {
@@ -432,8 +433,11 @@ public class Indexer {
     private void checkOrMakeDir(String targetDirPath) {
         try {
             Path path = Paths.get(targetDirPath);
-            if (Files.notExists(path)) {
+            if (Files.notExists(path) && !createdFolder) {
                 Files.createDirectory(path);
+                targetPath = targetDirPath+"\\";
+                createdFolder=true;
+                createdFolder=true;
             }
         } catch (Exception e) {
             System.out.println("couldn't find or open: " + targetDirPath);
