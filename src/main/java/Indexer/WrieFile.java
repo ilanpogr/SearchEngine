@@ -14,6 +14,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WrieFile {
 
     private static String targetPath = Controller.getTargetDirPath();
+
+    public static void setTargetPath(String targetPath) {
+        WrieFile.targetPath = targetPath;
+    }
+
     private static AtomicInteger fileNum = new AtomicInteger(0);
 
     public static void createTempPostingFile(StringBuilder poString) {
