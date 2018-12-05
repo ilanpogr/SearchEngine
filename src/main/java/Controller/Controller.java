@@ -9,6 +9,7 @@ import TextContainers.Doc;
 import TextContainers.LanguagesInfo;
 import org.apache.commons.lang3.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -63,8 +64,12 @@ public class Controller {
         double mainStartTime = System.currentTimeMillis();
         int j = 0, f = 0, ii = 0, term_count = 0;
         try {
-            targetDirPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
-            corpusPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
+            PropertiesFile.putProperty("save.files.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\");
+            PropertiesFile.putProperty("data.set.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus");
+//            targetDirPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\";
+            targetDirPath = PropertiesFile.getProperty("save.files.path");
+            corpusPath = PropertiesFile.getProperty("data.set.path");
+//            corpusPath = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus";
             filesList = new ArrayList<>();
             ReadFile readFile = new ReadFile(corpusPath);
             Parse p = new Parse();
@@ -98,7 +103,7 @@ public class Controller {
                 filesList.clear();
 //                if (f == 9) break;
             }
-            indexer.mergePostingTempFiles(targetDirPath);
+            indexer.mergePostingTempFiles();
             double s = System.nanoTime();
             indexer.writeToDictionary(new TreeMap<>(DocDic), "3. Documents Dictionary");
 //            indexer.writeToDictionary(termDictionary,"1. Term Dictionary");

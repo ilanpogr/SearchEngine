@@ -1,7 +1,6 @@
 package Indexer;
 
-import Controller.Controller;
-
+import Controller.PropertiesFile;
 import static org.apache.commons.io.FileUtils.*;
 
 import java.io.*;
@@ -13,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WrieFile {
 
-    private static String targetPath = Controller.getTargetDirPath();
+    private static String targetPath = PropertiesFile.getProperty("save.files.path");
 
     public static void setTargetPath(String targetPath) {
         WrieFile.targetPath = targetPath;
