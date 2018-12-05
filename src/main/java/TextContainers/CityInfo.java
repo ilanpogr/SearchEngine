@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -25,6 +26,11 @@ public class CityInfo {
 
     private HashMap<String, City> citiesInfo_map;
     private HashMap<String, String> infoEntries;
+    private HashSet<String> citiesNotAPI = new HashSet<>();
+
+    public HashSet<String> getCitiesNotAPI() {
+        return citiesNotAPI;
+    }
 
     /**
      * regular singleton
@@ -149,6 +155,7 @@ public class CityInfo {
                 citiesInfo_map.put(cityName, city);
             } else {
                 doc.setCity(cityNameShort);
+                citiesNotAPI.add(cityNameShort);
             }
         }
     }

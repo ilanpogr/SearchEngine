@@ -29,16 +29,21 @@ public class Controller {
     private static String corpusPath;
     private static String currPath;
 
+    public static boolean isStemMode() {
+        return isStemMode;
+    }
+
     /**
      * get a Property from properties file and convert it to int.
      * if it can't convert to Integer, it will return 5.
+     *
      * @param s - the value of the property
      * @return the value of the property
      */
     private static int getPropertyAsInt(String s) {
         try {
             return Integer.parseInt(PropertiesFile.getProperty(s));
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
             return 5;
         }
@@ -46,6 +51,7 @@ public class Controller {
 
     /**
      * get the Path to the Directory that file will be written to
+     *
      * @return String path
      */
     public static String getTargetDirPath() {
@@ -71,11 +77,9 @@ public class Controller {
                 for (int i = 0; i < filesList.size(); i++) {
                     double parsestart = System.currentTimeMillis();
                     currPath = filesList.get(i).docNum();
+                        HashMap<String, String> map = p.parse(filesList.get(i).text());
 
-                    HashMap<String, String> map = p.parse(filesList.get(i).text());
-
-                    handleFile(map);
-
+                        handleFile(map);
 
                     double parseend = System.currentTimeMillis();
                     singleparse = (parseend - read) / 1000;
@@ -84,8 +88,8 @@ public class Controller {
                     j++;
 
                 }
-                if (f % (fileNum/tmpFileNum) == 0 || f == fileNum) {
-                    term_count += tmpTermDic.size();
+                if (f % (fileNum / tmpFileNum) == 0 || f == fileNum) {
+//                    term_count += tmpTermDic.size();
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
                     System.out.println("Time took to read and parse file: " + currPath + ": " + singleparse + " seconds. \t Total read and parse time: " + (int) fileparse / 60 + ":" + ((fileparse % 60 < 10) ? "0" : "") + (int) fileparse % 60 + " seconds. \t (number of documents: " + (j) + ",\t number of files: " + f + ")\t\t\tSize of Dictionary before merging: " + term_count);
@@ -95,10 +99,10 @@ public class Controller {
             }
             indexer.mergePostingTempFiles(targetDirPath);
             double s = System.nanoTime();
-//            indexer.writeToDictionary(new TreeMap<>(DocDic), "Documents Dictionary");
+            indexer.writeToDictionary(new TreeMap<>(DocDic), "Documents Dictionary");
 //            indexer.writeToDictionary(termDictionary,"Term Dictionary");
 //            indexer.writeToDictionary(cache, "Cache Dictionary");
-            System.out.println(System.nanoTime()-s);
+            System.out.println(System.nanoTime() - s);
 
             int total = (int) ((System.currentTimeMillis() - mainStartTime) / 1000);
             System.out.println("\nTime took to run main: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds");
@@ -112,6 +116,8 @@ public class Controller {
         l.printLanguages();
         System.out.println();
         c.printCities();
+        HashSet cities = new HashSet(CityInfo.getInstance().getCitiesNotAPI());
+        cities.forEach(System.out::println);
     }
 
     private static void handleFile(HashMap<String, String> parsedDic) {
@@ -120,13 +126,14 @@ public class Controller {
             HashMap<String, String> stemmed = stemmer.stem(parsedDic);
             mergeDicts(stemmed);
         } else {
-            parsedDic.replaceAll((k,v)->v=substring(v,2));
+            parsedDic.replaceAll((k, v) -> v = substring(v, 2));
             mergeDicts(parsedDic);
         }
     }
 
     /**
      * Merging the Dictionary of a single Document into the Main Dictionaries
+     *
      * @param map - the Dictionary that will be merged
      */
     private static void mergeDicts(HashMap<String, String> map) {
@@ -147,15 +154,16 @@ public class Controller {
                 isUpperCase = true;
             }
             if (tmpTermDic.containsKey(termKey)) {
-                if (!isUpperCase){
-                    tmpTermDic.replace(termKey,"0"+substring(tmpTermDic.get(termKey),1));
+                if (!isUpperCase) {
+                    tmpTermDic.replace(termKey, "0" + substring(tmpTermDic.get(termKey), 1));
                 }
                 stringBuilder.append(tmpTermDic.get(termKey)).append(fileDelimiter);
             } else {
-                stringBuilder.append(isUpperCase?"1":"0").append(termSeperator);
+                stringBuilder.append(isUpperCase ? "1" : "0").append(termSeperator);
             }
+
             stringBuilder.append(currPath).append(fileDelimiter).append(term.getValue());
-            tmpTermDic.put(termKey, stringBuilder.toString());
+            tmpTermDic.put(isUpperCase ? term.getKey() : termKey, stringBuilder.toString());
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
@@ -168,12 +176,12 @@ public class Controller {
     }
 
     public static void addToFinalTermDictionary(String minTerm, String s) {
-        termDictionary.put(minTerm,s);
+        termDictionary.put(minTerm, s);
 
     }
 
     public static void addToCacheDictionary(String minTerm, String s) {
-        cache.put(minTerm,s);
+        cache.put(minTerm, s);
     }
 
     public static int getDocCount() {
@@ -185,7 +193,7 @@ public class Controller {
     }
 
     public static void writeToFreeSpace(Indexer indexer) {
-        indexer.writeToDictionary(termDictionary,"Term Dictionary");
+        indexer.writeToDictionary(termDictionary, "Term Dictionary");
         indexer.writeToDictionary(cache, "Cache Dictionary");
         cache.clear();
         termDictionary.clear();

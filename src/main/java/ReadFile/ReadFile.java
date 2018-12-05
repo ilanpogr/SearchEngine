@@ -27,7 +27,7 @@ public class ReadFile {
     private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
     private ArrayList<Doc> docList; //a list of Docs, from a single File
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
-    private static AtomicInteger fileCounter = new AtomicInteger(0);
+    private static AtomicInteger fileCounter = new AtomicInteger(13);
 
     //    private ArrayList<String> textList;
 //    private ArrayList<String> docNumList;
@@ -131,7 +131,7 @@ public class ReadFile {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
             Doc curr = new Doc();
-            curr.setFileName(substringAfterLast(rootPath.get(fileCounter.get()),"\\"));
+            curr.setFileName(substringAfterLast(rootPath.get(fileCounter.get()-1),"\\"));
             StringBuilder docCity = new StringBuilder();
             String docLang = "";
             boolean isLanguage = false;
