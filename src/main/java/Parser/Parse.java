@@ -25,6 +25,7 @@ public class Parse {
     private static HashSet<String> stopWords = initStopWords();
     private static HashMap<String, String> monthDictionary = initMonthMap();
     private int currentPosition = 0;
+    private int stopWordsCounter = 0;
 
     /**
      * TODO - initStopWords(String path) that will get from the model (using the properties)
@@ -125,12 +126,13 @@ public class Parse {
         String[] s = split(str[0], " ");
         boolean expressionFlag;
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
-            currentPosition = i+1;
+            currentPosition = i+1 - stopWordsCounter;
             expressionFlag = false;
             doneWithToken = true;
             String[] token = new String[]{s[i], parametersDelimiter};
             cleanToken(token);
             if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$') || containsOnly(token[0], '%')) {
+                stopWordsCounter++;
                 continue;
             }
             if (contains(token[0],"%")){
