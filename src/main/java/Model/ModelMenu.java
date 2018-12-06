@@ -10,9 +10,6 @@ import java.util.Observable;
  */
 public class ModelMenu extends Observable{
 
-    private long start;
-    private long end;
-
     private Master master_of_puppets;
 
     public ModelMenu(){
@@ -20,7 +17,7 @@ public class ModelMenu extends Observable{
     }
 
     public int getNumOfTerms() {
-        return master_of_puppets.getNumOfTerms();
+        return master_of_puppets.getTermCount();
     }
 
     public int getNumOfDocs() {
@@ -28,15 +25,12 @@ public class ModelMenu extends Observable{
     }
 
     public void start(){
-        start = System.currentTimeMillis();
         master_of_puppets.indexCorpus();
-        end = System.currentTimeMillis();
         setChanged();
         notifyObservers("done");
     }
 
-    public long getElapsedTime() {
-        return (end - start) / 10000;
+    public void removeAllFiles() {
+        master_of_puppets.removeAllFiles();
     }
-
 }

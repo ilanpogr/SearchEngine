@@ -1,11 +1,8 @@
 package Parser;
 
 import Controller.PropertiesFile;
-import TextContainers.City;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -28,7 +25,6 @@ public class Parse {
     private int stopWordsCounter = 0;
 
     /**
-     * TODO - initStopWords(String path) that will get from the model (using the properties)
      * Initialize set of all the wanted stop-words.
      *
      * @return : the set of stop-words
