@@ -1,16 +1,20 @@
 package Controller;
 
 import Model.ModelMenu;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import View.IR_MenuView;
 
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-import java.io.File;
+import java.awt.*;
+import java.io.*;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -23,6 +27,9 @@ public class ControllerMenu implements Observer {
     private IR_MenuView ir_menuView;
     private ModelMenu ir_modelMenu;
     private String[] propertyKeys = {"data.set.path", "save.files.path"};
+
+    private long start;
+    private long end;
 
     private boolean savePath = false;
     private boolean dataPath = false;
@@ -71,10 +78,11 @@ public class ControllerMenu implements Observer {
                     ir_menuView.data_textField.setText("stop_words.txt not existing in this path");
                     ir_menuView.start_bttn.setDisable(false);
                 } else {
-                    if (selectedDirectory.getAbsolutePath().endsWith("\\"))
+                    if (selectedDirectory.getAbsolutePath().endsWith("\\")) {
                         PropertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath());
-                    else
+                    } else {
                         PropertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath() + "\\");
+                    }
                     ir_menuView.data_textField.setText(PropertiesFile.getProperty(propertyKeys[0]));
                     dataPath = true;
                     checkIfCanStart();
@@ -85,6 +93,7 @@ public class ControllerMenu implements Observer {
                 else
                     PropertiesFile.putProperty(propertyKeys[1], selectedDirectory.getAbsolutePath() + "\\");
                 ir_menuView.save_textField.setText(PropertiesFile.getProperty(propertyKeys[1]));
+                ir_menuView.dict_btn.setDisable(false);
                 savePath = true;
                 checkIfCanStart();
             }
@@ -105,55 +114,90 @@ public class ControllerMenu implements Observer {
                     PropertiesFile.putProperty("stem.mode", "1");
                 }
                 setSceneBeforeStart();
-                Thread thread = new Thread(){
-                    public void run(){
+                Thread thread = new Thread() {
+                    public void run() {
+                        ir_modelMenu.removeAllFiles();
                         ir_modelMenu.start();
                     }
                 };
+                start = System.currentTimeMillis();
                 thread.start();
             } else if (arg.equals("browse")) {
                 loadPathFromDirectoryChooser(0);
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {
-                PropertiesFile.resetProperties(propertyKeys);
-                ir_menuView.save_textField.setText("");
-                ir_menuView.data_textField.setText("");
-                ir_menuView.start_bttn.setDisable(true);
+                ir_modelMenu.removeAllFiles();
+//                ir_menuView.start_bttn.setDisable(true);
+            } else if (arg.equals("show")) {
+                                Thread thread = new Thread() {
+                    public void run() {
+                        openDictionary();
+                        ir_menuView.summary_lbl.setText("");
+                    }
+                };
+                thread.start();
             }
-        } if (o.equals(ir_modelMenu)){
-            if (arg.equals("done"))
-            addSummaryToLabel();
+        } else if (o.equals(ir_modelMenu)) {
+            if (arg.equals("done")) {
+                end = System.currentTimeMillis();
+                Platform.runLater(this::addSummaryToLabel);
+            }
         }
     }
 
-    private void setSceneBeforeStart() {
-        ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
-        ir_menuView.summary_lbl.setText("IN PROCESS!!");
-        ir_menuView.start_bttn.setDisable(true);
-        ir_menuView.dict_btn.setDisable(true);
-        ir_menuView.browse_btn.setDisable(true);
-        ir_menuView.save_btn.setDisable(true);
+    private void openDictionary() {
+        String s;
+        if (PropertiesFile.getProperty("stem.mode").equals("0")) { // stem is off
+            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries without stemming\\1. Term Dictionary without stemming.txt";
+        } else {
+            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries with stemming\\1. Term Dictionary with stemming.txt";
+        }
+        boolean exist = new File(s).isFile();
+        if (!exist) {
+
+        } else {
+            try {
+                Desktop desktop = null;
+                if (Desktop.isDesktopSupported()) {
+                    desktop = Desktop.getDesktop();
+                }
+                desktop.open(new File(s));
+            } catch (IOException ioe) {
+            }
+        }
     }
 
-    private void addSummaryToLabel() {
-        ir_menuView.start_bttn.setDisable(false);
-        ir_menuView.dict_btn.setDisable(false);
-        ir_menuView.browse_btn.setDisable(false);
-        ir_menuView.save_btn.setDisable(false);
-        ir_menuView.summary_lbl.setAlignment(Pos.TOP_LEFT);
-        String time = "Time for the whole operation: " + ir_modelMenu.getElapsedTime() + " seconds";
-        String numOfterms = "Total number of term: " + ir_modelMenu.getNumOfTerms();
-        String numOfDocs = "Total number of Documents: " + ir_modelMenu.getNumOfDocs();
-        String summary = "Summary:\n" +
-                "\t" + time + "\n" +
-                "\t" + numOfterms + "\n" +
-                "\t" + numOfDocs;
-        ir_menuView.summary_lbl.setText(summary);
 
-    }
+        private void setSceneBeforeStart () {
+            ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
+            ir_menuView.summary_lbl.setText("IN PROCESS!!");
+            ir_menuView.start_bttn.setDisable(true);
+            ir_menuView.dict_btn.setDisable(true);
+            ir_menuView.browse_btn.setDisable(true);
+            ir_menuView.save_btn.setDisable(true);
+            ir_menuView.reset_btn.setDisable(true);
+        }
 
-    public void showStage() {
-        stage.show();
+        private void addSummaryToLabel () {
+            ir_menuView.start_bttn.setDisable(false);
+            ir_menuView.dict_btn.setDisable(false);
+            ir_menuView.browse_btn.setDisable(false);
+            ir_menuView.save_btn.setDisable(false);
+            ir_menuView.reset_btn.setDisable(false);
+            ir_menuView.summary_lbl.setAlignment(Pos.TOP_LEFT);
+            String time = "Time for the whole operation: " + (end - start) / 1000 + " seconds";
+            String numOfterms = "Total number of term: " + ir_modelMenu.getNumOfTerms();
+            String numOfDocs = "Total number of Documents: " + ir_modelMenu.getNumOfDocs();
+            String summary = "Summary:\n" +
+                    "\t" + time + "\n" +
+                    "\t" + numOfterms + "\n" +
+                    "\t" + numOfDocs;
+            ir_menuView.summary_lbl.setText(summary);
+
+        }
+
+        public void showStage () {
+            stage.show();
+        }
     }
-}

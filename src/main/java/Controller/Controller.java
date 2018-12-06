@@ -14,6 +14,7 @@ import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
+// todo - remove this class
 public class Controller {
 //    private static int fileNum = getPropertyAsInt("number.of.files");
 //    private static int tmpFileNum = getPropertyAsInt("number.of.temp.files");

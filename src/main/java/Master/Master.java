@@ -6,6 +6,8 @@ import Parser.Parse;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
+import TextContainers.LanguagesInfo;
+
 import java.util.*;
 import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.lowerCase;
@@ -19,6 +21,7 @@ public class Master {
     private static int tmpFileNum = getPropertyAsInt("number.of.temp.files");
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
     private static String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
+    private static String targetPath;
     private static StringBuilder stringBuilder = new StringBuilder();
     private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
@@ -62,7 +65,9 @@ public class Master {
         try {
 //            PropertiesFile.putProperty("save.files.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\");
 //            PropertiesFile.putProperty("data.set.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus");
+            isStemMode = setStemMode();
             String s = PropertiesFile.getProperty("data.set.path")+"corpus\\";
+            targetPath = PropertiesFile.getProperty("save.files.path");
             ReadFile readFile = new ReadFile(PropertiesFile.getProperty("data.set.path")+"corpus\\");
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
@@ -84,8 +89,11 @@ public class Master {
             System.out.println("MERGING..");
             indexer.mergePostingTempFiles();
             indexer.writeToDictionary(new TreeMap<>(DocDic), "3. Documents Dictionary");
+            LanguagesInfo.getInstance().printLanguages();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            PropertiesFile.putProperty("save.files.path", targetPath);
         }
     }
 
@@ -149,7 +157,7 @@ public class Master {
      * @return the size of the dictionary
      */
     public static int getTermCount() {
-        return termDictionary.size();
+        return Indexer.getTermCounter();
     }
 
     /**
@@ -158,10 +166,6 @@ public class Master {
      */
     public static void removeFromDictionary(String term) {
         termDictionary.remove(term);
-    }
-
-    public int getNumOfTerms() {
-        return termDictionary.size();
     }
 
     public static int getNumOfDocs() {
@@ -182,6 +186,11 @@ public class Master {
 
     public static void addToFinalTermDictionary(String minTerm, String s) {
         termDictionary.put(minTerm, s);
+
+    }
+
+    // todo - check if stem mode on or not from properties.
+    public void removeAllFiles() {
 
     }
     //    public static void writeToFreeSpace(Indexer indexer) {
