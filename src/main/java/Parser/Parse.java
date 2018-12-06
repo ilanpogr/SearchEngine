@@ -125,6 +125,7 @@ public class Parse {
     private void parseTokens(HashMap<String, String> termsDict, String[] str) {
         String[] s = split(str[0], " ");
         boolean expressionFlag;
+        stopWordsCounter = 0;
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             currentPosition = i+1 - stopWordsCounter;
             expressionFlag = false;
