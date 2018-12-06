@@ -34,8 +34,8 @@ public class Parse {
      * @return : the set of stop-words
      */
     private static HashSet<String> initStopWords() {
-        String baseDir = (String) System.getProperties().get("user.dir");
-        String filesPath = baseDir + PropertiesFile.getProperty("stop.words.path");
+//        String baseDir = (String) System.getProperties().get("user.dir");
+        String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
         stopWords = new HashSet<>();
         Scanner s = null;
         try {

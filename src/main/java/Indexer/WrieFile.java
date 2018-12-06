@@ -13,22 +13,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WrieFile {
 
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
+    private static AtomicInteger fileNum = new AtomicInteger(0);
+
 
     public static void setTargetPath(String targetPath) {
         WrieFile.targetPath = targetPath;
-    }
-
-    private static AtomicInteger fileNum = new AtomicInteger(0);
-
-    public static void createTempPostingFile(StringBuilder poString) {
-        int fileName = fileNum.getAndIncrement() + 1;
-        try {
-            writeStringToFile(new File(targetPath + fileName + ".post"), poString.toString(), false);
-        } catch (IOException e) {
-            System.out.println("create temp posting file filed in: " + fileName);
-            e.printStackTrace();
-        }
-
     }
 
     public static int getFileNum() {
@@ -44,27 +33,16 @@ public class WrieFile {
         }
     }
 
-//    public static void writeFinalDictionary(StringBuilder termDictionary) {
-//        int fileName = fileNum.getAndIncrement()+1;
-//        try {
-//            writeStringToFile(new File(targetPath+"Final Terms Dictionary"),termDictionary.toString(),true);
-//        } catch (IOException e) {
-//            System.out.println("create temp posting file filed in: " +fileName);
-//            e.printStackTrace();
-//        }
-//
-//    }
-//
-//    public static void writeCacheDictionary(StringBuilder cahce) {
-//        int fileName = fileNum.getAndIncrement()+1;
-//        try {
-//            writeStringToFile(new File(targetPath+"Cache Dictionary"),cahce.toString(),true);
-//        } catch (IOException e) {
-//            System.out.println("create temp posting file filed in: " +fileName);
-//            e.printStackTrace();
-//        }
-//
-//    }
+    public static void createTempPostingFile(StringBuilder poString) {
+        int fileName = fileNum.getAndIncrement() + 1;
+        try {
+            writeStringToFile(new File(targetPath + fileName + ".post"), poString.toString(), false);
+        } catch (IOException e) {
+            System.out.println("create temp posting file filed in: " + fileName);
+            e.printStackTrace();
+        }
+
+    }
 
     public static void writeToDictionary(StringBuilder s, String fileName) {
         try {

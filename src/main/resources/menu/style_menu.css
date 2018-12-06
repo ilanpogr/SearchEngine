@@ -24,6 +24,15 @@
     -fx-padding: 5;
 }
 
+.button:pressed {
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+    -fx-background-color: #186a67;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-padding: 5;
+}
+
 .check-box {
     -fx-font-weight: bold;
     -fx-text-fill: #000000;

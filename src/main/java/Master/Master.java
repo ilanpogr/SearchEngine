@@ -25,9 +25,18 @@ public class Master {
     private static TreeMap<String, String> termDictionary = new TreeMap<>();
     private static TreeMap<String, String> cache = new TreeMap<>();
     private static ArrayList<Doc> filesList;
-    private static boolean isStemMode = false;
-    private static String currPath;
+    private static boolean isStemMode = setStemMode();
 
+    private static String currDocName;
+
+    private static boolean setStemMode() {
+        String stem = PropertiesFile.getProperty("stem.mode");
+        if (stem.equalsIgnoreCase("0")){
+            return false;
+        } else {
+            return true;
+        }
+    }
     public static boolean isStemMode() {
         return isStemMode;
     }
@@ -39,7 +48,7 @@ public class Master {
      * @param s - the value of the property
      * @return the value of the property
      */
-    private static int getPropertyAsInt(String s) {
+     private static int getPropertyAsInt(String s) {
         try {
             return Integer.parseInt(PropertiesFile.getProperty(s));
         } catch (Exception e) {
@@ -48,29 +57,22 @@ public class Master {
         }
     }
 
-    public static void main(String[] args) {
-        new Master();
-    }
-
-
-    public Master(){
-        indexCorpus();
-    }
-
-    private static void indexCorpus() {
+    public void indexCorpus() {
         int i=0;
         try {
-            PropertiesFile.putProperty("save.files.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\");
-            PropertiesFile.putProperty("data.set.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus");
-            ReadFile readFile = new ReadFile(PropertiesFile.getProperty("data.set.path"));
+//            PropertiesFile.putProperty("save.files.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\");
+//            PropertiesFile.putProperty("data.set.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus");
+            String s = PropertiesFile.getProperty("data.set.path")+"corpus\\";
+            ReadFile readFile = new ReadFile(PropertiesFile.getProperty("data.set.path")+"corpus\\");
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
             Parse p = new Parse();
+            System.out.println("READING, PARSING..");
             while (ReadFile.hasNextFile()) {
                 i++;
                 filesList = readFile.getFileList();
                 for (Doc aFilesList : filesList) {
-                    currPath = aFilesList.docNum();
+                    currDocName = aFilesList.docNum();
                     HashMap<String, String> map = p.parse(aFilesList.text());
                     handleFile(map);
                 }
@@ -79,6 +81,7 @@ public class Master {
                     tmpTermDic.clear();
                 }
             }
+            System.out.println("MERGING..");
             indexer.mergePostingTempFiles();
             indexer.writeToDictionary(new TreeMap<>(DocDic), "3. Documents Dictionary");
         } catch (Exception e) {
@@ -132,12 +135,12 @@ public class Master {
                 stringBuilder.append(isUpperCase ? "1" : "0").append(termSeperator);
             }
 
-            stringBuilder.append(currPath).append(fileDelimiter).append(term.getValue());
+            stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
-        DocDic.put(currPath, "" + maxTf + "," + length+ "," + filesList.get(docNum++).getFileName());
+        DocDic.put(currDocName, "" + maxTf + "," + length+ "," + filesList.get(docNum++).getFileName());
         map.clear();
     }
 
