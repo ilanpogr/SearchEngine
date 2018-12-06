@@ -48,7 +48,12 @@ public class Master {
         }
     }
 
-    Master(){
+    public static void main(String[] args) {
+        new Master();
+    }
+
+
+    public Master(){
         indexCorpus();
     }
 

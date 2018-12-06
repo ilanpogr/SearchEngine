@@ -5,12 +5,11 @@ import Controller.PropertiesFile;
 import Master.Master;
 import Parser.Parse;
 import Stemmer.Stemmer;
-import TextContainers.CityInfo;
-import TextContainers.LanguagesInfo;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+
 import static org.apache.commons.io.FileUtils.sizeOf;
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -23,19 +22,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Indexer {
 
-    private static double totalPostingSizeByKB = 0;
+    private static double totalPostingSizeByKB = 0;//todo - remove this field and send the information to view (through the right pipes)
     private static final int minNumberOfTf = (int) getPropertyAsDouble("min.tf.to.save");
-    private static final int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
     private static final double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
+    private static final int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
     private static final String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
     private static final String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static final String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-    //    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
-//    private static AtomicInteger tmpFilesCounter = new AtomicInteger(202);
-        private static AtomicInteger tmpFilesCounter  = new AtomicInteger(0);
-//    private static AtomicInteger termCount = new AtomicInteger(0);
-    private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
+    //    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
+    //    private static AtomicInteger tmpFilesCounter = new AtomicInteger(202);
+    private static AtomicInteger tmpFilesCounter  = new AtomicInteger(0);
+    private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
     private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
     private static TreeMap<Integer, String> mostCommonTerms = new TreeMap<>();
@@ -61,11 +59,12 @@ public class Indexer {
 
     /**
      * creates and writes a temp file
+     *
      * @param sortedTermsDic
      */
     public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
 //        PropertiesFile.putProperty("save.files.path",getFileOrDirName(targetPath+"Dictionaries"));
-        checkOrMakeDir(getFileOrDirName(targetPath+"Dictionaries"));
+        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
         try {
             StringBuilder tmpPostFile = new StringBuilder();
             sortedTermsDic.forEach((k, v) -> tmpPostFile.append(lowerCase(k)).append(termSeperator).append(v).append("\n"));
@@ -127,11 +126,15 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
-//        double logN = StrictMath.log10(Controller.getDocCount()) / log2;
-        double logN = StrictMath.log10(472000) / log2;
+        double logN = StrictMath.log10(Master.getDocCount()) / log2;
+//        double logN = StrictMath.log10(472000) / log2;
         BufferedWriter pw = null;
+        CSVPrinter csvPrinter = null;
         try {
-            pw = new BufferedWriter(new FileWriter("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\zipf.csv",true));
+            pw = new BufferedWriter(new FileWriter("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\zipf.csv", true));
+            csvPrinter = new CSVPrinter(pw, CSVFormat.DEFAULT.withHeader("Term", "tf")
+                    .withIgnoreHeaderCase()
+                    .withTrim());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -171,7 +174,7 @@ public class Indexer {
             }
             stringBuilder.trimToSize();
             ArrayList<ImmutablePair<Integer, ImmutablePair<String, String>>> sortedPosting = new ArrayList<>();
-            sortPostingByFrequency(sortedPosting, stringBuilder);
+            sortPostingByFrequency(sortedPosting, stringBuilder, minTerm);
             int totalTf = 0;
             stringBuilder.setLength(0);
             for (ImmutablePair<Integer, ImmutablePair<String, String>> d : sortedPosting) {
@@ -181,17 +184,14 @@ public class Indexer {
             int df = sortedPosting.size();
             double idf = logN - (StrictMath.log10(df) / log2);
             if (!contains(minTerm, " ")) {
-                try{
+                try {
                     if (isUpperCase == 1) {
                         minTerm = upperCase(minTerm);
                     }
-
-                    CSVPrinter csvPrinter = new CSVPrinter(pw, CSVFormat.DEFAULT.withHeader("Term", "tf")
-                            .withIgnoreHeaderCase()
-                            .withTrim());
 //                    pw.append(minTerm).append(",").append(String.valueOf(totalTf))/*.append(",").append(String.valueOf(df)).append(",").append(String.valueOf(idf))*/.append("\n");
-                    csvPrinter.printRecord(Arrays.asList(minTerm,totalTf));
-                }catch (IOException e){
+                    if (totalTf > 1)
+                        csvPrinter.printRecord(Arrays.asList(minTerm, totalTf));
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
 //                if (mostCommonTerms.size() < 1 || mostCommonTerms.firstKey() == null || mostCommonTerms.firstKey().compareTo(totalTf) < 0) {
@@ -244,7 +244,7 @@ public class Indexer {
         }
         try {
             totalPostingSizeByKB = sizeOf(new File(targetDirPath));
-            if (pw!=null){
+            if (pw != null) {
                 pw.flush();
                 pw.close();
             }
@@ -269,8 +269,9 @@ public class Indexer {
 
     /**
      * appends with/without stemming to the file/dir name
+     *
      * @param fileName the files
-     * @return
+     * @return the file's string appended with "with(out)? stemming"
      */
     private String getFileOrDirName(String fileName) {
         return appendIfMissingIgnoreCase(fileName, " with" + (Master.isStemMode() ? "" : "out") + " stemming");
@@ -278,6 +279,7 @@ public class Indexer {
 
     /**
      * takes a part of the posting and splits it to two parts - one for cache and the other to the posting file
+     *
      * @param stringBuilder
      * @return
      */
@@ -293,8 +295,9 @@ public class Indexer {
 
     /**
      * get the file name which the term's posting should be written to
-     * @param first
-     * @return
+     *
+     * @param first - the first character of a term
+     * @return the file's full name
      */
     private String getFileName(char first) {
         switch (first) {
@@ -356,10 +359,11 @@ public class Indexer {
 
     /**
      * sorts the posting string by the term frequency
-     * @param toSort
-     * @param stringBuilder
+     *  @param toSort        - an array list holding the tf as a key and the Map's term's record as a value
+     * @param stringBuilder - a string given with the term's value
+     * @param minTerm
      */
-    private void sortPostingByFrequency(ArrayList<ImmutablePair<Integer, ImmutablePair<String, String>>> toSort, StringBuilder stringBuilder) {
+    private void sortPostingByFrequency(ArrayList<ImmutablePair<Integer, ImmutablePair<String, String>>> toSort, StringBuilder stringBuilder, String minTerm) {
         String[] pairs = split(stringBuilder.toString(), fileDelimiter);
         for (int i = 0, frequency; i < pairs.length - 1; i++) {
             frequency = countMatches(pairs[i + 1], Stemmer.getStemDelimiter().charAt(0));
@@ -372,24 +376,26 @@ public class Indexer {
     }
 
     /**
+     * creates the file that we want to write to
      *
-     * @param mergedFilesCounterDic
-     * @param mergedFilesDic
-     * @param fileName
+     * @param mergedFilesCounterDic the map that counts for each file how many terms (+1) are inserted - for knowing later the row's number
+     * @param mergedFilesDic        - key: the file's name.    value: BufferedWriter that will be assigned to this file.
+     * @param fileName              - the name of the created file
      */
     private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic, String fileName) {
         StringBuilder stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(getFileOrDirName(stringBuilder.toString()+"Dictionaries"));
+        checkOrMakeDir(getFileOrDirName(stringBuilder.toString() + "Dictionaries"));
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(contains(fileName, " ") ? "" : ".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
     }
 
     /**
+     * adds a BufferedReader for each of the temp posting files
      *
-     * @param tmpFiles
-     * @param stringBuilder
-     * @param i
+     * @param tmpFiles      - the key is the index (name) of a temporary file and the value is the reader
+     * @param stringBuilder - has the path
+     * @param i - posting file index
      */
     private void addFileToList(LinkedHashMap<Integer, BufferedReader> tmpFiles, StringBuilder stringBuilder, int i) {
         try {
@@ -401,10 +407,10 @@ public class Indexer {
     }
 
     /**
-     *
-     * @param tmpFiles
-     * @param stringBuilder
-     * @param name
+     * adds a BufferedWriter for each of the temp posting files
+     * @param tmpFiles      - the key is the index (name) of a temporary file and the value is the reader
+     * @param stringBuilder - has the path
+     * @param name          - name of the file
      */
     private void addFileToList(LinkedHashMap<String, BufferedWriter> tmpFiles, StringBuilder stringBuilder, String name) {
         try {
@@ -422,11 +428,11 @@ public class Indexer {
     }
 
     /**
-     *
-     * @param tmpFiles
-     * @param termKeys
-     * @param termValues
-     * @param i
+     * reads the next line of a file (if available) or deletes it from the maps.
+     * @param tmpFiles      - the key is the index (name) of a temporary file and the value is the reader
+     * @param termKeys      - the keys map of the current lines
+     * @param termValues    - the values map of the current lines
+     * @param i             - index of the temp posting file
      */
     private void getFirstTerms(LinkedHashMap<Integer, BufferedReader> tmpFiles, LinkedHashMap<Integer, MutablePair<String, Integer>> termKeys, LinkedHashMap<Integer, String> termValues, int i) {
         try {
@@ -450,17 +456,17 @@ public class Indexer {
     }
 
     /**
-     *
-     * @param targetDirPath
+     * checks if a given path points to a valid directory. if not - creates the directory
+     * @param targetDirPath - the Dir path
      */
     private void checkOrMakeDir(String targetDirPath) {
         try {
             Path path = Paths.get(targetDirPath);
             if (Files.notExists(path) && !createdFolder) {
                 Files.createDirectory(path);
-                PropertiesFile.putProperty("save.files.path",targetDirPath+"\\");
+                PropertiesFile.putProperty("save.files.path", targetDirPath + "\\");
                 targetPath = PropertiesFile.getProperty("save.files.path");
-                createdFolder=true;
+                createdFolder = true;
             }
             WrieFile.setTargetPath(targetPath);
         } catch (Exception e) {
@@ -470,9 +476,9 @@ public class Indexer {
     }
 
     /**
-     *
-     * @param dic
-     * @param dicName
+     * writes a TreeMap to a file
+     * @param dic - the map we want to write
+     * @param dicName - the name of the created file
      */
     public void writeToDictionary(TreeMap<String, String> dic, String dicName) {
         try {
@@ -487,7 +493,7 @@ public class Indexer {
             try {
                 inverter.flush();
                 inverter.close();
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 //            s.trimToSize();
