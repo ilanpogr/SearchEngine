@@ -126,18 +126,8 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
-        double logN = StrictMath.log10(Master.getDocCount()) / log2;
-//        double logN = StrictMath.log10(472000) / log2;
-        BufferedWriter pw = null;
-        CSVPrinter csvPrinter = null;
-        try {
-            pw = new BufferedWriter(new FileWriter("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\zipf.csv", true));
-            csvPrinter = new CSVPrinter(pw, CSVFormat.DEFAULT.withHeader("Term", "tf")
-                    .withIgnoreHeaderCase()
-                    .withTrim());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        double logN = StrictMath.log10(Controller.getDocCount()) / log2;
+        double logN = StrictMath.log10(472000) / log2;
         while (mergedFilesCounter.get() < tmpFilesCounter.get()/* && last<=13*/) {
 //            if (Runtime.getRuntime().freeMemory()<Runtime.getRuntime().totalMemory()/25){
 //                Controller.writeToFreeSpace(this);
@@ -183,26 +173,6 @@ public class Indexer {
             }
             int df = sortedPosting.size();
             double idf = logN - (StrictMath.log10(df) / log2);
-            if (!contains(minTerm, " ")) {
-                try {
-                    if (isUpperCase == 1) {
-                        minTerm = upperCase(minTerm);
-                    }
-//                    pw.append(minTerm).append(",").append(String.valueOf(totalTf))/*.append(",").append(String.valueOf(df)).append(",").append(String.valueOf(idf))*/.append("\n");
-                    if (totalTf > 1)
-                        csvPrinter.printRecord(Arrays.asList(minTerm, totalTf));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-//                if (mostCommonTerms.size() < 1 || mostCommonTerms.firstKey() == null || mostCommonTerms.firstKey().compareTo(totalTf) < 0) {
-//                    if (mostCommonTerms.size() > 10) mostCommonTerms.pollFirstEntry();
-//                    mostCommonTerms.put(totalTf, minTerm + " -> tf: " + totalTf + "    df: " + df/* + "    idf: " + idf*/);
-//                }
-//                if (leastCommonTerms.size() < 1 || leastCommonTerms.firstKey() == null || leastCommonTerms.firstKey().compareTo(totalTf) >= 0) {
-//                    if (leastCommonTerms.size() > 10) leastCommonTerms.pollFirstEntry();
-//                    leastCommonTerms.put(totalTf, minTerm + " -> tf: " + totalTf + "    df: " + df/* + "    idf: " + idf*/);
-//                }
-            }
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
 //            if (totalTf <2 && !containsAny(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ','/')) {
 //            if (containsOnly(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ') || (countMatches(minTerm,'/')-countMatches(minTerm,' ')<=1  && containsOnly(minTerm, '-','/', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))) {
@@ -244,10 +214,6 @@ public class Indexer {
         }
         try {
             totalPostingSizeByKB = sizeOf(new File(targetDirPath));
-            if (pw != null) {
-                pw.flush();
-                pw.close();
-            }
         } catch (Exception e) {
             try {
                 for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
