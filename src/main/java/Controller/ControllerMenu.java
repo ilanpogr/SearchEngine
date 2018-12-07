@@ -132,7 +132,8 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {
-                ir_modelMenu.removeAllFiles();
+                ir_modelMenu.reset();
+//                ir_modelMenu.removeAllFiles();
 //                ir_menuView.start_bttn.setDisable(true);
             } else if (arg.equals("show")) {
                 Thread thread = new Thread() {
@@ -152,26 +153,26 @@ public class ControllerMenu implements Observer {
     }
 
     private void showDictionary() {
-        String s;
-        if (PropertiesFile.getProperty("stem.mode").equals("0")) { // stem is off
-            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries without stemming\\1. Term Dictionary without stemming";
-        } else {
-            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries with stemming\\1. Term Dictionary with stemming";
-        }
-        File file = new File(s);
+//        StringBuilder pathBuilder = new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries without stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0")?"out ":" ").append("stemming");
+//        if (PropertiesFile.getProperty("stem.mode").equals("0")) { // stem is off
+//            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries without stemming\\1. Term Dictionary without stemming";
+//        } else {
+//            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries with stemming\\1. Term Dictionary with stemming";
+//        }
+        String dicPath = ir_modelMenu.getDicPath();
+        File file = new File(dicPath);
 //        boolean exist = new File(s).isFile();
 //        if (exist) {
         if (file.isFile())
             try {
+                file.setWritable(false);
+                Runtime runtime = Runtime.getRuntime();
+                Process process = runtime.exec("src\\main\\resources\\Notepad++\\Notepad++.exe "+dicPath);
 //                Desktop desktop = null;
 //                if (Desktop.isDesktopSupported()) {
 //                    desktop = Desktop.getDesktop();
 //                }
-                file.setWritable(false);
-                Runtime runtime = Runtime.getRuntime();
-                Process process = runtime.exec("src\\main\\resources\\Notepad++\\Notepad++.exe "+file.getAbsolutePath());
 //                desktop.open(file);
-
             } catch (IOException ioe) {
                 //todo - warnings
                 ioe.printStackTrace();

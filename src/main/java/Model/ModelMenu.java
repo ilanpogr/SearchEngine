@@ -8,11 +8,12 @@ import java.util.Observable;
 /**
  * This class is linking between the controller and the brain of this project (Master Class)
  */
-public class ModelMenu extends Observable{
+public class ModelMenu extends Observable {
 
+    private StringBuilder pathBuilder;
     private Master master_of_puppets;
 
-    public ModelMenu(){
+    public ModelMenu() {
         master_of_puppets = new Master();
     }
 
@@ -24,7 +25,7 @@ public class ModelMenu extends Observable{
         return master_of_puppets.getNumOfDocs();
     }
 
-    public void start(){
+    public void start() {
         master_of_puppets.indexCorpus();
         setChanged();
         notifyObservers("done");
@@ -32,5 +33,23 @@ public class ModelMenu extends Observable{
 
     public void removeAllFiles() {
         master_of_puppets.removeAllFiles();
+    }
+
+    public void reset() {
+        master_of_puppets.removeAllFiles();
+        if (PropertiesFile.getProperty("stem.mode").equals("0")){
+            PropertiesFile.putProperty("stem.mode","1");
+            master_of_puppets.removeAllFiles();
+            PropertiesFile.putProperty("stem.mode","0");
+        } else {
+            PropertiesFile.putProperty("stem.mode","0");
+            master_of_puppets.removeAllFiles();
+            PropertiesFile.putProperty("stem.mode","1");
+        }
+    }
+
+    public String getDicPath() {
+        pathBuilder = new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries without stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming");
+        return pathBuilder.toString();
     }
 }
