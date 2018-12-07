@@ -31,21 +31,12 @@ public class ModelMenu extends Observable {
         notifyObservers("done");
     }
 
-    public void removeAllFiles() {
-        master_of_puppets.removeAllFiles();
+    public boolean removeAllFiles() {
+        return master_of_puppets.removeAllFiles();
     }
 
     public void reset() {
-        master_of_puppets.removeAllFiles();
-        if (PropertiesFile.getProperty("stem.mode").equals("0")){
-            PropertiesFile.putProperty("stem.mode","1");
-            master_of_puppets.removeAllFiles();
-            PropertiesFile.putProperty("stem.mode","0");
-        } else {
-            PropertiesFile.putProperty("stem.mode","0");
-            master_of_puppets.removeAllFiles();
-            PropertiesFile.putProperty("stem.mode","1");
-        }
+        master_of_puppets.reset();
     }
 
     public String getDicPath() {
