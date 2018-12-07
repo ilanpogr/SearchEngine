@@ -8,15 +8,15 @@ import View.IR_MenuView;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 
 import java.awt.*;
 import java.io.*;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.zip.ZipFile;
 
 public class ControllerMenu implements Observer {
 
@@ -109,10 +109,15 @@ public class ControllerMenu implements Observer {
     @Override
     public void update(Observable o, Object arg) {
         if (o.equals(ir_menuView)) {
-            if (arg.equals("start")) {
+            if (arg.equals("stem")) {
                 if (ir_menuView.stemmer_checkBox.isSelected()) {
                     PropertiesFile.putProperty("stem.mode", "1");
-                }
+                } else PropertiesFile.putProperty("stem.mode", "0");
+            } else if (arg.equals("start")) {
+//                if (ir_menuView.stemmer_checkBox.isSelected()) {
+//                    PropertiesFile.putProperty("stem.mode", "1");
+//                }
+                this.update(o, "stem");
                 setSceneBeforeStart();
                 Thread thread = new Thread() {
                     public void run() {
@@ -130,10 +135,10 @@ public class ControllerMenu implements Observer {
                 ir_modelMenu.removeAllFiles();
 //                ir_menuView.start_bttn.setDisable(true);
             } else if (arg.equals("show")) {
-                                Thread thread = new Thread() {
+                Thread thread = new Thread() {
                     public void run() {
-                        openDictionary();
-                        ir_menuView.summary_lbl.setText("");
+                        showDictionary();
+                        ir_menuView.summary_lbl.setVisible(false);
                     }
                 };
                 thread.start();
@@ -146,58 +151,64 @@ public class ControllerMenu implements Observer {
         }
     }
 
-    private void openDictionary() {
+    private void showDictionary() {
         String s;
         if (PropertiesFile.getProperty("stem.mode").equals("0")) { // stem is off
-            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries without stemming\\1. Term Dictionary without stemming.txt";
+            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries without stemming\\1. Term Dictionary without stemming";
         } else {
-            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries with stemming\\1. Term Dictionary with stemming.txt";
+            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries with stemming\\1. Term Dictionary with stemming";
         }
-        boolean exist = new File(s).isFile();
-        if (!exist) {
-
-        } else {
+        File file = new File(s);
+//        boolean exist = new File(s).isFile();
+//        if (exist) {
+        if (file.isFile())
             try {
-                Desktop desktop = null;
-                if (Desktop.isDesktopSupported()) {
-                    desktop = Desktop.getDesktop();
-                }
-                desktop.open(new File(s));
+//                Desktop desktop = null;
+//                if (Desktop.isDesktopSupported()) {
+//                    desktop = Desktop.getDesktop();
+//                }
+                file.setWritable(false);
+                Runtime runtime = Runtime.getRuntime();
+                Process process = runtime.exec("src\\main\\resources\\Notepad++\\Notepad++.exe "+file.getAbsolutePath());
+//                desktop.open(file);
+
             } catch (IOException ioe) {
+                //todo - warnings
+                ioe.printStackTrace();
             }
-        }
+//    }
     }
 
 
-        private void setSceneBeforeStart () {
-            ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
-            ir_menuView.summary_lbl.setText("IN PROCESS!!");
-            ir_menuView.start_bttn.setDisable(true);
-            ir_menuView.dict_btn.setDisable(true);
-            ir_menuView.browse_btn.setDisable(true);
-            ir_menuView.save_btn.setDisable(true);
-            ir_menuView.reset_btn.setDisable(true);
-        }
-
-        private void addSummaryToLabel () {
-            ir_menuView.start_bttn.setDisable(false);
-            ir_menuView.dict_btn.setDisable(false);
-            ir_menuView.browse_btn.setDisable(false);
-            ir_menuView.save_btn.setDisable(false);
-            ir_menuView.reset_btn.setDisable(false);
-            ir_menuView.summary_lbl.setAlignment(Pos.TOP_LEFT);
-            String time = "Time for the whole operation: " + (end - start) / 1000 + " seconds";
-            String numOfterms = "Total number of term: " + ir_modelMenu.getNumOfTerms();
-            String numOfDocs = "Total number of Documents: " + ir_modelMenu.getNumOfDocs();
-            String summary = "Summary:\n" +
-                    "\t" + time + "\n" +
-                    "\t" + numOfterms + "\n" +
-                    "\t" + numOfDocs;
-            ir_menuView.summary_lbl.setText(summary);
-
-        }
-
-        public void showStage () {
-            stage.show();
-        }
+    private void setSceneBeforeStart() {
+        ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
+        ir_menuView.summary_lbl.setText("IN PROCESS!!");
+        ir_menuView.start_bttn.setDisable(true);
+        ir_menuView.dict_btn.setDisable(true);
+        ir_menuView.browse_btn.setDisable(true);
+        ir_menuView.save_btn.setDisable(true);
+        ir_menuView.reset_btn.setDisable(true);
     }
+
+    private void addSummaryToLabel() {
+        ir_menuView.start_bttn.setDisable(false);
+        ir_menuView.dict_btn.setDisable(false);
+        ir_menuView.browse_btn.setDisable(false);
+        ir_menuView.save_btn.setDisable(false);
+        ir_menuView.reset_btn.setDisable(false);
+        ir_menuView.summary_lbl.setAlignment(Pos.TOP_LEFT);
+        String time = "Time for the whole operation: " + (end - start) / 1000 + " seconds";
+        String numOfterms = "Total number of term: " + ir_modelMenu.getNumOfTerms();
+        String numOfDocs = "Total number of Documents: " + ir_modelMenu.getNumOfDocs();
+        String summary = "Summary:\n" +
+                "\t" + time + "\n" +
+                "\t" + numOfterms + "\n" +
+                "\t" + numOfDocs;
+        ir_menuView.summary_lbl.setText(summary);
+
+    }
+
+    public void showStage() {
+        stage.show();
+    }
+}

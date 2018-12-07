@@ -48,4 +48,9 @@ public class IR_MenuView extends Observable {
         setChanged();
         notifyObservers("show");
     }
+
+    public void setStemMode(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("stem");
+    }
 }

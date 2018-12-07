@@ -4,9 +4,12 @@ import Controller.PropertiesFile;
 import Master.Master;
 import Parser.Parse;
 import Stemmer.Stemmer;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.sizeOf;
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -28,13 +31,11 @@ public class Indexer {
     private static final String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
     //    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
-    //    private static AtomicInteger tmpFilesCounter = new AtomicInteger(202);
+//        private static AtomicInteger tmpFilesCounter = new AtomicInteger(31);
     private static AtomicInteger tmpFilesCounter  = new AtomicInteger(0);
     private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
     private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
-    private static TreeMap<Integer, String> mostCommonTerms = new TreeMap<>();
-    private static TreeMap<Integer, String> leastCommonTerms = new TreeMap<>();
     private static boolean createdFolder = false;
     private static int termCounter = 0;
 
@@ -52,6 +53,20 @@ public class Indexer {
         } catch (Exception e) {
             System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
             return 1;
+        }
+    }
+
+    public void removeAllFiles() {
+        try {
+            File dir = new File(targetPath);
+            if (dir.isDirectory()){
+                File file = new File(getFileOrDirName(targetPath + "Dictionaries", false));
+                if (FileUtils.directoryContains(dir,file)){
+                    deleteQuietly(file);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -95,7 +110,7 @@ public class Indexer {
         int last = 0;
         String targetDirPath = targetPath;
         int currFileNum = WrieFile.getFileNum();
-//        int currFileNum = 202;
+//        int currFileNum = 31;
         StringBuilder stringBuilder = new StringBuilder();
         LinkedHashMap<Integer, MutablePair<String, Integer>> termKeys = new LinkedHashMap<>();
         LinkedHashMap<Integer, String> termValues = new LinkedHashMap<>();
@@ -123,8 +138,8 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary", true));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
-//        double logN = StrictMath.log10(Controller.getDocCount()) / log2;
-        double logN = StrictMath.log10(472000) / log2;
+        double logN = StrictMath.log10(Master.getDocCount()) / log2;
+//        double logN = StrictMath.log10(472000) / log2;
         while (mergedFilesCounter.get() < tmpFilesCounter.get()/* && last<=13*/) {
 //            if (Runtime.getRuntime().freeMemory()<Runtime.getRuntime().totalMemory()/25){
 //                Controller.writeToFreeSpace(this);
@@ -236,7 +251,7 @@ public class Indexer {
      * @return the file's string appended with "with(out)? stemming"
      */
     private String getFileOrDirName(String fileName, boolean isFile) {
-        return appendIfMissingIgnoreCase(fileName, " with" + (Master.isStemMode() ? "" : "out") + " stemming" +(isFile?".txt":""));
+        return appendIfMissingIgnoreCase(fileName, " with" + (Master.isStemMode() ? "" : "out") + " stemming" +(isFile?"":"\\"));
     }
 
     /**
@@ -345,8 +360,8 @@ public class Indexer {
      * @param fileName              - the name of the created file
      */
     private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic, String fileName) {
+        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries", false));
         StringBuilder stringBuilder = new StringBuilder(targetPath);
-        checkOrMakeDir(getFileOrDirName(stringBuilder.toString() + "Dictionaries", false));
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(contains(fileName, " ") ? "" : ".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
