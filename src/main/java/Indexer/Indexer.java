@@ -7,6 +7,8 @@ import Stemmer.Stemmer;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.sizeOf;
@@ -21,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Indexer {
 
-    private static double totalPostingSizeByKB = 0;//todo - remove this field and send the information to view (through the right pipes)
+    private static double totalPostingSizeByKB = 0;
     private static final int minNumberOfTf = (int) getPropertyAsDouble("min.tf.to.save");
     private static final double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
     private static final int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
@@ -31,7 +33,7 @@ public class Indexer {
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
     //    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
 //        private static AtomicInteger tmpFilesCounter = new AtomicInteger(31);
-    private static AtomicInteger tmpFilesCounter  = new AtomicInteger(0);
+    private static AtomicInteger tmpFilesCounter = new AtomicInteger(0);
     private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
     private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
@@ -62,7 +64,7 @@ public class Indexer {
      */
     public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
 //        PropertiesFile.putProperty("save.files.path",getFileOrDirName(targetPath+"Dictionaries"));
-        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries", false));
+        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
         try {
             StringBuilder tmpPostFile = new StringBuilder();
             sortedTermsDic.forEach((k, v) -> tmpPostFile.append(lowerCase(k)).append(termSeperator).append(v).append("\n"));
@@ -119,8 +121,8 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "op");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "qrs");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "tuvwxyz");
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("1. Term Dictionary", true));
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary", true));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("1. Term Dictionary"));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         double logN = StrictMath.log10(Master.getDocCount()) / log2;
@@ -170,6 +172,7 @@ public class Indexer {
             }
             int df = sortedPosting.size();
             double idf = logN - (StrictMath.log10(df) / log2);
+
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
 //            if (totalTf <2 && !containsAny(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ','/')) {
 //            if (containsOnly(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ') || (countMatches(minTerm,'/')-countMatches(minTerm,' ')<=1  && containsOnly(minTerm, '-','/', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))) {
@@ -179,13 +182,13 @@ public class Indexer {
                     minTerm = upperCase(minTerm);
                 }
                 if (maxIdfForCache < idf || df == 1) {
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary" , true), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
+                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary", true), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("2. Cache Dictionary", true), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
+                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
+                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     WrieFile.addPostLine(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
@@ -224,7 +227,7 @@ public class Indexer {
             }
         }
         System.out.println("Size of Posting Files: " + totalPostingSizeByKB / 1024);
-
+        createdFolder = false;
 
     }
 
@@ -232,11 +235,10 @@ public class Indexer {
      * appends with/without stemming to the file/dir name
      *
      * @param fileName the files
-     * @param isFile
      * @return the file's string appended with "with(out)? stemming"
      */
-    private String getFileOrDirName(String fileName, boolean isFile) {
-        return appendIfMissingIgnoreCase(fileName, " with" + (Master.isStemMode() ? "" : "out") + " stemming" +(isFile?"":"\\"));
+    private String getFileOrDirName(String fileName) {
+        return appendIfMissingIgnoreCase(fileName, " with" + (Master.isStemMode() ? "" : "out") + " stemming");
     }
 
     /**
@@ -321,7 +323,8 @@ public class Indexer {
 
     /**
      * sorts the posting string by the term frequency
-     *  @param toSort        - an array list holding the tf as a key and the Map's term's record as a value
+     *
+     * @param toSort        - an array list holding the tf as a key and the Map's term's record as a value
      * @param stringBuilder - a string given with the term's value
      * @param minTerm
      */
@@ -345,7 +348,7 @@ public class Indexer {
      * @param fileName              - the name of the created file
      */
     private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic, String fileName) {
-        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries", false));
+        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
         StringBuilder stringBuilder = new StringBuilder(targetPath);
         mergedFilesCounterDic.put(fileName, 1);
         stringBuilder.append(fileName).append(contains(fileName, " ") ? "" : ".post");
@@ -357,7 +360,7 @@ public class Indexer {
      *
      * @param tmpFiles      - the key is the index (name) of a temporary file and the value is the reader
      * @param stringBuilder - has the path
-     * @param i - posting file index
+     * @param i             - posting file index
      */
     private void addFileToList(LinkedHashMap<Integer, BufferedReader> tmpFiles, StringBuilder stringBuilder, int i) {
         try {
@@ -370,6 +373,7 @@ public class Indexer {
 
     /**
      * adds a BufferedWriter for each of the temp posting files
+     *
      * @param tmpFiles      - the key is the index (name) of a temporary file and the value is the reader
      * @param stringBuilder - has the path
      * @param name          - name of the file
@@ -391,10 +395,11 @@ public class Indexer {
 
     /**
      * reads the next line of a file (if available) or deletes it from the maps.
-     * @param tmpFiles      - the key is the index (name) of a temporary file and the value is the reader
-     * @param termKeys      - the keys map of the current lines
-     * @param termValues    - the values map of the current lines
-     * @param i             - index of the temp posting file
+     *
+     * @param tmpFiles   - the key is the index (name) of a temporary file and the value is the reader
+     * @param termKeys   - the keys map of the current lines
+     * @param termValues - the values map of the current lines
+     * @param i          - index of the temp posting file
      */
     private void getFirstTerms(LinkedHashMap<Integer, BufferedReader> tmpFiles, LinkedHashMap<Integer, MutablePair<String, Integer>> termKeys, LinkedHashMap<Integer, String> termValues, int i) {
         try {
@@ -419,6 +424,7 @@ public class Indexer {
 
     /**
      * checks if a given path points to a valid directory. if not - creates the directory
+     *
      * @param targetDirPath - the Dir path
      */
     private void checkOrMakeDir(String targetDirPath) {
@@ -439,7 +445,8 @@ public class Indexer {
 
     /**
      * writes a TreeMap to a file
-     * @param dic - the map we want to write
+     *
+     * @param dic     - the map we want to write
      * @param dicName - the name of the created file
      */
     public void writeToDictionary(TreeMap<String, String> dic, String dicName) {
@@ -484,21 +491,21 @@ public class Indexer {
         return termCounter;
     }
 
-    public void reset() {
+    public static void reset() {
         delete(targetPath + "Dictionaries with stemming");
         delete(targetPath + "Dictionaries without stemming");
     }
 
     public boolean removeAllFiles() {
-        return delete(getFileOrDirName(targetPath + "Dictionaries", false));
+        return delete(getFileOrDirName(targetPath + "Dictionaries"));
     }
 
-    private boolean delete(String path){
+    private static boolean delete(String path) {
         try {
             File dir = new File(targetPath);
-            if (dir.isDirectory()){
+            if (dir.isDirectory()) {
                 File file = new File(path);
-                if (FileUtils.directoryContains(dir,file)){
+                if (FileUtils.directoryContains(dir, file)) {
                     return deleteQuietly(file);
                 }
             }
@@ -506,5 +513,16 @@ public class Indexer {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static void clear() {
+        totalPostingSizeByKB = 0;
+        targetPath = PropertiesFile.getProperty("save.files.path");
+        tmpFilesCounter = new AtomicInteger(0);
+        mergedFilesCounter = new AtomicInteger(0);
+        inverter = null;
+        createdFolder = false;
+        termCounter = 0;
+        WrieFile.clear();
     }
 }

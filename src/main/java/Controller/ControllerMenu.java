@@ -55,6 +55,52 @@ public class ControllerMenu implements Observer {
     }
 
     /**
+     *
+     * @param selectedDirectoryPath
+     */
+    private void loadCorpusPath (String selectedDirectoryPath){
+        PropertiesFile.putProperty(propertyKeys[0], selectedDirectoryPath);
+        boolean corpusCheck = new File(selectedDirectoryPath, "corpus").exists();
+        boolean stopWords = new File(selectedDirectoryPath, "stop_words.txt").exists();
+        if ((!corpusCheck && !stopWords)) {
+            ir_menuView.data_textField.setText("stop_words.txt and corpus folder are not existing in this path");
+            ir_menuView.start_bttn.setDisable(true);
+        } else if (!corpusCheck) {
+            ir_menuView.data_textField.setText("corpus folder not existing in this path");
+            ir_menuView.start_bttn.setDisable(true);
+        } else if (!stopWords) {
+            ir_menuView.data_textField.setText("stop_words.txt not existing in this path");
+            ir_menuView.start_bttn.setDisable(true);
+        } else {
+            if (selectedDirectoryPath.endsWith("\\")) {
+                PropertiesFile.putProperty(propertyKeys[0], selectedDirectoryPath);
+            } else {
+                PropertiesFile.putProperty(propertyKeys[0], selectedDirectoryPath + "\\");
+            }
+            ir_menuView.data_textField.setText(PropertiesFile.getProperty(propertyKeys[0]));
+            dataPath = true;
+            checkIfCanStart();
+        }
+    }
+
+
+    /**
+     *
+     * @param selectedDirectoryPath
+     */
+    private void loadTargetPath(String selectedDirectoryPath){
+        if (selectedDirectoryPath.endsWith("\\"))
+            PropertiesFile.putProperty(propertyKeys[1], selectedDirectoryPath);
+        else
+            PropertiesFile.putProperty(propertyKeys[1], selectedDirectoryPath + "\\");
+        ir_menuView.save_textField.setText(PropertiesFile.getProperty(propertyKeys[1]));
+        ir_menuView.dict_btn.setDisable(false);
+        ir_menuView.reset_btn.setDisable(false);
+        savePath = true;
+        checkIfCanStart();
+    }
+
+    /**
      * Opens the directory chooser
      *
      * @param operation : 1 -> Save; 0 Load
@@ -62,43 +108,9 @@ public class ControllerMenu implements Observer {
     private void loadPathFromDirectoryChooser(int operation) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File selectedDirectory = directoryChooser.showDialog(stage);
-        if (selectedDirectory == null) {
-            return;
-        } else {
-            if (operation == 0) {
-                PropertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath());
-                boolean corpusCheck = new File(selectedDirectory.getAbsolutePath(), "corpus").exists();
-                boolean stopWords = new File(selectedDirectory.getAbsolutePath(), "stop_words.txt").exists();
-                if ((!corpusCheck && !stopWords)) {
-                    ir_menuView.data_textField.setText("stop_words.txt and corpus folder are not existing in this path");
-                    ir_menuView.start_bttn.setDisable(true);
-                } else if (!corpusCheck) {
-                    ir_menuView.data_textField.setText("corpus folder not existing in this path");
-                    ir_menuView.start_bttn.setDisable(true);
-                } else if (!stopWords) {
-                    ir_menuView.data_textField.setText("stop_words.txt not existing in this path");
-                    ir_menuView.start_bttn.setDisable(true);
-                } else {
-                    if (selectedDirectory.getAbsolutePath().endsWith("\\")) {
-                        PropertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath());
-                    } else {
-                        PropertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath() + "\\");
-                    }
-                    ir_menuView.data_textField.setText(PropertiesFile.getProperty(propertyKeys[0]));
-                    dataPath = true;
-                    checkIfCanStart();
-                }
-            } else {
-                if (selectedDirectory.getAbsolutePath().endsWith("\\"))
-                    PropertiesFile.putProperty(propertyKeys[1], selectedDirectory.getAbsolutePath());
-                else
-                    PropertiesFile.putProperty(propertyKeys[1], selectedDirectory.getAbsolutePath() + "\\");
-                ir_menuView.save_textField.setText(PropertiesFile.getProperty(propertyKeys[1]));
-                ir_menuView.dict_btn.setDisable(false);
-                ir_menuView.reset_btn.setDisable(false);
-                savePath = true;
-                checkIfCanStart();
-            }
+        if (selectedDirectory != null) {
+            if (operation == 0) loadCorpusPath(selectedDirectory.getAbsolutePath());
+             else loadTargetPath(selectedDirectory.getAbsolutePath());
         }
     }
 
@@ -157,8 +169,11 @@ public class ControllerMenu implements Observer {
             }
         } else if (o.equals(ir_modelMenu)) {
             if (arg.equals("done")) {
+                ir_menuView.summary_lbl.setVisible(true);
+                ir_menuView.stemmer_checkBox.setDisable(false);
                 end = System.currentTimeMillis();
-                Platform.runLater(this::addSummaryToLabel);
+//                Platform.runLater(this::addSummaryToLabel);
+                addSummaryToLabel();
             }
         }
     }
@@ -189,7 +204,7 @@ public class ControllerMenu implements Observer {
 //                ioe.printStackTrace();
             }
         } else {
-            showAlert("Wrong Path" , "Couldn't Find The Requested Dictionary", "try to change path to be the directory that contains: \"Dictionaries with/out stemming\"\nand click on the \'show\' button again");
+            showAlert("Wrong Path" , "Couldn't Find The Requested Dictionary", "try to change path to be the directory that contains: \"Dictionaries with/out stemming\"\nand click on the \'Show Dictionary\' button again");
         }
     }
 
@@ -197,6 +212,7 @@ public class ControllerMenu implements Observer {
     private void setSceneBeforeStart() {
         ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
         ir_menuView.summary_lbl.setText("IN PROCESS!!");
+        ir_menuView.summary_lbl.setVisible(true);
         ir_menuView.start_bttn.setDisable(true);
         ir_menuView.dict_btn.setDisable(true);
         ir_menuView.browse_btn.setDisable(true);
@@ -220,7 +236,8 @@ public class ControllerMenu implements Observer {
                 "\t" + numOfterms + "\n" +
                 "\t" + numOfDocs;
         ir_menuView.summary_lbl.setText(summary);
-
+        loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
+        loadTargetPath(PropertiesFile.getProperty("save.files.path"));
     }
 
     public void showStage() {
