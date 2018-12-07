@@ -172,8 +172,8 @@ public class ControllerMenu implements Observer {
                 ir_menuView.summary_lbl.setVisible(true);
                 ir_menuView.stemmer_checkBox.setDisable(false);
                 end = System.currentTimeMillis();
-//                Platform.runLater(this::addSummaryToLabel);
-                addSummaryToLabel();
+                Platform.runLater(this::addSummaryToLabel);
+//                addSummaryToLabel();
             }
         }
     }
@@ -222,7 +222,6 @@ public class ControllerMenu implements Observer {
     }
 
     private void addSummaryToLabel() {
-        ir_menuView.start_bttn.setDisable(false);
         ir_menuView.dict_btn.setDisable(false);
         ir_menuView.browse_btn.setDisable(false);
         ir_menuView.save_btn.setDisable(false);

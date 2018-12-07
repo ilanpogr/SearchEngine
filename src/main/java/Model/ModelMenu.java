@@ -40,7 +40,7 @@ public class ModelMenu extends Observable {
     }
 
     public String getDicPath() {
-        pathBuilder = new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries without stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming");
+        pathBuilder = new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming");
         return pathBuilder.toString();
     }
 }
