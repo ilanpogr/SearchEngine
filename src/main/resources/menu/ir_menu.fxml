@@ -53,7 +53,7 @@
                 <HBox prefHeight="40.0" prefWidth="300.0">
                     <children>
                         <Region prefHeight="40.0" prefWidth="145.0" />
-                        <CheckBox fx:id="stemmer_checkBox" mnemonicParsing="false" prefHeight="40.0" prefWidth="110.0" text="Use Stemmer" />
+                        <CheckBox fx:id="stemmer_checkBox" onAction="#setStemMode" mnemonicParsing="false" prefHeight="40.0" prefWidth="110.0" text="Use Stemmer" />
                         <Region prefHeight="40.0" prefWidth="125.0" />
                     </children>
                 </HBox>
