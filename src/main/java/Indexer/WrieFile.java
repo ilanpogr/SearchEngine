@@ -52,4 +52,9 @@ public class WrieFile {
             e.printStackTrace();
         }
     }
+
+    public static void clear() {
+        targetPath = PropertiesFile.getProperty("save.files.path");
+        fileNum = new AtomicInteger(0);
+    }
 }

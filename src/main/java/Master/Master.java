@@ -9,6 +9,7 @@ import TextContainers.Doc;
 import TextContainers.LanguagesInfo;
 
 import java.util.*;
+
 import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.lowerCase;
 import static org.apache.commons.lang3.StringUtils.substring;
@@ -34,12 +35,13 @@ public class Master {
 
     private static boolean setStemMode() {
         String stem = PropertiesFile.getProperty("stem.mode");
-        if (stem.equalsIgnoreCase("0")){
+        if (stem.equalsIgnoreCase("0")) {
             return false;
         } else {
             return true;
         }
     }
+
     public static boolean isStemMode() {
         return isStemMode;
     }
@@ -51,7 +53,7 @@ public class Master {
      * @param s - the value of the property
      * @return the value of the property
      */
-     private static int getPropertyAsInt(String s) {
+    private static int getPropertyAsInt(String s) {
         try {
             return Integer.parseInt(PropertiesFile.getProperty(s));
         } catch (Exception e) {
@@ -61,18 +63,23 @@ public class Master {
     }
 
     public void indexCorpus() {
-        int i=0;
+        int tmpFileIndex = 0, i = 0;
         try {
 //            PropertiesFile.putProperty("save.files.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\");
 //            PropertiesFile.putProperty("data.set.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus");
             isStemMode = setStemMode();
-            String s = PropertiesFile.getProperty("data.set.path")+"corpus\\";
+            String s = PropertiesFile.getProperty("data.set.path") + "corpus\\";
             targetPath = PropertiesFile.getProperty("save.files.path");
-            ReadFile readFile = new ReadFile(PropertiesFile.getProperty("data.set.path")+"corpus\\");
+            ReadFile readFile = new ReadFile(s);
+            fileNum = getPropertyAsInt("number.of.files");
+            tmpFileNum = getPropertyAsInt("number.of.temp.files");
+            double tmpChunkSize = fileNum/tmpFileNum;
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
             Parse p = new Parse();
             System.out.println("READING, PARSING..");
+            tmpFileIndex++;
+            int nextTmpFileIndex = (int) (tmpFileIndex * tmpChunkSize);
             while (ReadFile.hasNextFile()) {
                 i++;
                 filesList = readFile.getFileList();
@@ -81,28 +88,29 @@ public class Master {
                     HashMap<String, String> map = p.parse(aFilesList.text());
                     handleFile(map);
                 }
-                if (i % (fileNum / tmpFileNum) == 0 || i == fileNum) {
+                System.out.println(i);
+                if ((i == nextTmpFileIndex && tmpFileIndex<tmpFileNum) || i == fileNum) {
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
+                    System.out.println("Parsed and Read " + tmpFileIndex + " parts out of " + tmpFileNum);
+                    tmpFileIndex++;
+                    nextTmpFileIndex = (int) (tmpFileIndex * (tmpChunkSize));
                 }
             }
             System.out.println("MERGING..");
             indexer.mergePostingTempFiles();
             indexer.writeToDictionary(new TreeMap<>(DocDic), "3. Documents Dictionary");
-            LanguagesInfo.getInstance().printLanguages();
+//            LanguagesInfo.getInstance().printLanguages();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             PropertiesFile.putProperty("save.files.path", targetPath);
         }
-        LanguagesInfo l = LanguagesInfo.getInstance();
-        System.out.println();
-        l.printLanguages();
-        System.out.println();
     }
 
     /**
      * handles each document,(if checked) Stemmers it and Merges it.
+     *
      * @param parsedDic - A Dictionary of a single parsed document
      */
     private static void handleFile(HashMap<String, String> parsedDic) {
@@ -152,12 +160,13 @@ public class Master {
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
-        DocDic.put(currDocName, "" + maxTf + "," + length+ "," + filesList.get(docNum++).getFileName());
+        DocDic.put(currDocName, "" + maxTf + "," + length + "," + filesList.get(docNum++).getFileName());
         map.clear();
     }
 
     /**
      * get how many terms are currently in the Dictionary
+     *
      * @return the size of the dictionary
      */
     public static int getTermCount() {
@@ -166,6 +175,7 @@ public class Master {
 
     /**
      * removes a single term from the dictionary
+     *
      * @param term
      */
     public static void removeFromDictionary(String term) {
@@ -175,9 +185,6 @@ public class Master {
     public static int getNumOfDocs() {
         return DocDic.size();
     }
-
-
-
 
 
     public static int getDocCount() {
@@ -195,16 +202,25 @@ public class Master {
 
     // todo - check if stem mode on or not from properties.
     public boolean removeAllFiles() {
+        clear();
         return new Indexer().removeAllFiles();
     }
 
     public void reset() {
-        new Indexer().reset();
+        clear();
+        Indexer.reset();
     }
-    //    public static void writeToFreeSpace(Indexer indexer) {
-//        indexer.writeToDictionary(termDictionary, "1. Term Dictionary");
-//        indexer.writeToDictionary(cache, "2. Cache Dictionary");
-//        cache.clear();
-//        termDictionary.clear();
-//    }
+
+    public void clear(){
+        fileNum = getPropertyAsInt("number.of.files");
+        tmpFileNum = getPropertyAsInt("number.of.temp.files");
+        stringBuilder = new StringBuilder();
+        DocDic = new LinkedHashMap<>();
+        tmpTermDic = new LinkedHashMap<>();
+        termDictionary = new TreeMap<>();
+        cache = new TreeMap<>();
+        isStemMode = setStemMode();
+        new Thread(Indexer::clear).start();
+        ReadFile.clear();
+    }
 }

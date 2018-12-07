@@ -82,6 +82,11 @@ public class ReadFile {
         return fileList;
     }
 
+    public static void clear() {
+        rootPath=null;
+        fileCounter = new AtomicInteger(0);
+    }
+
     /**
      * clears the documents lists
      */
