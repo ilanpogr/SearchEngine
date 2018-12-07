@@ -8,7 +8,6 @@ import Stemmer.Stemmer;
 import TextContainers.Doc;
 import TextContainers.LanguagesInfo;
 
-import java.io.File;
 import java.util.*;
 import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.lowerCase;
@@ -96,6 +95,10 @@ public class Master {
         } finally {
             PropertiesFile.putProperty("save.files.path", targetPath);
         }
+        LanguagesInfo l = LanguagesInfo.getInstance();
+        System.out.println();
+        l.printLanguages();
+        System.out.println();
     }
 
     /**
@@ -191,8 +194,12 @@ public class Master {
     }
 
     // todo - check if stem mode on or not from properties.
-    public void removeAllFiles() {
-        new Indexer().removeAllFiles();
+    public boolean removeAllFiles() {
+        return new Indexer().removeAllFiles();
+    }
+
+    public void reset() {
+        new Indexer().reset();
     }
     //    public static void writeToFreeSpace(Indexer indexer) {
 //        indexer.writeToDictionary(termDictionary, "1. Term Dictionary");

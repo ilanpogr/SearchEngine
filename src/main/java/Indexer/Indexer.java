@@ -8,7 +8,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
-import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FileUtils.sizeOf;
 import static org.apache.commons.lang3.StringUtils.*;
@@ -53,20 +52,6 @@ public class Indexer {
         } catch (Exception e) {
             System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
             return 1;
-        }
-    }
-
-    public void removeAllFiles() {
-        try {
-            File dir = new File(targetPath);
-            if (dir.isDirectory()){
-                File file = new File(getFileOrDirName(targetPath + "Dictionaries", false));
-                if (FileUtils.directoryContains(dir,file)){
-                    deleteQuietly(file);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -497,5 +482,29 @@ public class Indexer {
 
     public static int getTermCounter() {
         return termCounter;
+    }
+
+    public void reset() {
+        delete(targetPath + "Dictionaries with stemming");
+        delete(targetPath + "Dictionaries without stemming");
+    }
+
+    public boolean removeAllFiles() {
+        return delete(getFileOrDirName(targetPath + "Dictionaries", false));
+    }
+
+    private boolean delete(String path){
+        try {
+            File dir = new File(targetPath);
+            if (dir.isDirectory()){
+                File file = new File(path);
+                if (FileUtils.directoryContains(dir,file)){
+                    return deleteQuietly(file);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

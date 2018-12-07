@@ -8,6 +8,7 @@ import View.IR_MenuView;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
@@ -70,13 +71,13 @@ public class ControllerMenu implements Observer {
                 boolean stopWords = new File(selectedDirectory.getAbsolutePath(), "stop_words.txt").exists();
                 if ((!corpusCheck && !stopWords)) {
                     ir_menuView.data_textField.setText("stop_words.txt and corpus folder are not existing in this path");
-                    ir_menuView.start_bttn.setDisable(false);
+                    ir_menuView.start_bttn.setDisable(true);
                 } else if (!corpusCheck) {
                     ir_menuView.data_textField.setText("corpus folder not existing in this path");
-                    ir_menuView.start_bttn.setDisable(false);
+                    ir_menuView.start_bttn.setDisable(true);
                 } else if (!stopWords) {
                     ir_menuView.data_textField.setText("stop_words.txt not existing in this path");
-                    ir_menuView.start_bttn.setDisable(false);
+                    ir_menuView.start_bttn.setDisable(true);
                 } else {
                     if (selectedDirectory.getAbsolutePath().endsWith("\\")) {
                         PropertiesFile.putProperty(propertyKeys[0], selectedDirectory.getAbsolutePath());
@@ -94,6 +95,7 @@ public class ControllerMenu implements Observer {
                     PropertiesFile.putProperty(propertyKeys[1], selectedDirectory.getAbsolutePath() + "\\");
                 ir_menuView.save_textField.setText(PropertiesFile.getProperty(propertyKeys[1]));
                 ir_menuView.dict_btn.setDisable(false);
+                ir_menuView.reset_btn.setDisable(false);
                 savePath = true;
                 checkIfCanStart();
             }
@@ -104,6 +106,14 @@ public class ControllerMenu implements Observer {
         if (dataPath && savePath) {
             ir_menuView.start_bttn.setDisable(false);
         }
+    }
+
+    public void showAlert(String title, String information, String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(information);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     @Override
@@ -126,6 +136,7 @@ public class ControllerMenu implements Observer {
                     }
                 };
                 start = System.currentTimeMillis();
+                thread.setDaemon(true);
                 thread.start();
             } else if (arg.equals("browse")) {
                 loadPathFromDirectoryChooser(0);
@@ -136,13 +147,13 @@ public class ControllerMenu implements Observer {
 //                ir_modelMenu.removeAllFiles();
 //                ir_menuView.start_bttn.setDisable(true);
             } else if (arg.equals("show")) {
-                Thread thread = new Thread() {
-                    public void run() {
+//                Thread thread = new Thread() {
+//                    public void run() {
                         showDictionary();
                         ir_menuView.summary_lbl.setVisible(false);
-                    }
-                };
-                thread.start();
+//                    }
+//                };
+//                thread.start();
             }
         } else if (o.equals(ir_modelMenu)) {
             if (arg.equals("done")) {
@@ -163,21 +174,23 @@ public class ControllerMenu implements Observer {
         File file = new File(dicPath);
 //        boolean exist = new File(s).isFile();
 //        if (exist) {
-        if (file.isFile())
+        if (file.isFile()) {
             try {
                 file.setWritable(false);
                 Runtime runtime = Runtime.getRuntime();
-                Process process = runtime.exec("src\\main\\resources\\Notepad++\\Notepad++.exe "+dicPath);
+                Process process = runtime.exec("src\\main\\resources\\Notepad++\\Notepad++.exe " + dicPath);
 //                Desktop desktop = null;
 //                if (Desktop.isDesktopSupported()) {
 //                    desktop = Desktop.getDesktop();
 //                }
 //                desktop.open(file);
             } catch (IOException ioe) {
-                //todo - warnings
-                ioe.printStackTrace();
+                showAlert("Wrong Path" , "Couldn't Find The Requested Dictionary", "try to change path to be the directory that contains: \"Dictionaries with/out stemming\"\nand click on the \'show\' button again");
+//                ioe.printStackTrace();
             }
-//    }
+        } else {
+            showAlert("Wrong Path" , "Couldn't Find The Requested Dictionary", "try to change path to be the directory that contains: \"Dictionaries with/out stemming\"\nand click on the \'show\' button again");
+        }
     }
 
 
@@ -189,6 +202,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.browse_btn.setDisable(true);
         ir_menuView.save_btn.setDisable(true);
         ir_menuView.reset_btn.setDisable(true);
+        ir_menuView.stemmer_checkBox.setDisable(true);
     }
 
     private void addSummaryToLabel() {
