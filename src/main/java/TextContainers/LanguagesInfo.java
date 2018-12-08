@@ -29,6 +29,15 @@ public class LanguagesInfo {
     }
 
     /**
+     * Ctor
+     *
+     */
+    private LanguagesInfo() {
+        languageInfo_map = new HashSet<>();
+        specialCharSet = initSpecialSet();
+    }
+
+    /**
      * init all chars we want to clean from token.
      *
      * @return : the char set after initialize.
@@ -43,20 +52,20 @@ public class LanguagesInfo {
         return specialCharSet;
     }
 
-    private void cleanToken(String[] token) {
-        while (token[0].length() > 0 && specialCharSet.contains(token[0].charAt(0))) {
-            token[0] = token[0].substring(1);
-        }
-        while (token[0].length() >= 1 && specialCharSet.contains(token[0].charAt(token[0].length() - 1))) {
-            token[0] = token[0].substring(0, token[0].length() - 1);
-        }
+    /**
+     * Cleans the words from special chars
+     *
+     * @param words - the words that will be clean
+     */
+    private void cleanToken(String[] words) {
+        for (; words[0].length() > 0 && specialCharSet.contains(words[0].charAt(0));words[0] = words[0].substring(1));
+        for (; words[0].length() >= 1 && specialCharSet.contains(words[0].charAt(words[0].length() - 1));words[0] = words[0].substring(0, words[0].length() - 1));
     }
 
-    private LanguagesInfo() {
-        languageInfo_map = new HashSet<>();
-        specialCharSet = initSpecialSet();
-    }
-
+    /**
+     * adds a language to the Languages List
+     * @param language - the added language
+     */
     public void addLanguageToList(String language) {
         String[] tokens = split(language, " ");
         cleanToken(tokens);
@@ -64,13 +73,20 @@ public class LanguagesInfo {
             languageInfo_map.add(tokens[0]);
     }
 
+    /**
+     * prints all languages
+     */
     public void printLanguages() {
         for (String s : languageInfo_map) {
             System.out.println(s);
         }
     }
 
-    public ArrayList<String> getLanguagesAsList(){
+    /**
+     * get a list of all the languages
+     * @return ArrayList of Languages (strings)
+     */
+    public ArrayList<String> getLanguagesAsList() {
         return new ArrayList<>(languageInfo_map);
     }
 

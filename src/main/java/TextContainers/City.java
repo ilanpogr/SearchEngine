@@ -28,7 +28,6 @@ public class City {
 
     @Override
     public String toString(){
-//        return "City: " + cityName + ", Country: " + countryName + ", Population: " + population + ", Currency: " + currency;
         return "Country: " + countryName + ", Population: " + population + ", Currency: " + currency;
     }
 }

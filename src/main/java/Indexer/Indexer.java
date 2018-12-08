@@ -7,8 +7,6 @@ import Stemmer.Stemmer;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 
 import static org.apache.commons.io.FileUtils.*;
 import static org.apache.commons.lang3.StringUtils.*;
@@ -168,14 +166,14 @@ public class Indexer {
                     minTerm = upperCase(minTerm);
                 }
                 if (maxIdfForCache < idf || df == 1) {
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
-                    WrieFile.addPostLine(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
+                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
+                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
-                    WrieFile.addPostLine(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
-                    WrieFile.addPostLine(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
+                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
+                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
+                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
                 termCounter++;
@@ -494,8 +492,6 @@ public class Indexer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-//            s.trimToSize();
-//            WrieFile.writeToDictionary(s, dicName);
         } catch (OutOfMemoryError om) {     //if Map is too big
             try {
                 ArrayList<Map.Entry<String, String>> lines = new ArrayList<>(dic.entrySet());
