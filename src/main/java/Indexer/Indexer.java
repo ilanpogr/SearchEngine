@@ -40,12 +40,12 @@ public class Indexer {
      * get a Property from properties file and convert it to double.
      * if it can't convert to Double, it will return 1.
      *
-     * @param s - the value of the property
+     * @param prop - the value of the property
      * @return the value of the property
      */
-    private static double getPropertyAsDouble(String s) {
+    private static double getPropertyAsDouble(String prop) {
         try {
-            return Double.parseDouble(PropertiesFile.getProperty(s));
+            return Double.parseDouble(PropertiesFile.getProperty(prop));
         } catch (Exception e) {
             System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
             return 1;
@@ -85,8 +85,6 @@ public class Indexer {
      * the inverter function. takes all temp files and merges them.
      */
     public void mergePostingTempFiles() {
-        double startIndexTime = System.currentTimeMillis();
-        int last = 0;
         String targetDirPath = targetPath;
         int currFileNum = WrieFile.getFileNum();
         StringBuilder stringBuilder = new StringBuilder();
@@ -150,7 +148,7 @@ public class Indexer {
             }
             stringBuilder.trimToSize();
             ArrayList<ImmutablePair<Integer, ImmutablePair<String, String>>> sortedPosting = new ArrayList<>();
-            sortPostingByFrequency(sortedPosting, stringBuilder, minTerm);
+            sortPostingByFrequency(sortedPosting, stringBuilder);
             int totalTf = 0;
             stringBuilder.setLength(0);
             for (ImmutablePair<Integer, ImmutablePair<String, String>> d : sortedPosting) {
@@ -270,8 +268,8 @@ public class Indexer {
     /**
      * takes a part of the posting and splits it to two parts - one for cache and the other to the posting file
      *
-     * @param stringBuilder
-     * @return
+     * @param stringBuilder - the posting of a term
+     * @return a two-slots-Array    slot0 - posting for the cache   slot1 - rest of the posting
      */
     private String[] splitToCachePost(StringBuilder stringBuilder) {
         String[] forCache = split(stringBuilder.toString(), fileDelimiter);
@@ -352,9 +350,8 @@ public class Indexer {
      *
      * @param toSort        - an array list holding the tf as a key and the Map's term's record as a value
      * @param stringBuilder - a string given with the term's value
-     * @param minTerm
      */
-    private void sortPostingByFrequency(ArrayList<ImmutablePair<Integer, ImmutablePair<String, String>>> toSort, StringBuilder stringBuilder, String minTerm) {
+    private void sortPostingByFrequency(ArrayList<ImmutablePair<Integer, ImmutablePair<String, String>>> toSort, StringBuilder stringBuilder) {
         String[] pairs = split(stringBuilder.toString(), fileDelimiter);
         for (int i = 0, frequency; i < pairs.length - 1; i++) {
             frequency = countMatches(pairs[i + 1], Stemmer.getStemDelimiter().charAt(0));
