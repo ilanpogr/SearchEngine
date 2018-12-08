@@ -201,22 +201,30 @@ public class Master {
         termDictionary.remove(term);
     }
 
-    public static int getNumOfDocs() {
-        return DocDic.size();
-    }
-
-
+    /**
+     * get the number of documents
+     * @return int - number of documents
+     */
     public static int getDocCount() {
         return DocDic.size();
     }
 
-    public static void addToCacheDictionary(String minTerm, String s) {
-        cache.put(minTerm, s);
+    /**
+     * add a term to cache
+     * @param term - the term
+     * @param mostRelevantPartOfPosting - the Most Relevant Part Of the term's Posting
+     */
+    public static void addToCacheDictionary(String term, String mostRelevantPartOfPosting) {
+        cache.put(term, mostRelevantPartOfPosting);
     }
 
-    public static void addToFinalTermDictionary(String minTerm, String s) {
-        termDictionary.put(minTerm, s);
-
+    /**
+     * add a term to the dictionary
+     * @param term - the term
+     * @param details - the term's details
+     */
+    public static void addToFinalTermDictionary(String term, String details) {
+        termDictionary.put(term, details);
     }
 
     /**
@@ -262,6 +270,11 @@ public class Master {
         return currentStatus;
     }
 
+    /**
+     * Read Dictionary to RAM
+     * @param dicPath - dictionary's path
+     * @return true if was able to read
+     */
     public static boolean readDictionary(String dicPath) {
         termDictionary = ReadFile.readDictionary(dicPath,termSeparator);
         return termDictionary!=null;

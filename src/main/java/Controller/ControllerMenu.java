@@ -25,7 +25,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 /**
- *
+ *  Controller
  */
 public class ControllerMenu implements Observer {
 
@@ -320,7 +320,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.summary_lbl.setAlignment(Pos.TOP_LEFT);
         String time = "Time for the whole operation: " + (end - start) / 1000 + " seconds";
         String numOfterms = "Total number of term: " + ir_modelMenu.getNumOfTerms();
-        String numOfDocs = "Total number of Documents: " + ir_modelMenu.getNumOfDocs();
+        String numOfDocs = "Total number of Documents: " + ir_modelMenu.getDocCount();
         String summary = "Summary:\n" +
                 "\t" + time + "\n" +
                 "\t" + numOfterms + "\n" +
