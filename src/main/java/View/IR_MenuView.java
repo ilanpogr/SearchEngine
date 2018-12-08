@@ -22,6 +22,7 @@ public class IR_MenuView extends Observable {
     public Button browse_btn;
     public Button reset_btn;
     public ProgressBar progressbar;
+    public ComboBox docs_language;
 
     public void Start(ActionEvent actionEvent) {
         setChanged();
