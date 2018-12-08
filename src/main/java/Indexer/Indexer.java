@@ -58,8 +58,7 @@ public class Indexer {
 
     /**
      * creates and writes a temp file
-     *
-     * @param sortedTermsDic
+     * @param sortedTermsDic - the dictionary of few Docs we want to write to disk
      */
     public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
 //        PropertiesFile.putProperty("save.files.path",getFileOrDirName(targetPath+"Dictionaries"));

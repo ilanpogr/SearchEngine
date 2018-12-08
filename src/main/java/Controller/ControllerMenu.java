@@ -188,32 +188,28 @@ public class ControllerMenu implements Observer {
     }
 
     private void showDictionary() {
-//        StringBuilder pathBuilder = new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries without stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0")?"out ":" ").append("stemming");
-//        if (PropertiesFile.getProperty("stem.mode").equals("0")) { // stem is off
-//            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries without stemming\\1. Term Dictionary without stemming";
-//        } else {
-//            s = PropertiesFile.getProperty("save.files.path") + "Dictionaries with stemming\\1. Term Dictionary with stemming";
-//        }
         String dicPath = ir_modelMenu.getDicPath();
         File file = new File(dicPath);
-//        boolean exist = new File(s).isFile();
-//        if (exist) {
         if (file.isFile()) {
             try {
                 file.setWritable(false);
                 Runtime runtime = Runtime.getRuntime();
                 Process process = runtime.exec("src\\main\\resources\\Notepad++\\Notepad++.exe " + dicPath);
-//                Desktop desktop = null;
-//                if (Desktop.isDesktopSupported()) {
-//                    desktop = Desktop.getDesktop();
-//                }
-//                desktop.open(file);
             } catch (IOException ioe) {
-                showAlert("Wrong Path" , "Couldn't Find The Requested Dictionary", "try to change path to be the directory that contains: \"Dictionaries with/out stemming\"\nand click on the \'show\' button again");
-//                ioe.printStackTrace();
+                showAlert(
+                        "Wrong Path" ,
+                        "Couldn't Find The Requested Dictionary",
+                        "try to change path to be the directory that contains:" +
+                                " \"Dictionaries with/out stemming\"" +
+                                "\nand click on the \'show\' button again");
             }
         } else {
-            showAlert("Wrong Path" , "Couldn't Find The Requested Dictionary", "try to change path to be the directory that contains: \"Dictionaries with/out stemming\"\nand click on the \'Show Dictionary\' button again");
+            showAlert(
+                    "Wrong Path" ,
+                    "Couldn't Find The Requested Dictionary",
+                    "try to change path to be the directory that contains:" +
+                            " \"Dictionaries with/out stemming\"" +
+                            "\nand click on the \'show\' button again");
         }
     }
 
@@ -230,6 +226,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.stemmer_checkBox.setDisable(true);
         ir_menuView.progressbar.setVisible(true);
         ir_menuView.progress_lbl.setVisible(true);
+        ir_menuView.docs_language.setDisable(true);
         progress.addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
@@ -266,6 +263,8 @@ public class ControllerMenu implements Observer {
         ir_menuView.progress_lbl.setVisible(false);
         ir_menuView.docs_language.setDisable(false);
         ir_menuView.docs_language.getItems().addAll(LanguagesInfo.getInstance().getLanguagesAsList());
+        ir_menuView.docs_language.setDisable(false);
+
 //        ir_menuView.docs_language.show();
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));

@@ -61,13 +61,10 @@
                 <Region prefHeight="10.0" prefWidth="300.0" />
                 <HBox prefHeight="40.0" prefWidth="300.0">
                     <children>
-                        <Label minHeight="40.0" prefHeight="40.0" prefWidth="144.0" text="Please choose language :">
-                            <HBox.margin>
-                                <Insets left="62.0" />
-                            </HBox.margin>
-                        </Label>
-                        <Region prefHeight="200.0" prefWidth="20.0" />
-                  <ComboBox fx:id="docs_language" minHeight="40.0" prefHeight="40.0" prefWidth="120.0" />
+                  <ComboBox fx:id="docs_language" minHeight="25.0" prefHeight="30.0" prefWidth="250.0" promptText="Please Choose Language">
+                     <HBox.margin>
+                        <Insets left="75.0" top="5.0" />
+                     </HBox.margin></ComboBox>
                     </children>
                 </HBox>
                 <Region prefHeight="10.0" prefWidth="300.0" />
@@ -77,13 +74,13 @@
                     </VBox.margin>
                 </Button>
                 <Region prefHeight="10.0" prefWidth="300.0" />
-            <ProgressBar fx:id="progressbar" minHeight="20.0" prefHeight="20.0" prefWidth="280.0" progress="0.0">
+            <ProgressBar fx:id="progressbar" minHeight="20.0" prefHeight="20.0" prefWidth="220.0" progress="0.0" visible="false">
                <VBox.margin>
-                  <Insets left="55.0" />
+                  <Insets left="85.0" />
                </VBox.margin>
             </ProgressBar>
             <Region prefHeight="10.0" prefWidth="300.0" />
-            <Label fx:id="progress_lbl" alignment="CENTER" maxHeight="27.0" maxWidth="380.0" prefWidth="316.0">
+            <Label fx:id="progress_lbl" alignment="CENTER" maxHeight="27.0" maxWidth="380.0" prefWidth="316.0" visible="false">
                <VBox.margin>
                   <Insets left="10.0" />
                </VBox.margin></Label>
