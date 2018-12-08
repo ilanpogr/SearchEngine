@@ -87,10 +87,9 @@
                <VBox.margin>
                   <Insets left="10.0" />
                </VBox.margin></Label>
-            <Region layoutX="10.0" layoutY="434.0" prefHeight="10.0" prefWidth="300.0" />
             <Label fx:id="summary_lbl" alignment="TOP_LEFT" maxHeight="120.0" prefHeight="120.0" prefWidth="320.0">
                <VBox.margin>
-                  <Insets left="35.0" top="20.0" />
+                  <Insets left="35.0" />
                </VBox.margin>
                <font>
                   <Font size="14.0" />
