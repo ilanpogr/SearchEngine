@@ -36,8 +36,8 @@ public class ModelMenu extends Observable {
      * get the number of documents in corpus
      * @return integer
      */
-    public int getNumOfDocs() {
-        return Master.getNumOfDocs();
+    public int getDocCount() {
+        return Master.getDocCount();
     }
 
     /**

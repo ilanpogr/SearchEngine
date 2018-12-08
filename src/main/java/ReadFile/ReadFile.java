@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 
 /**
- *
+ *  the class that reads the corpus
  */
 public class ReadFile {
 
@@ -33,20 +33,12 @@ public class ReadFile {
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
     private static AtomicInteger fileCounter = new AtomicInteger(0);
 
-    //    private ArrayList<String> textList;
-//    private ArrayList<String> docNumList;
-//    private Map<String,String> docMap = new M
-//    private static int docCounter = 0;
-
-
     /**
      * dCtor
      */
     public ReadFile() {
         this.unInstancedDocList = new ArrayList<>();
         this.docList = new ArrayList<>();
-//        this.textList = new ArrayList<>();
-//        this.docNumList = new ArrayList<>();
     }
 
     /**
@@ -67,8 +59,6 @@ public class ReadFile {
     private static List<String> createPathsList(String path) {
         List<String> fileList = new ArrayList<>();
         try {
-//            Stream<Path> subPaths = Files.walk(Paths.get(path));
-//            fileList = subPaths.filter(Files::isRegularFile).map(Objects::toString).collect(Collectors.toList());
             File root = new File(path);
             File[] dirs = root.listFiles();
             StringBuilder filePath = new StringBuilder();
@@ -78,7 +68,6 @@ public class ReadFile {
                 fileList.add(filePath.toString());
                 filePath.setLength(0);
             }
-//            System.out.println(fileCounter);
             PropertiesFile.putProperty("number.of.files",""+fileList.size());
         } catch (Exception e) {
             e.printStackTrace();
@@ -86,11 +75,20 @@ public class ReadFile {
         return fileList;
     }
 
+    /**
+     * clears static values
+     */
     public static void clear() {
         rootPath=null;
         fileCounter = new AtomicInteger(0);
     }
 
+    /**
+     * reads a dictionary and makes a Map out of it to keep in the memory
+     * @param dicPath - the path to the dictionary
+     * @param delimiter - the delimiter of whats a key and whats a value
+     * @return a Map or null
+     */
     public static TreeMap<String,String> readDictionary(String dicPath, String delimiter) {
         TreeMap <String,String> dic =null;
         BufferedReader bufferedReader = null;
@@ -119,8 +117,6 @@ public class ReadFile {
     private void clearLists() {
         unInstancedDocList.clear();
         docList.clear();
-//        textList = new ArrayList<>();
-//        docNumList = new ArrayList<>();
     }
 
     /**
@@ -135,20 +131,13 @@ public class ReadFile {
             StringBuilder stringBuilder = new StringBuilder();
             Stream<String> s = bufferedReader.lines();
             s.forEach(s1 -> stringBuilder.append(s1 + " "));
-//            System.out.println(stringBuilder);
             String string = stringBuilder.toString();
-//            unInstancedDocList.addAll(Arrays.asList(string.split("</DOC>")));
             unInstancedDocList.addAll(Arrays.asList(splitByWholeSeparator(string, "</DOC>")));
             unInstancedDocList.remove(unInstancedDocList.size() - 1);
             createDocList();
             stringBuilder.setLength(0);
             unInstancedDocList.clear();
             return docList;
-//            extractDocNums();
-//            extractText();
-//            double end = System.currentTimeMillis();
-//            System.out.println("Time took to read files: " + (end - start) / 1000 + " sec.");
-//            System.out.println();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -205,23 +194,29 @@ public class ReadFile {
         }
     }
 
-    private void createAndUpdateLanguage(Doc curr, String docLang) {
-        if (!docLang.equals("")){
+    /**
+     * creates a City and puts it in the CityInfo
+     * @param doc - the document that the city was stated
+     * @param lang - the actual language
+     */
+    private void createAndUpdateLanguage(Doc doc, String lang) {
+        if (!lang.equals("")){
             LanguagesInfo languagesInfo = LanguagesInfo.getInstance();
-            languagesInfo.addLanguageToList(docLang);
-            curr.setLanguage(docLang);
+            languagesInfo.addLanguageToList(lang);
+            doc.setLanguage(lang);
         }
     }
 
-    private void createAndUpdateCity(Doc doc, StringBuilder document) {
-//        stringBuilder.setLength(0);
-//        extractTag(stringBuilder,document,"<F P=104>");
-//        String tag = stringBuilder.toString();
-        String tag = trim(substringBetween(document.toString(),">","<"));
+    /**
+     * creates a City and puts it in the CityInfo
+     * @param doc - the document that the city was stated
+     * @param stringBuilder - the actual string
+     */
+    private void createAndUpdateCity(Doc doc, StringBuilder stringBuilder) {
+        String tag = trim(substringBetween(stringBuilder.toString(),">","<"));
         if (tag != null && !tag.equals("")) {
             CityInfo cityInfo = CityInfo.getInstance();
             cityInfo.setInfo(tag, doc);
-//            doc.addAttributes("City", stringBuilder.toString());
         }
     }
 
@@ -245,17 +240,17 @@ public class ReadFile {
      * @return true if there are unread files, else false
      */
     public static boolean hasNextFile() {
-//        return fileCounter < 1000;
         return fileCounter.get() < rootPath.size();
     }
 
 
     /**
      * private function to make corpus as asked.
-     * @param s
+     * in case its a dir with only files
+     * @param path - path to the corpus
      */
-    private void corpusCreate(String s) {
-        File root = new File(s);
+    private void corpusCreate(String path) {
+        File root = new File(path);
         File[] files = root.listFiles();
         File [] dirs = new File[files.length];
         for (int i = 0; i < files.length; i++) {
@@ -268,9 +263,9 @@ public class ReadFile {
                     e.printStackTrace();
                 }
                 files[i].renameTo(new File(dirs[i].getAbsolutePath()+"\\"+files[i].getName()));
-            }
-            if (dirs[i].isDirectory()){
-                dirs[i].renameTo(new File(dirs[i].getAbsolutePath().substring(0,dirs[i].getAbsolutePath().length()-3)));
+                if (dirs[i].isDirectory()){
+                    dirs[i].renameTo(new File(dirs[i].getAbsolutePath().substring(0,dirs[i].getAbsolutePath().length()-3)));
+                }
             }
         }
     }
