@@ -149,22 +149,6 @@ public class ControllerMenu implements Observer {
 //                }
                 this.update(o, "stem");
                 setSceneBeforeStart();
-                progress.addListener(new ChangeListener<Number>() {
-                    @Override
-                    public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                        double val = newValue.doubleValue();
-                        if (val>1){
-                            val-=1;
-                            double finalVal = val;
-                            Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%"+(int)(finalVal *100)));
-                        } else {
-                            double finalVal = val;
-                            Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%"+(int)(finalVal*100)));
-                        }
-                        ir_menuView.progressbar.progressProperty().set(val);
-                    }
-                });
-                progress.bind(ir_modelMenu.getProgress());
                 Thread thread = new Thread() {
                     public void run() {
                         ir_modelMenu.start();
@@ -242,6 +226,24 @@ public class ControllerMenu implements Observer {
         ir_menuView.save_btn.setDisable(true);
         ir_menuView.reset_btn.setDisable(true);
         ir_menuView.stemmer_checkBox.setDisable(true);
+        ir_menuView.progressbar.setVisible(true);
+        ir_menuView.progress_lbl.setVisible(true);
+        progress.addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                double val = newValue.doubleValue();
+                if (val>1){
+                    val-=1;
+                    double finalVal = val;
+                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%"+(int)(finalVal *100)));
+                } else {
+                    double finalVal = val;
+                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Creating temporary files\t%"+(int)(finalVal*100)));
+                }
+                ir_menuView.progressbar.progressProperty().set(val);
+            }
+        });
+        progress.bind(ir_modelMenu.getProgress());
     }
 
     private void addSummaryToLabel() {
@@ -258,6 +260,8 @@ public class ControllerMenu implements Observer {
                 "\t" + numOfterms + "\n" +
                 "\t" + numOfDocs;
         ir_menuView.summary_lbl.setText(summary);
+        ir_menuView.progressbar.setVisible(false);
+        ir_menuView.progress_lbl.setVisible(false);
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
     }
