@@ -14,7 +14,6 @@ import java.util.Observable;
  */
 public class ModelMenu extends Observable {
 
-    private StringBuilder pathBuilder;
     private Master master_of_puppets;
     private static DoubleProperty progress;
 
@@ -30,15 +29,15 @@ public class ModelMenu extends Observable {
      * @return integer
      */
     public int getNumOfTerms() {
-        return master_of_puppets.getTermCount();
+        return Master.getTermCount();
     }
 
     /**
      * get the number of documents in corpus
-     * @return
+     * @return integer
      */
     public int getNumOfDocs() {
-        return master_of_puppets.getNumOfDocs();
+        return Master.getNumOfDocs();
     }
 
     /**
@@ -68,11 +67,11 @@ public class ModelMenu extends Observable {
 
     /**
      * get path for the Dictionaries directory (depends on stem mode)
-     * @return
+     * @return the new path
      */
     public String getDicPath() {
-        pathBuilder = new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming");
-        return pathBuilder.toString();
+        return new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming").toString();
+
     }
 
     /**
@@ -90,11 +89,6 @@ public class ModelMenu extends Observable {
      * sets a listener from the master's progress property
      */
     public static void setProgress() {
-        Master.getProgress().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                progress.set(newValue.doubleValue());
-            }
-        });
+        Master.getProgress().addListener((observable, oldValue, newValue) -> progress.set(newValue.doubleValue()));
     }
 }
