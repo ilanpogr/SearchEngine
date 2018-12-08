@@ -9,6 +9,8 @@ import org.jsoup.Jsoup;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -223,4 +225,29 @@ public class ReadFile {
         return fileCounter.get() < rootPath.size();
     }
 
+
+    /**
+     * private function to make corpus as asked.
+     * @param s
+     */
+    private void corpusCreate(String s) {
+        File root = new File(s);
+        File[] files = root.listFiles();
+        File [] dirs = new File[files.length];
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile())
+            {
+                dirs[i] = new File(files[i].getAbsolutePath()+"dir\\");
+                try {
+                    FileUtils.forceMkdir(dirs[i]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                files[i].renameTo(new File(dirs[i].getAbsolutePath()+"\\"+files[i].getName()));
+            }
+            if (dirs[i].isDirectory()){
+                dirs[i].renameTo(new File(dirs[i].getAbsolutePath().substring(0,dirs[i].getAbsolutePath().length()-3)));
+            }
+        }
+    }
 }

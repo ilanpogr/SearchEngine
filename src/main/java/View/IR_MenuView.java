@@ -1,10 +1,7 @@
 package View;
 
 import javafx.event.ActionEvent;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 import java.util.Observable;
 
@@ -19,10 +16,12 @@ public class IR_MenuView extends Observable {
     public Label data_textField;
     public Label save_textField;
     public Label summary_lbl;
+    public Label progress_lbl;
     public Button dict_btn;
     public Button save_btn;
     public Button browse_btn;
     public Button reset_btn;
+    public ProgressBar progressbar;
 
     public void Start(ActionEvent actionEvent) {
         setChanged();

@@ -1,7 +1,12 @@
 package Controller;
 
 import Model.ModelMenu;
+import ReadFile.ReadFile;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import View.IR_MenuView;
 
@@ -29,6 +34,8 @@ public class ControllerMenu implements Observer {
     private ModelMenu ir_modelMenu;
     private String[] propertyKeys = {"data.set.path", "save.files.path"};
 
+    private DoubleProperty progress;
+
     private long start;
     private long end;
 
@@ -52,6 +59,7 @@ public class ControllerMenu implements Observer {
         ir_modelMenu = new ModelMenu();
         ir_modelMenu.addObserver(this);
         ir_menuView.addObserver(this);
+        progress = new SimpleDoubleProperty(0);
     }
 
     /**
@@ -141,9 +149,24 @@ public class ControllerMenu implements Observer {
 //                }
                 this.update(o, "stem");
                 setSceneBeforeStart();
+                progress.addListener(new ChangeListener<Number>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                        double val = newValue.doubleValue();
+                        if (val>1){
+                            val-=1;
+                            double finalVal = val;
+                            Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%"+(int)(finalVal *100)));
+                        } else {
+                            double finalVal = val;
+                            Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%"+(int)(finalVal*100)));
+                        }
+                        ir_menuView.progressbar.progressProperty().set(val);
+                    }
+                });
+                progress.bind(ir_modelMenu.getProgress());
                 Thread thread = new Thread() {
                     public void run() {
-                        ir_modelMenu.removeAllFiles();
                         ir_modelMenu.start();
                     }
                 };

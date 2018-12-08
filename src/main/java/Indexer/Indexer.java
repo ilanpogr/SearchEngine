@@ -10,8 +10,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
-import static org.apache.commons.io.FileUtils.deleteQuietly;
-import static org.apache.commons.io.FileUtils.sizeOf;
+import static org.apache.commons.io.FileUtils.*;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
@@ -193,15 +192,9 @@ public class Indexer {
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 }
                 termCounter++;
+                Master.setCurrentStatus(getIndexStatus(minTerm));
             } else {
                 Master.removeFromDictionary(minTerm);
-            }
-
-
-            int total = (int) ((System.currentTimeMillis() - startIndexTime) / 1000);
-            if (last < total) {
-                last = total;
-                System.out.println("Time until now to index: " + total / 60 + ":" + (total % 60 < 10 ? "0" : "") + total % 60 + " seconds \t\t\tCurrent term: " + minTerm);
             }
         }
         for (Map.Entry<String, BufferedWriter> mapEntry : mergedFilesDic.entrySet()) {
@@ -228,6 +221,55 @@ public class Indexer {
         }
         System.out.println("Size of Posting Files: " + totalPostingSizeByKB / 1024);
         createdFolder = false;
+
+    }
+
+    /**
+     * gets the letter value that is being indexed
+     * @param curr - the current term
+     * @return number in [0,1] to indicate the state
+     */
+    private double getIndexStatus(String curr) {
+        double stat = 0;
+        switch (curr.charAt(0)){
+            case '0': stat = 1; break;
+            case '1': stat = 2; break;
+            case '2': stat = 3; break;
+            case '3': stat = 4; break;
+            case '4': stat = 5; break;
+            case '5': stat = 6; break;
+            case '6': stat = 7; break;
+            case '7': stat = 8; break;
+            case '8': stat = 9; break;
+            case '9': stat = 10; break;
+            case 'a': stat = 11; break;
+            case 'b': stat = 12; break;
+            case 'c': stat = 13; break;
+            case 'd': stat = 14; break;
+            case 'e': stat = 15; break;
+            case 'f': stat = 16; break;
+            case 'g': stat = 17; break;
+            case 'h': stat = 18; break;
+            case 'i': stat = 19; break;
+            case 'j': stat = 20; break;
+            case 'k': stat = 21; break;
+            case 'l': stat = 22; break;
+            case 'm': stat = 23; break;
+            case 'n': stat = 24; break;
+            case 'o': stat = 25; break;
+            case 'p': stat = 26; break;
+            case 'q': stat = 27; break;
+            case 'r': stat = 28; break;
+            case 's': stat = 29; break;
+            case 't': stat = 30; break;
+            case 'u': stat = 31; break;
+            case 'v': stat = 32; break;
+            case 'w': stat = 33; break;
+            case 'x': stat = 34; break;
+            case 'y': stat = 35; break;
+            case 'z': stat = 36; break;
+        }
+        return stat/36;
 
     }
 
@@ -430,8 +472,9 @@ public class Indexer {
     private void checkOrMakeDir(String targetDirPath) {
         try {
             Path path = Paths.get(targetDirPath);
-            if (Files.notExists(path) && !createdFolder) {
-                Files.createDirectory(path);
+            if (!createdFolder) {
+                if (Files.notExists(path))
+                    Files.createDirectory(path);
                 PropertiesFile.putProperty("save.files.path", targetDirPath + "\\");
                 targetPath = PropertiesFile.getProperty("save.files.path");
                 createdFolder = true;
