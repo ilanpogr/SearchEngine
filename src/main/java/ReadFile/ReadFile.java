@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 
 /**
- *  the class that reads the corpus
+ * the class that reads the corpus
  */
 public class ReadFile {
 
@@ -43,6 +43,7 @@ public class ReadFile {
 
     /**
      * Ctor
+     *
      * @param path - to corpus dir
      */
     public ReadFile(String path) {
@@ -53,6 +54,7 @@ public class ReadFile {
 
     /**
      * create a list with all paths within corpus dir
+     *
      * @param path - to corpus dir
      * @return List of paths
      */
@@ -68,7 +70,7 @@ public class ReadFile {
                 fileList.add(filePath.toString());
                 filePath.setLength(0);
             }
-            PropertiesFile.putProperty("number.of.files",""+fileList.size());
+            PropertiesFile.putProperty("number.of.files", "" + fileList.size());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -79,28 +81,30 @@ public class ReadFile {
      * clears static values
      */
     public static void clear() {
-        rootPath=null;
+        rootPath = null;
         fileCounter = new AtomicInteger(0);
     }
 
     /**
      * reads a dictionary and makes a Map out of it to keep in the memory
-     * @param dicPath - the path to the dictionary
+     *
+     * @param dicPath   - the path to the dictionary
      * @param delimiter - the delimiter of whats a key and whats a value
      * @return a Map or null
      */
-    public static TreeMap<String,String> readDictionary(String dicPath, String delimiter) {
-        TreeMap <String,String> dic =null;
+    public static TreeMap<String, String> readDictionary(String dicPath, String delimiter) {
+        TreeMap<String, String> dic = null;
         BufferedReader bufferedReader = null;
         try {
             bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
             String s = bufferedReader.readLine();
             dic = new TreeMap<>(String::compareToIgnoreCase);
             while (s != null) {
-                String[] term = split(s, delimiter,2);
-                dic.put(term[0],term[1]);
+                String[] term = split(s, delimiter, 2);
+                dic.put(term[0], term[1]);
                 s = bufferedReader.readLine();
             }
+            bufferedReader.close();
             return dic;
         } catch (FileNotFoundException e) {
 
@@ -121,6 +125,7 @@ public class ReadFile {
 
     /**
      * reads a File and splits it into a document list
+     *
      * @param path - to the file
      * @return a list of Doc (documents)
      */
@@ -151,7 +156,7 @@ public class ReadFile {
         for (String doc : unInstancedDocList) {
             StringBuilder document = new StringBuilder(Jsoup.parse(doc).toString());
             Doc curr = new Doc();
-            curr.setFileName(substringAfterLast(rootPath.get(fileCounter.get()-1),"\\"));
+            curr.setFileName(substringAfterLast(rootPath.get(fileCounter.get() - 1), "\\"));
             StringBuilder docCity = new StringBuilder();
             String docLang = "";
             boolean isLanguage = false;
@@ -159,35 +164,35 @@ public class ReadFile {
             StringBuilder line = new StringBuilder(), tag = new StringBuilder();
             for (int i = 0; i < docArr.length; i++) {
                 docArr[i] = trim(docArr[i]);
-                if (startsWith(docArr[i],"<")) {
-                    if (containsIgnoreCase(docArr[i],"f p=\"104\"")) {
-                        docCity = new StringBuilder(docArr[i] + docArr[i+1] + docArr[i+2]);
+                if (startsWith(docArr[i], "<")) {
+                    if (containsIgnoreCase(docArr[i], "f p=\"104\"")) {
+                        docCity = new StringBuilder(docArr[i] + docArr[i + 1] + docArr[i + 2]);
                     }
-                    if (containsIgnoreCase(docArr[i],"f p=\"105\"")){
-                        docLang = trim(docArr[i+1]);
+                    if (containsIgnoreCase(docArr[i], "f p=\"105\"")) {
+                        docLang = trim(docArr[i + 1]);
                         isLanguage = true;
                     }
-                        String[] lineArr = splitPreserveAllTokens(docArr[i], ">", 2);
-                        docArr[i] = trim(lineArr[1]);
+                    String[] lineArr = splitPreserveAllTokens(docArr[i], ">", 2);
+                    docArr[i] = trim(lineArr[1]);
                     if (line.length() > 0 && docArr[i].isEmpty()) {
                         if (!lineArr[0].contains("/")) continue;
-                        tag.append(upperCase(splitPreserveAllTokens(lineArr[0],"/")[1]));
+                        tag.append(upperCase(splitPreserveAllTokens(lineArr[0], "/")[1]));
                         curr.addAttributes(trim(tag.toString()), trim(line.toString()));
                         tag.setLength(0);
                         line.setLength(0);
                     }
                     if (docArr[i].endsWith(">")) {
-                        docArr[i] = trim(splitPreserveAllTokens(docArr[i],"<", 2)[0]);
+                        docArr[i] = trim(splitPreserveAllTokens(docArr[i], "<", 2)[0]);
                     }
                 }
                 if (docArr[i].isEmpty()) continue;
                 line.append(" ").append(docArr[i]);
             }
-            if (curr.hasCity()){
-                createAndUpdateCity(curr,docCity);
+            if (curr.hasCity()) {
+                createAndUpdateCity(curr, docCity);
             }
-            if (isLanguage){
-                createAndUpdateLanguage(curr,docLang);
+            if (isLanguage) {
+                createAndUpdateLanguage(curr, docLang);
             }
             docList.add(curr);
 
@@ -196,11 +201,12 @@ public class ReadFile {
 
     /**
      * creates a City and puts it in the CityInfo
-     * @param doc - the document that the city was stated
+     *
+     * @param doc  - the document that the city was stated
      * @param lang - the actual language
      */
     private void createAndUpdateLanguage(Doc doc, String lang) {
-        if (!lang.equals("")){
+        if (!lang.equals("")) {
             LanguagesInfo languagesInfo = LanguagesInfo.getInstance();
             languagesInfo.addLanguageToList(lang);
             doc.setLanguage(lang);
@@ -209,11 +215,12 @@ public class ReadFile {
 
     /**
      * creates a City and puts it in the CityInfo
-     * @param doc - the document that the city was stated
+     *
+     * @param doc           - the document that the city was stated
      * @param stringBuilder - the actual string
      */
     private void createAndUpdateCity(Doc doc, StringBuilder stringBuilder) {
-        String tag = trim(substringBetween(stringBuilder.toString(),">","<"));
+        String tag = trim(substringBetween(stringBuilder.toString(), ">", "<"));
         if (tag != null && !tag.equals("")) {
             CityInfo cityInfo = CityInfo.getInstance();
             cityInfo.setInfo(tag, doc);
@@ -225,6 +232,7 @@ public class ReadFile {
      * get a list of 'Doc' from a single File.
      * the function works as a queue, each time it's called it will return the next file
      * in a form of Doc's list.
+     *
      * @return ArrayList of Doc
      */
     public ArrayList<Doc> getFileList() {
@@ -237,6 +245,7 @@ public class ReadFile {
 
     /**
      * check if there are more files in the corpus
+     *
      * @return true if there are unread files, else false
      */
     public static boolean hasNextFile() {
@@ -247,24 +256,24 @@ public class ReadFile {
     /**
      * private function to make corpus as asked.
      * in case its a dir with only files
+     *
      * @param path - path to the corpus
      */
     private void corpusCreate(String path) {
         File root = new File(path);
         File[] files = root.listFiles();
-        File [] dirs = new File[files.length];
+        File[] dirs = new File[files.length];
         for (int i = 0; i < files.length; i++) {
-            if (files[i].isFile())
-            {
-                dirs[i] = new File(files[i].getAbsolutePath()+"dir\\");
+            if (files[i].isFile()) {
+                dirs[i] = new File(files[i].getAbsolutePath() + "dir\\");
                 try {
                     FileUtils.forceMkdir(dirs[i]);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                files[i].renameTo(new File(dirs[i].getAbsolutePath()+"\\"+files[i].getName()));
-                if (dirs[i].isDirectory()){
-                    dirs[i].renameTo(new File(dirs[i].getAbsolutePath().substring(0,dirs[i].getAbsolutePath().length()-3)));
+                files[i].renameTo(new File(dirs[i].getAbsolutePath() + "\\" + files[i].getName()));
+                if (dirs[i].isDirectory()) {
+                    dirs[i].renameTo(new File(dirs[i].getAbsolutePath().substring(0, dirs[i].getAbsolutePath().length() - 3)));
                 }
             }
         }
