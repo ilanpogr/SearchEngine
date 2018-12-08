@@ -2,6 +2,8 @@ package Controller;
 
 import Model.ModelMenu;
 import ReadFile.ReadFile;
+import TextContainers.LanguagesInfo;
+import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -262,6 +264,9 @@ public class ControllerMenu implements Observer {
         ir_menuView.summary_lbl.setText(summary);
         ir_menuView.progressbar.setVisible(false);
         ir_menuView.progress_lbl.setVisible(false);
+        ir_menuView.docs_language.setDisable(false);
+        ir_menuView.docs_language.getItems().addAll(LanguagesInfo.getInstance().getLanguagesAsList());
+//        ir_menuView.docs_language.show();
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
     }

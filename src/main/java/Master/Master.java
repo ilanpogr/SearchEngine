@@ -113,7 +113,6 @@ public class Master {
                 if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
-                    System.out.println("Parsed and Read " + tmpFileIndex + " parts out of " + tmpFileNum);
                     tmpFileIndex++;
                     nextTmpFileIndex = (int) (tmpFileIndex * (tmpChunkSize));
                 }

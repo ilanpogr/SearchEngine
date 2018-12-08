@@ -1,7 +1,9 @@
 package TextContainers;
 
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isAlpha;
 import static org.apache.commons.lang3.StringUtils.split;
@@ -67,4 +69,9 @@ public class LanguagesInfo {
             System.out.println(s);
         }
     }
+
+    public ArrayList<String> getLanguagesAsList(){
+        return new ArrayList<>(languageInfo_map);
+    }
+
 }
