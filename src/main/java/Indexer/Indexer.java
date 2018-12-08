@@ -30,8 +30,6 @@ public class Indexer {
     private static final String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static final String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
-    //    private static ConcurrentLinkedDeque<StringBuilder> tmpDicQueue = new ConcurrentLinkedDeque<>();
-//        private static AtomicInteger tmpFilesCounter = new AtomicInteger(31);
     private static AtomicInteger tmpFilesCounter = new AtomicInteger(0);
     private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
     private static final double log2 = StrictMath.log10(2);
@@ -61,13 +59,11 @@ public class Indexer {
      * @param sortedTermsDic - the dictionary of few Docs we want to write to disk
      */
     public void indexTempFile(TreeMap<String, String> sortedTermsDic) {
-//        PropertiesFile.putProperty("save.files.path",getFileOrDirName(targetPath+"Dictionaries"));
         checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
         try {
             StringBuilder tmpPostFile = new StringBuilder();
             sortedTermsDic.forEach((k, v) -> tmpPostFile.append(lowerCase(k)).append(termSeperator).append(v).append("\n"));
             tmpPostFile.trimToSize();
-//            tmpDicQueue.addLast(tmpPostFile);
             WrieFile.createTempPostingFile(tmpPostFile);
             tmpFilesCounter.incrementAndGet();
         } catch (OutOfMemoryError om) {     //if Map is too big
@@ -95,7 +91,6 @@ public class Indexer {
         int last = 0;
         String targetDirPath = targetPath;
         int currFileNum = WrieFile.getFileNum();
-//        int currFileNum = 31;
         StringBuilder stringBuilder = new StringBuilder();
         LinkedHashMap<Integer, MutablePair<String, Integer>> termKeys = new LinkedHashMap<>();
         LinkedHashMap<Integer, String> termValues = new LinkedHashMap<>();
@@ -124,11 +119,7 @@ public class Indexer {
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         double logN = StrictMath.log10(Master.getDocCount()) / log2;
-//        double logN = StrictMath.log10(472000) / log2;
-        while (mergedFilesCounter.get() < tmpFilesCounter.get()/* && last<=13*/) {
-//            if (Runtime.getRuntime().freeMemory()<Runtime.getRuntime().totalMemory()/25){
-//                Controller.writeToFreeSpace(this);
-//            }
+        while (mergedFilesCounter.get() < tmpFilesCounter.get()){
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
             for (int i = 1; i <= tmpFilesInitialSize; i++) {
@@ -172,11 +163,8 @@ public class Indexer {
             double idf = logN - (StrictMath.log10(df) / log2);
 
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
-//            if (totalTf <2 && !containsAny(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ','/')) {
-//            if (containsOnly(minTerm, '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',' ') || (countMatches(minTerm,'/')-countMatches(minTerm,' ')<=1  && containsOnly(minTerm, '-','/', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (isUpperCase == 1) {
-//                    termDictionary.remove(minTerm);
                     minTerm = upperCase(minTerm);
                 }
                 if (maxIdfForCache < idf || df == 1) {
@@ -220,7 +208,6 @@ public class Indexer {
         }
         System.out.println("Size of Posting Files: " + totalPostingSizeByKB / 1024);
         createdFolder = false;
-
     }
 
     /**
@@ -529,19 +516,35 @@ public class Indexer {
     }
 
 
+    /**
+     * get the number of terms
+     * @return int - number of terms
+     */
     public static int getTermCounter() {
         return termCounter;
     }
 
+    /**
+     * deletes all folders and files created by this program
+     */
     public static void reset() {
         delete(targetPath + "Dictionaries with stemming");
         delete(targetPath + "Dictionaries without stemming");
     }
 
+    /**
+     * deletes the folder of last run (depends on stem mode)
+     * @return true if deleted
+     */
     public boolean removeAllFiles() {
         return delete(getFileOrDirName(targetPath + "Dictionaries"));
     }
 
+    /**
+     * deletes a folder and all it's content recursively
+     * @param path - the folder's path
+     * @return true if deleted
+     */
     private static boolean delete(String path) {
         try {
             File dir = new File(targetPath);
@@ -557,6 +560,9 @@ public class Indexer {
         return false;
     }
 
+    /**
+     * clears memory
+     */
     public static void clear() {
         totalPostingSizeByKB = 0;
         targetPath = PropertiesFile.getProperty("save.files.path");
