@@ -9,12 +9,14 @@ import org.jsoup.Jsoup;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -87,6 +89,28 @@ public class ReadFile {
     public static void clear() {
         rootPath=null;
         fileCounter = new AtomicInteger(0);
+    }
+
+    public static TreeMap<String,String> readDictionary(String dicPath, String delimiter) {
+        TreeMap <String,String> dic =null;
+        BufferedReader bufferedReader = null;
+        try {
+            bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
+            String s = bufferedReader.readLine();
+            dic = new TreeMap<>(String::compareToIgnoreCase);
+            while (s != null) {
+                String[] term = split(s, delimiter,2);
+                dic.put(term[0],term[1]);
+                s = bufferedReader.readLine();
+            }
+            return dic;
+        } catch (FileNotFoundException e) {
+
+        } catch (IOException e) {
+
+        }
+
+        return dic;
     }
 
     /**
