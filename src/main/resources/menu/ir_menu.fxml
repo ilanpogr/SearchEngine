@@ -61,9 +61,9 @@
                 <Region prefHeight="10.0" prefWidth="300.0" />
                 <HBox prefHeight="40.0" prefWidth="300.0">
                     <children>
-                  <ComboBox fx:id="docs_language" minHeight="25.0" prefHeight="30.0" prefWidth="250.0" promptText="Please Choose Language">
+                  <ComboBox fx:id="docs_language" minHeight="25.0" prefHeight="30.0" prefWidth="240.0" promptText="No Languages Avilable Yet">
                      <HBox.margin>
-                        <Insets left="75.0" top="5.0" />
+                        <Insets left="77.0" top="5.0" />
                      </HBox.margin></ComboBox>
                     </children>
                 </HBox>

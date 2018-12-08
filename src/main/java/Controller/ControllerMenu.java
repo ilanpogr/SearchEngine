@@ -66,7 +66,7 @@ public class ControllerMenu implements Observer {
 
     /**
      *
-     * @param selectedDirectoryPath
+     * @param selectedDirectoryPath the path from the FileChooser
      */
     private void loadCorpusPath (String selectedDirectoryPath){
         PropertiesFile.putProperty(propertyKeys[0], selectedDirectoryPath);
@@ -96,7 +96,7 @@ public class ControllerMenu implements Observer {
 
     /**
      *
-     * @param selectedDirectoryPath
+     * @param selectedDirectoryPath the path from the FileChooser
      */
     private void loadTargetPath(String selectedDirectoryPath){
         if (selectedDirectoryPath.endsWith("\\"))
@@ -227,6 +227,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.progressbar.setVisible(true);
         ir_menuView.progress_lbl.setVisible(true);
         ir_menuView.docs_language.setDisable(true);
+        ir_menuView.docs_language.getItems().clear();
         progress.addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
@@ -263,9 +264,10 @@ public class ControllerMenu implements Observer {
         ir_menuView.progress_lbl.setVisible(false);
         ir_menuView.docs_language.setDisable(false);
         ir_menuView.docs_language.getItems().addAll(LanguagesInfo.getInstance().getLanguagesAsList());
+        if (!ir_menuView.docs_language.getItems().isEmpty())
+            ir_menuView.docs_language.setPromptText("Please Choose Language");
         ir_menuView.docs_language.setDisable(false);
 
-//        ir_menuView.docs_language.show();
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
     }
