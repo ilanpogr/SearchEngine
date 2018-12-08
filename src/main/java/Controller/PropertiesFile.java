@@ -29,10 +29,8 @@ public class PropertiesFile {
         String propertiesFileName = "project.properties";
         try {
             properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(propertiesFileName));
-            //System.out.println("Properties file '" + propertiesFileName + "' loaded.\n");
         } catch (IOException e) {
             String message = "Exception while reading properties file '" + propertiesFileName + "':" + e.getLocalizedMessage();
-            //System.out.println();
             throw new RuntimeException(message, e);
         }
         return properties;
@@ -86,7 +84,6 @@ public class PropertiesFile {
             properties.store(new FileOutputStream("project.properties"), null);
         } catch (IOException e) {
             String message = "Exception while reading properties file\n" + e.getLocalizedMessage();
-            //System.out.println();
         }
     }
 }
