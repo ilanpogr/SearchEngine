@@ -255,7 +255,10 @@ public class Master {
         ReadFile.clear();
     }
 
-
+    /**
+     * get the status Property from the master
+     * @return Status as DoubleProperty
+     */
     public static DoubleProperty getProgress() {
         return currentStatus;
     }
