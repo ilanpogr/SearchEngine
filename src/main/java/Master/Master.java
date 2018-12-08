@@ -2,11 +2,14 @@ package Master;
 
 import Controller.PropertiesFile;
 import Indexer.Indexer;
+import Model.ModelMenu;
 import Parser.Parse;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
-import TextContainers.LanguagesInfo;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ObservableValue;
 
 import java.util.*;
 
@@ -32,7 +35,11 @@ public class Master {
     private static boolean isStemMode = setStemMode();
 
     private static String currDocName;
+    private static DoubleProperty currentStatus = new SimpleDoubleProperty(0);
 
+    /**
+     * sets the stem mode from properties file
+     */
     private static boolean setStemMode() {
         String stem = PropertiesFile.getProperty("stem.mode");
         if (stem.equalsIgnoreCase("0")) {
@@ -42,6 +49,11 @@ public class Master {
         }
     }
 
+    /**
+     * is there a need to use stemmer?
+     *
+     * @return yes or no.
+     */
     public static boolean isStemMode() {
         return isStemMode;
     }
@@ -62,18 +74,27 @@ public class Master {
         }
     }
 
+    public static void setCurrentStatus(double indexStatus) {
+        if (currentStatus.get() - 1 < indexStatus)
+            currentStatus.set(indexStatus + 1);
+    }
+
+    /**
+     * the Main program of the master.
+     * this is where the master manages the other classes and indexes the corpus.
+     */
     public void indexCorpus() {
-        int tmpFileIndex = 0, i = 0;
+        double tmpFileIndex = 0;
+        double i = 0;
         try {
-//            PropertiesFile.putProperty("save.files.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\tmp-run\\writerDir\\");
-//            PropertiesFile.putProperty("data.set.path", "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\corpus");
+            ModelMenu.setProgress();
             isStemMode = setStemMode();
             String s = PropertiesFile.getProperty("data.set.path") + "corpus\\";
             targetPath = PropertiesFile.getProperty("save.files.path");
             ReadFile readFile = new ReadFile(s);
             fileNum = getPropertyAsInt("number.of.files");
             tmpFileNum = getPropertyAsInt("number.of.temp.files");
-            double tmpChunkSize = fileNum/tmpFileNum;
+            double tmpChunkSize = Double.max(fileNum / tmpFileNum, 1);
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
             Parse p = new Parse();
@@ -88,8 +109,8 @@ public class Master {
                     HashMap<String, String> map = p.parse(aFilesList.text());
                     handleFile(map);
                 }
-                System.out.println(i);
-                if ((i == nextTmpFileIndex && tmpFileIndex<tmpFileNum) || i == fileNum) {
+                currentStatus.set((tmpFileIndex / tmpFileNum)*(1-(nextTmpFileIndex-i)/nextTmpFileIndex));
+                if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
                     System.out.println("Parsed and Read " + tmpFileIndex + " parts out of " + tmpFileNum);
@@ -200,18 +221,28 @@ public class Master {
 
     }
 
-    // todo - check if stem mode on or not from properties.
+    /**
+     * removes All files associated with the current stem mode
+     *
+     * @return true iff deleted the directory
+     */
     public boolean removeAllFiles() {
         clear();
         return new Indexer().removeAllFiles();
     }
 
+    /**
+     * deletes all of the saved files by the Master
+     */
     public void reset() {
         clear();
         Indexer.reset();
     }
 
-    public void clear(){
+    /**
+     * clears memory. returns all states back to the beginning. (except stemmer cache..)
+     */
+    public void clear() {
         fileNum = getPropertyAsInt("number.of.files");
         tmpFileNum = getPropertyAsInt("number.of.temp.files");
         stringBuilder = new StringBuilder();
@@ -220,7 +251,14 @@ public class Master {
         termDictionary = new TreeMap<>();
         cache = new TreeMap<>();
         isStemMode = setStemMode();
-        new Thread(Indexer::clear).start();
+        currentStatus.set(0);
+        Indexer.clear();
         ReadFile.clear();
     }
+
+
+    public static DoubleProperty getProgress() {
+        return currentStatus;
+    }
+
 }
