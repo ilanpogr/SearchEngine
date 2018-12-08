@@ -4,6 +4,7 @@ import Model.ModelMenu;
 import TextContainers.LanguagesInfo;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -25,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 /**
- *  Controller
+ * Controller
  */
 public class ControllerMenu implements Observer {
 
@@ -109,7 +110,6 @@ public class ControllerMenu implements Observer {
         ir_menuView.dict_btn.setDisable(false);
         ir_menuView.read_dict_btn.setDisable(false);
         ir_menuView.reset_btn.setDisable(false);
-
         savePath = true;
         checkIfCanStart();
     }
@@ -139,9 +139,10 @@ public class ControllerMenu implements Observer {
 
     /**
      * Shows an Alert window
-     * @param title - window's title
+     *
+     * @param title       - window's title
      * @param information - info
-     * @param content - Alert content
+     * @param content     - Alert content
      */
     public void showAlert(String title, String information, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -159,9 +160,6 @@ public class ControllerMenu implements Observer {
                     PropertiesFile.putProperty("stem.mode", "1");
                 } else PropertiesFile.putProperty("stem.mode", "0");
             } else if (arg.equals("start")) {
-//                if (ir_menuView.stemmer_checkBox.isSelected()) {
-//                    PropertiesFile.putProperty("stem.mode", "1");
-//                }
                 this.update(o, "stem");
                 setSceneBeforeStart();
                 Thread thread = new Thread() {
@@ -178,16 +176,9 @@ public class ControllerMenu implements Observer {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {
                 ir_modelMenu.reset();
-//                ir_modelMenu.removeAllFiles();
-//                ir_menuView.start_btn.setDisable(true);
             } else if (arg.equals("show")) {
-//                Thread thread = new Thread() {
-//                    public void run() {
                 showDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
-//                    }
-//                };
-//                thread.start();
             } else if (arg.equals("read")) {
                 readDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
@@ -198,7 +189,6 @@ public class ControllerMenu implements Observer {
                 ir_menuView.stemmer_checkBox.setDisable(false);
                 end = System.currentTimeMillis();
                 Platform.runLater(this::addSummaryToLabel);
-//                addSummaryToLabel();
             }
         }
     }
@@ -208,19 +198,21 @@ public class ControllerMenu implements Observer {
      */
     private void readDictionary() {
         String dicPath = ir_modelMenu.getDicPath();
-        File file = new File(dicPath);
-        if (file.isFile()) {
-            if (ir_modelMenu.readDictionary(dicPath)) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Read Dictionary");
-                alert.setHeaderText("Dictionary is read and now available to use");
-                alert.showAndWait();
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("OMG!");
-                alert.setHeaderText("Couldn't read Dictionary. try showing it");
-                alert.showAndWait();
-            }
+        try {
+            File file = new File(dicPath);
+            if (file.isFile()) {
+                if (ir_modelMenu.readDictionary(dicPath)) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Read Dictionary");
+                    alert.setHeaderText("Dictionary is read and now available to use");
+                    alert.showAndWait();
+                } else throw new Exception();
+            } else throw new Exception();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("OMG!");
+            alert.setHeaderText("Couldn't read Dictionary. try showing it");
+            alert.showAndWait();
         }
     }
 
@@ -236,6 +228,13 @@ public class ControllerMenu implements Observer {
                 file.setWritable(false);
                 Runtime runtime = Runtime.getRuntime();
                 Process process = runtime.exec("./Notepad++\\Notepad++.exe " + dicPath);
+                new SimpleBooleanProperty(false).addListener(new ChangeListener<Boolean>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                        if (newValue.booleanValue())
+                            file.setWritable(true);
+                    }
+                });
             } catch (IOException ioe) {
                 try {
                     Stage dicShow = new Stage();
@@ -281,7 +280,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.summary_lbl.setVisible(true);
         ir_menuView.start_btn.setDisable(true);
         ir_menuView.dict_btn.setDisable(true);
-        ir_menuView.reset_btn.setDisable(true);
+        ir_menuView.read_dict_btn.setDisable(true);
         ir_menuView.browse_btn.setDisable(true);
         ir_menuView.save_btn.setDisable(true);
         ir_menuView.reset_btn.setDisable(true);
@@ -313,7 +312,7 @@ public class ControllerMenu implements Observer {
      */
     private void addSummaryToLabel() {
         ir_menuView.dict_btn.setDisable(false);
-        ir_menuView.reset_btn.setDisable(false);
+        ir_menuView.read_dict_btn.setDisable(false);
         ir_menuView.browse_btn.setDisable(false);
         ir_menuView.save_btn.setDisable(false);
         ir_menuView.reset_btn.setDisable(false);
@@ -333,7 +332,6 @@ public class ControllerMenu implements Observer {
         if (!ir_menuView.docs_language.getItems().isEmpty())
             ir_menuView.docs_language.setPromptText("Please Choose Language");
         ir_menuView.docs_language.setDisable(false);
-
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
     }
