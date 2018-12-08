@@ -9,7 +9,6 @@ import Stemmer.Stemmer;
 import TextContainers.Doc;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ObservableValue;
 
 import java.util.*;
 
@@ -24,13 +23,13 @@ public class Master {
     private static int fileNum = getPropertyAsInt("number.of.files");
     private static int tmpFileNum = getPropertyAsInt("number.of.temp.files");
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-    private static String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
+    private static String termSeparator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static String targetPath;
     private static StringBuilder stringBuilder = new StringBuilder();
     private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
-    private static TreeMap<String, String> termDictionary = new TreeMap<>();
-    private static TreeMap<String, String> cache = new TreeMap<>();
+    private static TreeMap<String, String> termDictionary = new TreeMap<>(String::compareToIgnoreCase);
+    private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
     private static ArrayList<Doc> filesList;
     private static boolean isStemMode = setStemMode();
 
@@ -172,7 +171,7 @@ public class Master {
                 }
                 stringBuilder.append(tmpTermDic.get(termKey)).append(fileDelimiter);
             } else {
-                stringBuilder.append(isUpperCase ? "1" : "0").append(termSeperator);
+                stringBuilder.append(isUpperCase ? "1" : "0").append(termSeparator);
             }
 
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
@@ -235,6 +234,8 @@ public class Master {
      */
     public void reset() {
         clear();
+        termDictionary = new TreeMap<>(String::compareToIgnoreCase);
+        cache = new TreeMap<>(String::compareToIgnoreCase);
         Indexer.reset();
     }
 
@@ -247,8 +248,6 @@ public class Master {
         stringBuilder = new StringBuilder();
         DocDic = new LinkedHashMap<>();
         tmpTermDic = new LinkedHashMap<>();
-        termDictionary = new TreeMap<>();
-        cache = new TreeMap<>();
         isStemMode = setStemMode();
         currentStatus.set(0);
         Indexer.clear();
@@ -263,4 +262,8 @@ public class Master {
         return currentStatus;
     }
 
+    public static boolean readDictionary(String dicPath) {
+        termDictionary = ReadFile.readDictionary(dicPath,termSeparator);
+        return termDictionary!=null;
+    }
 }

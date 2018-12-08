@@ -1,9 +1,7 @@
 package Controller;
 
 import Model.ModelMenu;
-import ReadFile.ReadFile;
 import TextContainers.LanguagesInfo;
-import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -16,16 +14,19 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
 
-import java.awt.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.zip.ZipFile;
 
+/**
+ *
+ */
 public class ControllerMenu implements Observer {
 
     private FXMLLoader fxmlLoader;
@@ -45,6 +46,9 @@ public class ControllerMenu implements Observer {
     private boolean dataPath = false;
 
 
+    /**
+     * ctor
+     */
     public ControllerMenu() {
         stage = new Stage();
         fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("menu/ir_menu.fxml"));
@@ -65,22 +69,21 @@ public class ControllerMenu implements Observer {
     }
 
     /**
-     *
      * @param selectedDirectoryPath the path from the FileChooser
      */
-    private void loadCorpusPath (String selectedDirectoryPath){
+    private void loadCorpusPath(String selectedDirectoryPath) {
         PropertiesFile.putProperty(propertyKeys[0], selectedDirectoryPath);
         boolean corpusCheck = new File(selectedDirectoryPath, "corpus").exists();
         boolean stopWords = new File(selectedDirectoryPath, "stop_words.txt").exists();
         if ((!corpusCheck && !stopWords)) {
             ir_menuView.data_textField.setText("stop_words.txt and corpus folder are not existing in this path");
-            ir_menuView.start_bttn.setDisable(true);
+            ir_menuView.start_btn.setDisable(true);
         } else if (!corpusCheck) {
             ir_menuView.data_textField.setText("corpus folder not existing in this path");
-            ir_menuView.start_bttn.setDisable(true);
+            ir_menuView.start_btn.setDisable(true);
         } else if (!stopWords) {
             ir_menuView.data_textField.setText("stop_words.txt not existing in this path");
-            ir_menuView.start_bttn.setDisable(true);
+            ir_menuView.start_btn.setDisable(true);
         } else {
             if (selectedDirectoryPath.endsWith("\\")) {
                 PropertiesFile.putProperty(propertyKeys[0], selectedDirectoryPath);
@@ -95,17 +98,18 @@ public class ControllerMenu implements Observer {
 
 
     /**
-     *
      * @param selectedDirectoryPath the path from the FileChooser
      */
-    private void loadTargetPath(String selectedDirectoryPath){
+    private void loadTargetPath(String selectedDirectoryPath) {
         if (selectedDirectoryPath.endsWith("\\"))
             PropertiesFile.putProperty(propertyKeys[1], selectedDirectoryPath);
         else
             PropertiesFile.putProperty(propertyKeys[1], selectedDirectoryPath + "\\");
         ir_menuView.save_textField.setText(PropertiesFile.getProperty(propertyKeys[1]));
         ir_menuView.dict_btn.setDisable(false);
+        ir_menuView.read_dict_btn.setDisable(false);
         ir_menuView.reset_btn.setDisable(false);
+
         savePath = true;
         checkIfCanStart();
     }
@@ -120,16 +124,25 @@ public class ControllerMenu implements Observer {
         File selectedDirectory = directoryChooser.showDialog(stage);
         if (selectedDirectory != null) {
             if (operation == 0) loadCorpusPath(selectedDirectory.getAbsolutePath());
-             else loadTargetPath(selectedDirectory.getAbsolutePath());
+            else loadTargetPath(selectedDirectory.getAbsolutePath());
         }
     }
 
+    /**
+     * checks if dir contains stop_words and corpus
+     */
     private void checkIfCanStart() {
         if (dataPath && savePath) {
-            ir_menuView.start_bttn.setDisable(false);
+            ir_menuView.start_btn.setDisable(false);
         }
     }
 
+    /**
+     * Shows an Alert window
+     * @param title - window's title
+     * @param information - info
+     * @param content - Alert content
+     */
     public void showAlert(String title, String information, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
@@ -166,15 +179,18 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("reset")) {
                 ir_modelMenu.reset();
 //                ir_modelMenu.removeAllFiles();
-//                ir_menuView.start_bttn.setDisable(true);
+//                ir_menuView.start_btn.setDisable(true);
             } else if (arg.equals("show")) {
 //                Thread thread = new Thread() {
 //                    public void run() {
-                        showDictionary();
-                        ir_menuView.summary_lbl.setVisible(false);
+                showDictionary();
+                ir_menuView.summary_lbl.setVisible(false);
 //                    }
 //                };
 //                thread.start();
+            } else if (arg.equals("read")) {
+                readDictionary();
+                ir_menuView.summary_lbl.setVisible(false);
             }
         } else if (o.equals(ir_modelMenu)) {
             if (arg.equals("done")) {
@@ -187,6 +203,31 @@ public class ControllerMenu implements Observer {
         }
     }
 
+    /**
+     * Read Dictionary to RAM
+     */
+    private void readDictionary() {
+        String dicPath = ir_modelMenu.getDicPath();
+        File file = new File(dicPath);
+        if (file.isFile()) {
+            if (ir_modelMenu.readDictionary(dicPath)) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Read Dictionary");
+                alert.setHeaderText("Dictionary is read and now available to use");
+                alert.showAndWait();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("OMG!");
+                alert.setHeaderText("Couldn't read Dictionary. try showing it");
+                alert.showAndWait();
+            }
+        }
+    }
+
+    /**
+     * Shows the Dictionary.
+     * if program is ran by jar - dictionary won't be shown as notepad++
+     */
     private void showDictionary() {
         String dicPath = ir_modelMenu.getDicPath();
         File file = new File(dicPath);
@@ -194,18 +235,35 @@ public class ControllerMenu implements Observer {
             try {
                 file.setWritable(false);
                 Runtime runtime = Runtime.getRuntime();
-                Process process = runtime.exec("src\\main\\resources\\Notepad++\\Notepad++.exe " + dicPath);
+                Process process = runtime.exec("./Notepad++\\Notepad++.exe " + dicPath);
             } catch (IOException ioe) {
-                showAlert(
-                        "Wrong Path" ,
-                        "Couldn't Find The Requested Dictionary",
-                        "try to change path to be the directory that contains:" +
-                                " \"Dictionaries with/out stemming\"" +
-                                "\nand click on the \'show\' button again");
+                try {
+                    Stage dicShow = new Stage();
+                    dicShow.setTitle("Term Dictionary");
+                    ListView<String> termsDic = new ListView<>();
+                    termsDic.setPrefSize(300, 400);
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
+                    String s = bufferedReader.readLine();
+                    while (s != null) {
+                        termsDic.getItems().add(s);
+                        s = bufferedReader.readLine();
+                    }
+                    Pane root = new Pane();
+                    root.getChildren().add(termsDic);
+                    dicShow.setScene(new Scene(root, 300, 400));
+                    dicShow.show();
+                } catch (Exception e) {
+                    showAlert(
+                            "Wrong Path",
+                            "Couldn't Find The Requested Dictionary",
+                            "try to change path to be the directory that contains:" +
+                                    " \"Dictionaries with/out stemming\"" +
+                                    "\nand click on the \'show\' button again");
+                }
             }
         } else {
             showAlert(
-                    "Wrong Path" ,
+                    "Wrong Path",
                     "Couldn't Find The Requested Dictionary",
                     "try to change path to be the directory that contains:" +
                             " \"Dictionaries with/out stemming\"" +
@@ -214,12 +272,16 @@ public class ControllerMenu implements Observer {
     }
 
 
+    /**
+     * Sets the stage to be "blocked" fro use before starting indexing
+     */
     private void setSceneBeforeStart() {
         ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
         ir_menuView.summary_lbl.setText("IN PROCESS!!");
         ir_menuView.summary_lbl.setVisible(true);
-        ir_menuView.start_bttn.setDisable(true);
+        ir_menuView.start_btn.setDisable(true);
         ir_menuView.dict_btn.setDisable(true);
+        ir_menuView.reset_btn.setDisable(true);
         ir_menuView.browse_btn.setDisable(true);
         ir_menuView.save_btn.setDisable(true);
         ir_menuView.reset_btn.setDisable(true);
@@ -232,13 +294,13 @@ public class ControllerMenu implements Observer {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 double val = newValue.doubleValue();
-                if (val>1){
-                    val-=1;
+                if (val > 1) {
+                    val -= 1;
                     double finalVal = val;
-                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%"+(int)(finalVal *100)));
+                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%" + (int) (finalVal * 100)));
                 } else {
                     double finalVal = val;
-                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Creating temporary files\t%"+(int)(finalVal*100)));
+                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Creating temporary files\t%" + (int) (finalVal * 100)));
                 }
                 ir_menuView.progressbar.progressProperty().set(val);
             }
@@ -246,8 +308,12 @@ public class ControllerMenu implements Observer {
         progress.bind(ir_modelMenu.getProgress());
     }
 
+    /**
+     * edits the stage to be set after done indexing
+     */
     private void addSummaryToLabel() {
         ir_menuView.dict_btn.setDisable(false);
+        ir_menuView.reset_btn.setDisable(false);
         ir_menuView.browse_btn.setDisable(false);
         ir_menuView.save_btn.setDisable(false);
         ir_menuView.reset_btn.setDisable(false);
@@ -272,6 +338,9 @@ public class ControllerMenu implements Observer {
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
     }
 
+    /**
+     * Shows the application window
+     */
     public void showStage() {
         stage.show();
     }

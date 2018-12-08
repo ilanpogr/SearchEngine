@@ -91,4 +91,13 @@ public class ModelMenu extends Observable {
     public static void setProgress() {
         Master.getProgress().addListener((observable, oldValue, newValue) -> progress.set(newValue.doubleValue()));
     }
+
+    /**
+     * Reads dictionary to RAM
+     * @param dicPath - path to the dictionary
+     * @return true if was able to read
+     */
+    public boolean readDictionary(String dicPath) {
+        return Master.readDictionary(dicPath);
+    }
 }
