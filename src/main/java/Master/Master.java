@@ -93,7 +93,7 @@ public class Master {
             ReadFile readFile = new ReadFile(s);
             fileNum = getPropertyAsInt("number.of.files");
             tmpFileNum = getPropertyAsInt("number.of.temp.files");
-            double tmpChunkSize = Double.max(fileNum / tmpFileNum, 1);
+            double tmpChunkSize = Double.min(Double.max(fileNum / tmpFileNum, 1),fileNum);
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
             Parse p = new Parse();
