@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.IR_MenuView">
+    <children>
+        <VBox prefHeight="570.0" prefWidth="400.0">
+            <children>
+            <Region prefHeight="10.0" prefWidth="200.0" />
+            <Button fx:id="start_btn" contentDisplay="CENTER" disable="true" mnemonicParsing="false" onAction="#Start" prefHeight="40.0" prefWidth="290.0" text="START">
+               <VBox.margin>
+                  <Insets left="50.0" />
+               </VBox.margin></Button>
+            <Region prefHeight="10.0" prefWidth="200.0" />
+            <Region fx:id="region_delimiter" prefHeight="1.0" prefWidth="200.0" />
+            <Region prefHeight="10.0" prefWidth="200.0" />
+                <Button fx:id="browse_btn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#BrowseDataSet" prefHeight="40.0" prefWidth="280.0" text="Browse Data Set">
+                    <VBox.margin>
+                        <Insets left="55.0" />
+                    </VBox.margin>
+                </Button>
+            <Label fx:id="data_textField" alignment="CENTER" maxHeight="25.0" maxWidth="380.0" prefWidth="380.0">
+               <VBox.margin>
+                  <Insets left="10.0" top="5.0" />
+               </VBox.margin>
+            </Label>
+                <Region prefHeight="10.0" prefWidth="300.0" />
+                <Button fx:id="save_btn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#savePostingFile_DictionaryFile" prefHeight="40.0" prefWidth="280.0" text="Save Posting and Dictionary">
+                    <VBox.margin>
+                        <Insets left="55.0" />
+                    </VBox.margin>
+                </Button>
+            <Label fx:id="save_textField" alignment="CENTER" maxHeight="25.0" maxWidth="380.0" prefWidth="380.0">
+               <VBox.margin>
+                  <Insets left="10.0" top="5.0" />
+               </VBox.margin>
+            </Label>
+            <Button fx:id="dict_btn" contentDisplay="CENTER" disable="true" mnemonicParsing="false" onAction="#showDictionary" prefHeight="40.0" prefWidth="280.0" text="Show Dictionary">
+               <VBox.margin>
+                  <Insets left="55.0" />
+               </VBox.margin></Button>
+            <Region prefHeight="10.0" prefWidth="300.0" />
+            <Button fx:id="read_dict_btn" contentDisplay="CENTER" disable="true" layoutX="65.0" layoutY="226.0" mnemonicParsing="false" onAction="#loadDictToMemory" prefHeight="40.0" prefWidth="280.0" text="Load Dictionary">
+               <VBox.margin>
+                  <Insets left="55.0" />
+               </VBox.margin>
+            </Button>
+                <Region prefHeight="10.0" prefWidth="300.0" />
+                <HBox prefHeight="40.0" prefWidth="300.0">
+                    <children>
+                        <Region prefHeight="40.0" prefWidth="145.0" />
+                        <CheckBox fx:id="stemmer_checkBox" mnemonicParsing="false" onAction="#setStemMode" prefHeight="40.0" prefWidth="110.0" text="Use Stemmer" />
+                        <Region prefHeight="40.0" prefWidth="125.0" />
+                    </children>
+                </HBox>
+                <Region prefHeight="10.0" prefWidth="300.0" />
+                <HBox prefHeight="40.0" prefWidth="300.0">
+                    <children>
+                  <ComboBox fx:id="docs_language" minHeight="25.0" prefHeight="30.0" prefWidth="240.0" promptText="No Languages Available Yet">
+                     <HBox.margin>
+                        <Insets left="77.0" top="5.0" />
+                     </HBox.margin></ComboBox>
+                    </children>
+                </HBox>
+                <Region prefHeight="10.0" prefWidth="300.0" />
+                <Button fx:id="reset_btn" alignment="CENTER" contentDisplay="CENTER" disable="true" minHeight="40.0" mnemonicParsing="false" onAction="#Reset" prefHeight="40.0" prefWidth="280.0" text="Reset" textAlignment="CENTER">
+                    <VBox.margin>
+                        <Insets left="55.0" />
+                    </VBox.margin>
+                </Button>
+                <Region prefHeight="10.0" prefWidth="300.0" />
+            <ProgressBar fx:id="progressbar" minHeight="20.0" prefHeight="20.0" prefWidth="220.0" progress="0.0" visible="false">
+               <VBox.margin>
+                  <Insets left="85.0" />
+               </VBox.margin>
+            </ProgressBar>
+            <Region prefHeight="10.0" prefWidth="300.0" />
+            <Label fx:id="progress_lbl" alignment="CENTER" maxHeight="27.0" maxWidth="380.0" prefWidth="316.0" visible="false">
+               <VBox.margin>
+                  <Insets left="10.0" />
+               </VBox.margin></Label>
+            <Label fx:id="summary_lbl" alignment="TOP_LEFT" maxHeight="120.0" prefHeight="120.0" prefWidth="320.0">
+               <VBox.margin>
+                  <Insets left="35.0" />
+               </VBox.margin>
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            </children>
+        </VBox>
+    </children>
+</Pane>
