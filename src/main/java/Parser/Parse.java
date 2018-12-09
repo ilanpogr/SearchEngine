@@ -30,18 +30,18 @@ public class Parse {
      * @return : the set of stop-words
      */
     private static HashSet<String> initStopWords() {
-//        String baseDir = (String) System.getProperties().get("user.dir");
         String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
         stopWords = new HashSet<>();
         Scanner s = null;
         try {
             s = new Scanner(new File(filesPath));
+            while (s!=null && s.hasNext()) stopWords.add(s.nextLine());
+            stopWords.remove("between");
+            stopWords.remove("may");
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("couldn't fine file");
+            return null;
         }
-        while (s!=null && s.hasNext()) stopWords.add(s.nextLine());
-        stopWords.remove("between");
-        stopWords.remove("may");
         return stopWords;
     }
 
@@ -122,6 +122,7 @@ public class Parse {
         String[] s = split(str[0], " ");
         boolean expressionFlag;
         stopWordsCounter = 0;
+        if (stopWords==null) stopWords = initStopWords();
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             currentPosition = i+1 - stopWordsCounter;
             expressionFlag = false;

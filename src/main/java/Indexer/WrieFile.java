@@ -38,7 +38,7 @@ public class WrieFile {
             writersMap.get(fileName).append(content);
         } catch (Exception e) {
             System.out.println("Couldn't write the line: " + content + " to the file Named: " + fileName);
-            e.printStackTrace();
+            //do nothing
         }
     }
 
@@ -52,7 +52,7 @@ public class WrieFile {
             writeStringToFile(new File(targetPath + fileName + ".post"), poString.toString(), false);
         } catch (IOException e) {
             System.out.println("create temp posting file filed in: " + fileName);
-            e.printStackTrace();
+            //do nothing
         }
 
     }
@@ -67,7 +67,7 @@ public class WrieFile {
             writeStringToFile(new File(targetPath+fileName),stringBuilder.toString(),true);
         } catch (IOException e) {
             System.out.println("create Dictionary file filed in: " +fileName);
-            e.printStackTrace();
+            //do nothing
         }
     }
 

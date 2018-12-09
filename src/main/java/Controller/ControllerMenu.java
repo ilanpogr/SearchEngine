@@ -56,7 +56,11 @@ public class ControllerMenu implements Observer {
         try {
             root = fxmlLoader.load();
         } catch (Exception e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("OMFG!");
+            alert.setHeaderText("Couldn't load FXML!");
+            alert.setContentText("try to run the app again");
+            alert.showAndWait();
         }
         Scene scene = new Scene(root);
         scene.getStylesheets().add("menu/style_menu.css");

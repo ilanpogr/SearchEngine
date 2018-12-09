@@ -192,7 +192,7 @@ public class Indexer {
                 bufferedWriter.flush();
                 bufferedWriter.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                //stop indexing
             }
         }
         try {
@@ -396,7 +396,7 @@ public class Indexer {
             tmpFiles.put(i, new BufferedReader(new FileReader(new File(stringBuilder.toString()))));
         } catch (FileNotFoundException e) {
             System.out.println("couldn't find or open: " + stringBuilder);
-            e.printStackTrace();
+            //do nothing
         }
     }
 
@@ -415,10 +415,10 @@ public class Indexer {
             tmpFiles.put(name, new BufferedWriter(new FileWriter(file, true)));
         } catch (FileNotFoundException e) {
             System.out.println("couldn't find or open: " + stringBuilder);
-            e.printStackTrace();
+            //do nothing
         } catch (IOException e) {
             System.out.println("couldn't create: " + stringBuilder);
-            e.printStackTrace();
+            //do nothing
         }
     }
 
@@ -446,7 +446,7 @@ public class Indexer {
             }
         } catch (IOException e) {
             System.out.println("couldn't find or open: ");
-            e.printStackTrace();
+            //do nothing
         }
 
     }
@@ -469,7 +469,7 @@ public class Indexer {
             WrieFile.setTargetPath(targetPath);
         } catch (Exception e) {
             System.out.println("couldn't find or open: " + targetDirPath);
-            e.printStackTrace();
+            //do nothing
         }
     }
 
@@ -486,14 +486,14 @@ public class Indexer {
                 try {
                     inverter.append(term).append(termSeperator).append(value).append("\n");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    //do nothing
                 }
             });
             try {
                 inverter.flush();
                 inverter.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                //do nothing
             }
         } catch (OutOfMemoryError om) {     //if Map is too big
             try {
@@ -510,7 +510,7 @@ public class Indexer {
                 });
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            //do nothing
         }
     }
 
@@ -554,7 +554,7 @@ public class Indexer {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //do nothing
         }
         return false;
     }

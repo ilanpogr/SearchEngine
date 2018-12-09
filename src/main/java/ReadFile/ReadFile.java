@@ -72,7 +72,7 @@ public class ReadFile {
             }
             PropertiesFile.putProperty("number.of.files", "" + fileList.size());
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("wrong path, look at the instructions!");
         }
         return fileList;
     }
@@ -107,7 +107,7 @@ public class ReadFile {
             bufferedReader.close();
             return dic;
         } catch (Exception e){
-
+            System.out.println("wrong path, look at the instructions!");
         }
 
         return dic;
@@ -129,7 +129,6 @@ public class ReadFile {
      */
     private ArrayList<Doc> readFromFile(String path) {
         try {
-//            double start = System.currentTimeMillis();
             BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
             StringBuilder stringBuilder = new StringBuilder();
             Stream<String> s = bufferedReader.lines();
@@ -142,7 +141,7 @@ public class ReadFile {
             unInstancedDocList.clear();
             return docList;
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            //skip this file.
         }
         return null;
     }

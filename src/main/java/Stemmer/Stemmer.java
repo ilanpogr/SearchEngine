@@ -134,7 +134,6 @@ public class Stemmer {
             num = Integer.parseInt(values[0]);
             positions = substringAfter(join(values,","),",");
         } catch (Exception e) {
-            e.printStackTrace();
             positions = substringAfter(value,",");
         }
         return new MutablePair<>(num,positions);
@@ -170,7 +169,7 @@ public class Stemmer {
             valueBuilder.append(value);
             stemmed.put(stemmedTerm.toString(), valueBuilder.toString() );
         } catch (Exception e) {
-            e.printStackTrace();
+            //do nothing
         }
     }
 }
