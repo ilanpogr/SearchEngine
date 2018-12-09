@@ -251,6 +251,7 @@ public class ControllerMenu implements Observer {
                     root.getChildren().add(termsDic);
                     dicShow.setScene(new Scene(root, 300, 400));
                     dicShow.show();
+                    bufferedReader.close();
                 } catch (Exception e) {
                     showAlert(
                             "Wrong Path",
