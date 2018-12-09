@@ -29,13 +29,13 @@ public class WrieFile {
 
     /**
      * adds a single line to a file
-     * @param writershMap - a map of Buffered Writers
-     * @param fileName - the name of the file that will be writen
+     * @param writersMap - a map of Buffered Writers
+     * @param fileName - the name of the file that will be written
      * @param content - the text
      */
-    public static void addLineToFile(LinkedHashMap<String, BufferedWriter> writershMap, String fileName, String content) {
+    public static void addLineToFile(LinkedHashMap<String, BufferedWriter> writersMap, String fileName, String content) {
         try {
-            writershMap.get(fileName).append(content);
+            writersMap.get(fileName).append(content);
         } catch (Exception e) {
             System.out.println("Couldn't write the line: " + content + " to the file Named: " + fileName);
             e.printStackTrace();

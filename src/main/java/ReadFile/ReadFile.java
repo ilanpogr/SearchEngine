@@ -106,9 +106,7 @@ public class ReadFile {
             }
             bufferedReader.close();
             return dic;
-        } catch (FileNotFoundException e) {
-
-        } catch (IOException e) {
+        } catch (Exception e){
 
         }
 

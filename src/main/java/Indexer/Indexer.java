@@ -4,6 +4,8 @@ import Controller.PropertiesFile;
 import Master.Master;
 import Parser.Parse;
 import Stemmer.Stemmer;
+import TextContainers.City;
+import TextContainers.CityInfo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -112,6 +114,7 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "tuvwxyz");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("1. Term Dictionary"));
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("4. Cities Dictionary"));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         double logN = StrictMath.log10(Master.getDocCount()) / log2;
@@ -163,13 +166,16 @@ public class Indexer {
                 if (isUpperCase == 1) {
                     minTerm = upperCase(minTerm);
                 }
+                City city = CityInfo.getInstance().getValueFromCitiesDictionary(minTerm);
                 if (maxIdfForCache < idf || df == 1) {
                     WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
+                    if (city!=null) WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("4. Cities Dictionary"), minTerm + termSeperator + city.getCountryName() + "," + city.getCurrency() + "," + city.getPopulation() + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     WrieFile.addLineToFile(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
                     WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
+                    if (city!=null) WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("4. Cities Dictionary"), minTerm + termSeperator + city.getCountryName() + "," + city.getCurrency() + "," + city.getPopulation() + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
                     WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     WrieFile.addLineToFile(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
                     mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
@@ -202,7 +208,7 @@ public class Indexer {
                 totalPostingSizeByKB = Master.getTermCount() * 1024;
             }
         }
-        System.out.println("Size of Posting Files: " + totalPostingSizeByKB / 1024);
+        System.out.println("Size of Posting Files: " + (int) (totalPostingSizeByKB / 1024) + " KB");
         createdFolder = false;
     }
 

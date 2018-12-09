@@ -30,4 +30,24 @@ public class City {
     public String toString(){
         return "Country: " + countryName + ", Population: " + population + ", Currency: " + currency;
     }
+
+    /**
+     * Getters
+     * @return string
+     */
+    public String getCityName() {
+        return cityName;
+    }
+
+    public String getCountryName() {
+        return countryName;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public String getPopulation() {
+        return population;
+    }
 }

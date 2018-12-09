@@ -93,11 +93,11 @@ public class Master {
             ReadFile readFile = new ReadFile(s);
             fileNum = getPropertyAsInt("number.of.files");
             tmpFileNum = getPropertyAsInt("number.of.temp.files");
-            double tmpChunkSize = Double.min(Double.max(fileNum / tmpFileNum, 1),fileNum);
+            double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1),fileNum);
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
             Parse p = new Parse();
-            System.out.println("READING, PARSING..");
+            System.out.print("READING, PARSING, ");
             tmpFileIndex++;
             int nextTmpFileIndex = (int) (tmpFileIndex * tmpChunkSize);
             while (ReadFile.hasNextFile()) {
@@ -108,7 +108,7 @@ public class Master {
                     HashMap<String, String> map = p.parse(aFilesList.text());
                     handleFile(map);
                 }
-                currentStatus.set((tmpFileIndex / tmpFileNum)*(1-(nextTmpFileIndex-i)/nextTmpFileIndex));
+                currentStatus.set(i/fileNum);
                 if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
@@ -116,10 +116,9 @@ public class Master {
                     nextTmpFileIndex = (int) (tmpFileIndex * (tmpChunkSize));
                 }
             }
-            System.out.println("MERGING..");
+            System.out.println("MERGING");
             indexer.mergePostingTempFiles();
             indexer.writeToDictionary(new TreeMap<>(DocDic), "3. Documents Dictionary");
-//            LanguagesInfo.getInstance().printLanguages();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

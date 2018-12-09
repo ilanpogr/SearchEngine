@@ -50,7 +50,7 @@ public class CityInfo {
      * does when get method called.
      */
     public City getValueFromCitiesDictionary(String key){
-        return citiesInfo_map.get(key);
+        return citiesInfo_map.getOrDefault(key,null);
     }
 
     /**
@@ -167,8 +167,6 @@ public class CityInfo {
             System.out.println(name + "  -->  " + citiesInfo_map.get(name));
         }
     }
-
-
 }
 
 
