@@ -201,11 +201,11 @@ public class ControllerMenu implements Observer {
      * Read Dictionary to RAM
      */
     private void readDictionary() {
-        String dicPath = ir_modelMenu.getDicPath();
+        String dicPath = ir_modelMenu.getDicsPath();
         try {
             File file = new File(dicPath);
             if (file.isFile()) {
-                if (ir_modelMenu.readDictionary(dicPath)) {
+                if (ir_modelMenu.readDictionaries(dicPath)) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Read Dictionary");
                     alert.setHeaderText("Dictionary is read and now available to use");
@@ -225,7 +225,9 @@ public class ControllerMenu implements Observer {
      * if program is ran by jar - dictionary won't be shown as notepad++
      */
     private void showDictionary() {
-        String dicPath = ir_modelMenu.getDicPath();
+        StringBuilder stringBuilder = new StringBuilder(ir_modelMenu.getDicsPath());
+        String dicPath = stringBuilder.append("\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming").toString();
+        stringBuilder.setLength(0);
         File file = new File(dicPath);
         if (file.isFile()) {
             try {

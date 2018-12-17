@@ -4,8 +4,6 @@ import Controller.PropertiesFile;
 import Master.Master;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 
 import java.util.Observable;
 
@@ -69,8 +67,8 @@ public class ModelMenu extends Observable {
      * get path for the Dictionaries directory (depends on stem mode)
      * @return the new path
      */
-    public String getDicPath() {
-        return new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming").toString();
+    public String getDicsPath() {
+        return new StringBuilder(PropertiesFile.getProperty("save.files.path")).append("Dictionaries with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming").toString();
 
     }
 
@@ -97,7 +95,7 @@ public class ModelMenu extends Observable {
      * @param dicPath - path to the dictionary
      * @return true if was able to read
      */
-    public boolean readDictionary(String dicPath) {
-        return Master.readDictionary(dicPath);
+    public boolean readDictionaries(String dicPath) {
+        return Master.readDictionaries(dicPath);
     }
 }

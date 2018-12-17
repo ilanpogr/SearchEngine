@@ -4,6 +4,7 @@ import Controller.PropertiesFile;
 import TextContainers.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+import org.ibex.nestedvm.util.Seekable;
 import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -92,10 +93,20 @@ public class ReadFile {
      * @param delimiter - the delimiter of whats a key and whats a value
      * @return a Map or null
      */
-    public static TreeMap<String, String> readDictionary(String dicPath, String delimiter) {
+    public static ArrayList<TreeMap<String, String>> readDictionaries(String dicPath, String delimiter) {
+        ArrayList<TreeMap<String, String>> dicSet = new ArrayList<>();
         TreeMap<String, String> dic = null;
         BufferedReader bufferedReader = null;
         try {
+            File dicDir = new File(dicPath);
+            if (dicDir.isDirectory()){
+                File [] dics = dicDir.listFiles();
+                for (int i = 0; i < dics.length; i++) {
+                    if (!isNumeric(dics[i].getName().substring(0,1)))continue;
+                    //todo - implement
+                }
+
+            }
             bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
             String s = bufferedReader.readLine();
             dic = new TreeMap<>(String::compareToIgnoreCase);
@@ -105,12 +116,12 @@ public class ReadFile {
                 s = bufferedReader.readLine();
             }
             bufferedReader.close();
-            return dic;
+            return dicSet;
         } catch (Exception e){
             System.out.println("wrong path, look at the instructions!");
         }
 
-        return dic;
+        return dicSet;
     }
 
     /**

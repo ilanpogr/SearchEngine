@@ -26,7 +26,7 @@ public class Master {
     private static String termSeparator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static String targetPath;
     private static StringBuilder stringBuilder = new StringBuilder();
-    private static LinkedHashMap<String, String> DocDic = new LinkedHashMap<>();
+    private static TreeMap<String, String> DocDic = new TreeMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
     private static TreeMap<String, String> termDictionary = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
@@ -118,7 +118,7 @@ public class Master {
             }
             System.out.println("MERGING");
             indexer.mergePostingTempFiles();
-            indexer.writeToDictionary(new TreeMap<>(DocDic), "3. Documents Dictionary");
+            indexer.writeToDictionary(DocDic, "3. Documents Dictionary");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -253,7 +253,7 @@ public class Master {
         fileNum = getPropertyAsInt("number.of.files");
         tmpFileNum = getPropertyAsInt("number.of.temp.files");
         stringBuilder = new StringBuilder();
-        DocDic = new LinkedHashMap<>();
+        DocDic = new TreeMap<>();
         tmpTermDic = new LinkedHashMap<>();
         isStemMode = setStemMode();
         currentStatus.set(0);
@@ -274,8 +274,8 @@ public class Master {
      * @param dicPath - dictionary's path
      * @return true if was able to read
      */
-    public static boolean readDictionary(String dicPath) {
-        termDictionary = ReadFile.readDictionary(dicPath,termSeparator);
+    public static boolean readDictionaries(String dicPath) {
+        termDictionary = ReadFile.readDictionaries(dicPath,termSeparator);
         return termDictionary!=null;
     }
 }
