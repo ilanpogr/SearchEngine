@@ -270,12 +270,15 @@ public class Master {
     }
 
     /**
-     * Read Dictionary to RAM
-     * @param dicPath - dictionary's path
+     * Read Dictionaries to RAM
+     * @param dicPath - dictionaries' path
      * @return true if was able to read
      */
     public static boolean readDictionaries(String dicPath) {
-        termDictionary = ReadFile.readDictionaries(dicPath,termSeparator);
-        return termDictionary!=null;
+        TreeMap<Character,TreeMap<String,String>> treeMaps = ReadFile.readDictionaries(dicPath,termSeparator);
+        termDictionary = treeMaps.remove('1');
+        cache = treeMaps.remove('2');
+        DocDic = treeMaps.remove('3');
+        return (termDictionary!=null && cache!=null && DocDic!=null);
     }
 }

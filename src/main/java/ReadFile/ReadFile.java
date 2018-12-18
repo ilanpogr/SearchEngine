@@ -87,14 +87,14 @@ public class ReadFile {
     }
 
     /**
-     * reads a dictionary and makes a Map out of it to keep in the memory
+     * reads dictionaries and makes a Map of Maps out of it to keep in the memory
      *
      * @param dicPath   - the path to the dictionary
      * @param delimiter - the delimiter of whats a key and whats a value
      * @return a Map or null
      */
-    public static ArrayList<TreeMap<String, String>> readDictionaries(String dicPath, String delimiter) {
-        ArrayList<TreeMap<String, String>> dicSet = new ArrayList<>();
+    public static TreeMap<Character,TreeMap<String, String>> readDictionaries(String dicPath, String delimiter) {
+        TreeMap<Character,TreeMap<String, String>> dicSet = new TreeMap<>();
         TreeMap<String, String> dic = null;
         BufferedReader bufferedReader = null;
         try {
@@ -104,19 +104,18 @@ public class ReadFile {
                 for (int i = 0; i < dics.length; i++) {
                     if (!isNumeric(dics[i].getName().substring(0,1)))continue;
                     //todo - implement
+                    bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dics[i].getPath()), StandardCharsets.UTF_8));
+                    String s = bufferedReader.readLine();
+                    dic = new TreeMap<>(String::compareToIgnoreCase);
+                    while (s != null) {
+                        String[] term = split(s, delimiter, 2);
+                        dic.put(term[0], term[1]);
+                        s = bufferedReader.readLine();
+                    }
+                    bufferedReader.close();
+                    dicSet.put(dics[i].getName().charAt(0),dic);
                 }
-
             }
-            bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
-            String s = bufferedReader.readLine();
-            dic = new TreeMap<>(String::compareToIgnoreCase);
-            while (s != null) {
-                String[] term = split(s, delimiter, 2);
-                dic.put(term[0], term[1]);
-                s = bufferedReader.readLine();
-            }
-            bufferedReader.close();
-            return dicSet;
         } catch (Exception e){
             System.out.println("wrong path, look at the instructions!");
         }

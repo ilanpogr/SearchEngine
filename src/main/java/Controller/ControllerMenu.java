@@ -166,11 +166,7 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("start")) {
                 this.update(o, "stem");
                 setSceneBeforeStart();
-                Thread thread = new Thread() {
-                    public void run() {
-                        ir_modelMenu.start();
-                    }
-                };
+                Thread thread = new Thread(() -> ir_modelMenu.start());
                 start = System.currentTimeMillis();
                 thread.setDaemon(true);
                 thread.start();
@@ -204,18 +200,18 @@ public class ControllerMenu implements Observer {
         String dicPath = ir_modelMenu.getDicsPath();
         try {
             File file = new File(dicPath);
-            if (file.isFile()) {
+            if (file.isDirectory()) {
                 if (ir_modelMenu.readDictionaries(dicPath)) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Read Dictionary");
-                    alert.setHeaderText("Dictionary is read and now available to use");
+                    alert.setTitle("Read Dictionaries");
+                    alert.setHeaderText("Dictionaries are read and now available to use");
                     alert.showAndWait();
                 } else throw new Exception();
             } else throw new Exception();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("OMG!");
-            alert.setHeaderText("Couldn't read Dictionary. try showing it");
+            alert.setHeaderText("Couldn't read Dictionaries. try showing them");
             alert.showAndWait();
         }
     }
