@@ -12,9 +12,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 
 import java.util.*;
 
-import static org.apache.commons.lang3.StringUtils.countMatches;
-import static org.apache.commons.lang3.StringUtils.lowerCase;
-import static org.apache.commons.lang3.StringUtils.substring;
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * The Master Controls the whole Process of indexing the corpus
@@ -26,12 +24,32 @@ public class Master {
     private static String termSeparator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static String targetPath;
     private static StringBuilder stringBuilder = new StringBuilder();
-    private static TreeMap<String, String> DocDic = new TreeMap<>();
+    private static TreeMap<String, String> docDic = new TreeMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
     private static TreeMap<String, String> termDictionary = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
     private static ArrayList<Doc> filesList;
     private static boolean isStemMode = setStemMode();
+    private static double avrageDocLength =0;
+
+    public static double getAvrageDocLength() {
+        return avrageDocLength;
+    }
+
+    public static void setAvrageDocLength() {
+        if (docDic ==null) avrageDocLength=0;
+        try{
+            ArrayList<String> vals = new ArrayList<>(docDic.values());
+            double lenSum =0;
+            int i = 0;
+            for (; i < vals.size(); i++) {
+              lenSum+=Integer.parseInt(split(vals.get(i),",")[1]);
+            }
+            avrageDocLength = lenSum/i;
+        } catch (Exception e){
+            //nothing
+        }
+    }
 
     private static String currDocName;
     private static DoubleProperty currentStatus = new SimpleDoubleProperty(0);
@@ -118,7 +136,7 @@ public class Master {
             }
             System.out.println("MERGING");
             indexer.mergePostingTempFiles();
-            indexer.writeToDictionary(DocDic, "3. Documents Dictionary");
+            indexer.writeToDictionary(docDic, "3. Documents Dictionary");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -178,7 +196,7 @@ public class Master {
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
-        DocDic.put(currDocName, "" + maxTf + "," + length + "," + filesList.get(docNum++).getFileName());
+        docDic.put(currDocName, "" + maxTf + "," + length + "," + filesList.get(docNum++).getFileName());
         map.clear();
     }
 
@@ -205,7 +223,7 @@ public class Master {
      * @return int - number of documents
      */
     public static int getDocCount() {
-        return DocDic.size();
+        return docDic.size();
     }
 
     /**
@@ -253,7 +271,7 @@ public class Master {
         fileNum = getPropertyAsInt("number.of.files");
         tmpFileNum = getPropertyAsInt("number.of.temp.files");
         stringBuilder = new StringBuilder();
-        DocDic = new TreeMap<>();
+        docDic = new TreeMap<>();
         tmpTermDic = new LinkedHashMap<>();
         isStemMode = setStemMode();
         currentStatus.set(0);
@@ -278,7 +296,8 @@ public class Master {
         TreeMap<Character,TreeMap<String,String>> treeMaps = ReadFile.readDictionaries(dicPath,termSeparator);
         termDictionary = treeMaps.remove('1');
         cache = treeMaps.remove('2');
-        DocDic = treeMaps.remove('3');
-        return (termDictionary!=null && cache!=null && DocDic!=null);
+        docDic = treeMaps.remove('3');
+        setAvrageDocLength();
+        return (termDictionary!=null && cache!=null && docDic !=null);
     }
 }
