@@ -4,7 +4,14 @@ import Controller.PropertiesFile;
 import Master.Master;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.QuoteMode;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Observable;
 
 /**
@@ -97,5 +104,27 @@ public class ModelMenu extends Observable {
      */
     public boolean readDictionaries(String dicPath) {
         return Master.readDictionaries(dicPath);
+    }
+
+    public void bm25bnkChecker(){
+        try{
+            CSVFormat csvFormat;
+            CSVPrinter csvPrinter;
+            for (int i = 0; i < 10; i++) {
+                csvFormat = CSVFormat.DEFAULT.withIgnoreEmptyLines().withRecordSeparator(" ").withTrim();
+                File file = new File("BM25 tester"+i);
+                if (!file.exists()) Files.createFile(Paths.get(getDicsPath()));
+                csvPrinter = new CSVPrinter(new FileWriter(file),csvFormat);
+                csvPrinter.printRecord("k","b","delta","grade");
+                for (int k = 0; k < 1000; k++) {
+
+                }
+
+            }
+
+        }catch (Exception e){
+
+        }
+
     }
 }

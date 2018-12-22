@@ -78,4 +78,13 @@ public class WrieFile {
         targetPath = PropertiesFile.getProperty("save.files.path");
         fileNum = new AtomicInteger(0);
     }
+
+    public void writeQueryResults(String path){
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path,true));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
