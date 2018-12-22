@@ -1,6 +1,8 @@
 package ReadFile;
 
 import Controller.PropertiesFile;
+import Indexer.Indexer;
+import Master.Master;
 import TextContainers.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
@@ -121,6 +123,25 @@ public class ReadFile {
         }
 
         return dicSet;
+    }
+
+    /**
+     * Getter for the posting of a given term and path to posting file
+     * @param postingPath - the path to the posting directory
+     * @param term - the term we seek
+     * @param skip - the number of bytes before this line
+     * @return posting line (String)
+     */
+    public static String getTermLine(StringBuilder postingPath, String term, String skip) {
+        postingPath.append("\\").append(Indexer.getFileName(lowerCase(term).charAt(0))).append(".post");
+        try {
+            RandomAccessFile file = new RandomAccessFile(postingPath.toString(), "r");
+            file.skipBytes(Integer.parseInt(skip,36));
+            return file.readLine();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     /**
@@ -285,4 +306,5 @@ public class ReadFile {
             }
         }
     }
+
 }

@@ -173,6 +173,8 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("browse")) {
                 loadPathFromDirectoryChooser(0);
             } else if (arg.equals("save")) {
+                loadTargetPath("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\חלק ב\\קורפוסNew folder");
+                loadCorpusPath("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\חלק ב\\קורפוסNew folder");
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {
                 ir_modelMenu.reset();
