@@ -3,7 +3,7 @@ package Master;
 import Controller.PropertiesFile;
 import Indexer.Indexer;
 import Model.ModelMenu;
-import Parser.Parse;
+import Parser.Parser;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
 import TextContainers.Doc;
@@ -30,23 +30,23 @@ public class Master {
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
     private static ArrayList<Doc> filesList;
     private static boolean isStemMode = setStemMode();
-    private static double avrageDocLength =0;
+    private static double avrageDocLength = 0;
 
     public static double getAvrageDocLength() {
         return avrageDocLength;
     }
 
     public static void setAvrageDocLength() {
-        if (docDic ==null) avrageDocLength=0;
-        try{
+        if (docDic == null) avrageDocLength = 0;
+        try {
             ArrayList<String> vals = new ArrayList<>(docDic.values());
-            double lenSum =0;
+            double lenSum = 0;
             int i = 0;
             for (; i < vals.size(); i++) {
-              lenSum+=Integer.parseInt(split(vals.get(i),",")[1]);
+                lenSum += Integer.parseInt(split(vals.get(i), ",")[1]);
             }
-            avrageDocLength = lenSum/i;
-        } catch (Exception e){
+            avrageDocLength = lenSum / i;
+        } catch (Exception e) {
             //nothing
         }
     }
@@ -91,9 +91,48 @@ public class Master {
         }
     }
 
+    /**
+     * set the status of external class
+     * @param indexStatus - the status from the indexer
+     */
     public static void setCurrentStatus(double indexStatus) {
         if (currentStatus.get() - 1 < indexStatus)
             currentStatus.set(indexStatus + 1);
+    }
+
+    /**
+     * Makes a Dictionary of <Term , Weight_in_Query> to the given query
+     * after Parsing and (maybe) Stemming each term in the query.
+     *
+     * @param query - the given single query
+     * @return the mentioned above dictionary
+     */
+    public static HashMap<String, Integer> makeQueryDic(String query) {
+        Parser parser = new Parser();
+        return handleQuery(parser.parse(new String[]{query}));
+    }
+
+    /**
+     * cleaning the query after parsing and returns the Query-Dictionary.
+     *
+     * @param parsed - the map after parsing the query.
+     * @return the cleaned dictionary mentioned above.
+     */
+    private static HashMap<String, Integer> handleQuery(HashMap<String, String> parsed) {
+        HashMap<String, Integer> queryDic = new HashMap<>();
+        if (isStemMode) {
+            Stemmer stemmer = new Stemmer();
+            parsed = stemmer.stem(parsed);
+        } else {
+            parsed.replaceAll((key, value) -> value = substring(value, 2));
+        }
+        int freq;
+        for (Map.Entry<String, String> term : parsed.entrySet()) {
+            String word = term.getKey();
+            freq = getFrequencyFromPosting(term);
+            queryDic.put(word,freq);
+        }
+        return queryDic;
     }
 
     /**
@@ -111,10 +150,10 @@ public class Master {
             ReadFile readFile = new ReadFile(s);
             fileNum = getPropertyAsInt("number.of.files");
             tmpFileNum = getPropertyAsInt("number.of.temp.files");
-            double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1),fileNum);
+            double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1), fileNum);
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
-            Parse p = new Parse();
+            Parser p = new Parser();
             System.out.print("READING, PARSING, ");
             tmpFileIndex++;
             int nextTmpFileIndex = (int) (tmpFileIndex * tmpChunkSize);
@@ -126,7 +165,7 @@ public class Master {
                     HashMap<String, String> map = p.parse(aFilesList.text());
                     handleFile(map);
                 }
-                currentStatus.set(i/fileNum);
+                currentStatus.set(i / fileNum);
                 if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
@@ -161,6 +200,19 @@ public class Master {
     }
 
     /**
+     * takes a term from a map and returns the frequency of it by the positions in the value
+     * @param term - the counted term from the map
+     * @return the number of times the term appears
+     */
+    private static int getFrequencyFromPosting(Map.Entry<String, String> term) {
+        int termFrequency = countMatches(term.getValue(), Stemmer.getStemDelimiter().charAt(0));
+        if (termFrequency == 0)
+            termFrequency++;
+        termFrequency += countMatches(term.getValue(), Parser.getGapDelimiter().charAt(0));
+        return termFrequency;
+    }
+
+    /**
      * Merging the Dictionary of a single Document into the Main Dictionaries
      *
      * @param map - the Dictionary that will be merged
@@ -173,12 +225,9 @@ public class Master {
 
             if (term.getKey().length() < 1) continue;
 
-            int termFrequency = countMatches(term.getValue(), Stemmer.getStemDelimiter().charAt(0));
             String termKey = lowerCase(term.getKey());
             boolean isUpperCase = false;
-            if (termFrequency == 0)
-                termFrequency++;
-            termFrequency += countMatches(term.getValue(), Parse.getGapDelimiter().charAt(0));
+            int termFrequency = getFrequencyFromPosting(term);
             if (Character.isUpperCase(term.getKey().charAt(0)) || Character.isUpperCase(term.getKey().charAt(termKey.length() - 1))) {
                 isUpperCase = true;
             }
@@ -220,6 +269,7 @@ public class Master {
 
     /**
      * get the number of documents
+     *
      * @return int - number of documents
      */
     public static int getDocCount() {
@@ -228,7 +278,8 @@ public class Master {
 
     /**
      * add a term to cache
-     * @param term - the term
+     *
+     * @param term                      - the term
      * @param mostRelevantPartOfPosting - the Most Relevant Part Of the term's Posting
      */
     public static void addToCacheDictionary(String term, String mostRelevantPartOfPosting) {
@@ -237,7 +288,8 @@ public class Master {
 
     /**
      * add a term to the dictionary
-     * @param term - the term
+     *
+     * @param term    - the term
      * @param details - the term's details
      */
     public static void addToFinalTermDictionary(String term, String details) {
@@ -281,6 +333,7 @@ public class Master {
 
     /**
      * get the status Property from the master
+     *
      * @return Status as DoubleProperty
      */
     public static DoubleProperty getProgress() {
@@ -289,15 +342,16 @@ public class Master {
 
     /**
      * Read Dictionaries to RAM
+     *
      * @param dicPath - dictionaries' path
      * @return true if was able to read
      */
     public static boolean readDictionaries(String dicPath) {
-        TreeMap<Character,TreeMap<String,String>> treeMaps = ReadFile.readDictionaries(dicPath,termSeparator);
+        TreeMap<Character, TreeMap<String, String>> treeMaps = ReadFile.readDictionaries(dicPath, termSeparator);
         termDictionary = treeMaps.remove('1');
         cache = treeMaps.remove('2');
         docDic = treeMaps.remove('3');
         setAvrageDocLength();
-        return (termDictionary!=null && cache!=null && docDic !=null);
+        return (termDictionary != null && cache != null && docDic != null);
     }
 }

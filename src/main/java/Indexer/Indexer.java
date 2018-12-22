@@ -2,7 +2,7 @@ package Indexer;
 
 import Controller.PropertiesFile;
 import Master.Master;
-import Parser.Parse;
+import Parser.Parser;
 import Stemmer.Stemmer;
 import TextContainers.City;
 import TextContainers.CityInfo;
@@ -363,7 +363,7 @@ public class Indexer {
             frequency = countMatches(pairs[i + 1], Stemmer.getStemDelimiter().charAt(0));
             if (frequency == 0)
                 frequency++;
-            frequency += countMatches(pairs[i + 1], Parse.getGapDelimiter().charAt(0));
+            frequency += countMatches(pairs[i + 1], Parser.getGapDelimiter().charAt(0));
             toSort.add(new ImmutablePair<>(frequency, new ImmutablePair<>(pairs[i++], pairs[i])));
         }
         toSort.sort((o1, o2) -> Integer.compare(o2.left, o1.left));

@@ -12,7 +12,7 @@ import static org.apache.commons.lang3.StringUtils.*;
  * by a set of rules pre decided, parsing the text and cerating a dictionary of
  * all the terms inside this specific text.
  */
-public class Parse {
+public class Parser {
 
     private static String parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
     private static String gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
@@ -23,6 +23,18 @@ public class Parse {
     private static HashMap<String, String> monthDictionary = initMonthMap();
     private int currentPosition = 0;
     private int stopWordsCounter = 0;
+
+    /**
+     * A wrapper function that starting the whole process.
+     *
+     * @param str : an Array containing 1 cell of the whole text.
+     * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
+     */
+    public HashMap<String, String> parse(String[] str) {
+        HashMap<String, String> termsDict = new HashMap<>();
+        parseTokens(termsDict, str);
+        return termsDict;
+    }
 
     /**
      * Initialize set of all the wanted stop-words.
@@ -96,18 +108,6 @@ public class Parse {
 
     public static CharSequence getGapDelimiter() {
         return gapDelimiter;
-    }
-
-    /**
-     * A wrapper function that starting the whole process.
-     *
-     * @param str : an Array containing 1 cell of the whole text.
-     * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
-     */
-    public HashMap<String, String> parse(String[] str) {
-        HashMap<String, String> termsDict = new HashMap<>();
-        parseTokens(termsDict, str);
-        return termsDict;
     }
 
     /**

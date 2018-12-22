@@ -5,6 +5,8 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 public class Ranker {
@@ -27,10 +29,20 @@ public class Ranker {
     private static TreeMap<String,Double> docsRank = new TreeMap<>();
     private static TreeMap<String, MutablePair<ArrayList<String>,ArrayList<Double>>> orderedPosting = new TreeMap<>();
 
-    public TreeMap<String,Double> rank(String postingPath, TreeMap<String,String> termDic, TreeMap<String,String> cache, TreeMap<String,String> docDic, TreeMap<String,String> query){
-
+    public TreeMap<String,Double> rank(String postingPath, TreeMap<String,String> termDic, TreeMap<String,String> cache, TreeMap<String,String> docDic, HashMap<String, Integer> query){
+        reArrangePostingForQuery(postingPath,termDic,cache,docDic,query);
         TreeMap<String,Double> ranked = getBestDocs(50);
         return ranked;
+    }
+
+    private void reArrangePostingForQuery(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
+        //TODO - Add Semantics!
+        for (Map.Entry<String, Integer> entry : query.entrySet()) {
+            String word = entry.getKey();
+            int qf = entry.getValue(); //query Frequency
+
+
+        }
     }
 
     private TreeMap<String, Double> getBestDocs(int i) {
