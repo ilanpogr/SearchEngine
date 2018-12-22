@@ -171,7 +171,7 @@ public class Indexer {
                     WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     if (city!=null) WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("4. Cities Dictionary"), minTerm + termSeperator + city.getCountryName() + "," + city.getCurrency() + "," + city.getPopulation() + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
                     WrieFile.addLineToFile(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
-                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
+                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) +1);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
                     WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");

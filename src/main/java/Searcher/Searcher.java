@@ -6,6 +6,7 @@ import Ranker.Ranker;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
+import static org.apache.commons.lang3.StringUtils.*;
 
 public class Searcher {
 
