@@ -1,3 +1,5 @@
+package Tests;
+
 import java.io.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -40,6 +42,7 @@ public class Treceval_cmd {
         double a_retrieved = Double.parseDouble(trim(substringBetween(values, "Retrieved:", "Relevant:")));
         double b_relevant = Double.parseDouble(trim(substringBetween(values, "Relevant:", "Rel_ret:")));
         double c_rel_ret = Double.parseDouble(trim(substringBetween(values, "Rel_ret:", "Interpolated Recall")));
+
         double r_precision = Double.parseDouble(trim(substringAfter(values, "Exact:")));
 
         double precision = c_rel_ret/a_retrieved;
@@ -48,6 +51,6 @@ public class Treceval_cmd {
 
         System.out.println("R-Percision: " + r_precision + ", " + "Percision: " + precision + ", " + "Recall: " + recall + ", " + "Rank: " + final_rank);
 
-        return new double[] {precision,recall,r_precision,final_rank};
+        return new double[] {r_precision,precision,recall,final_rank};
     }
 }
