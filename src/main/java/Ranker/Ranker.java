@@ -50,7 +50,7 @@ public class Ranker {
     public TreeMap<String, Double> rank(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
         reArrangePostingForQuery(postingPath, termDic, cache, docDic, query);
         arrangeDictionaryForCalculations();
-        calculateBM25(termDic,docDic);
+        calculateBM25(termDic, docDic);
         return getBestDocs(50);
     }
 
@@ -122,6 +122,12 @@ public class Ranker {
         return docsRank;
     }
 
+    /**
+     * calculates the rank given by BM25+
+     *
+     * @param termDic - dictionary
+     * @param docDic  - docs map
+     */
     public void calculateBM25(TreeMap<String, String> termDic, TreeMap<String, String> docDic) {
         int N = docDic.size();
         double log2 = StrictMath.log10(2);
@@ -148,7 +154,26 @@ public class Ranker {
                     res += idf * ((mone / mehane) + BM25__delta);
                 }
             }
-            docsRank.put(docNum,res*BM25__weight);
+            docsRank.put(docNum, res * BM25__weight);
+        }
+    }
+
+    public void calculateCosine(TreeMap<String, String> termDic, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
+        double sumWq2 = 0;
+        int maxTF = 0;
+        for (Map.Entry<String, Integer> entry : query.entrySet()) {
+            Integer frequency = entry.getValue();
+            maxTF = frequency > maxTF ? frequency : maxTF;
+            sumWq2 += Math.pow(frequency, 2);
+        }
+        for (Map.Entry<String, ArrayList<ImmutablePair<String, String>>> entry : relationDic.entrySet()) {
+            String docNum = entry.getKey();
+            ArrayList<ImmutablePair<String, String>> termsList = entry.getValue();
+            for (int i = 0; i < termsList.size(); i++) {
+                ImmutablePair<String, String> pair = termsList.get(i);
+                String term = pair.left;
+                String positions = pair.right;//todo-finish
+            }
         }
     }
 
