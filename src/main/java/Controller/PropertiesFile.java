@@ -36,7 +36,37 @@ public class PropertiesFile {
         return properties;
     }
 
+    /**
+     * get a Property from properties file and convert it to int.
+     * if it can't convert to Integer, it will return 5.
+     *
+     * @param s - the value of the property
+     * @return the value of the property
+     */
+    public static int getPropertyAsInt(String s) {
+        try {
+            return Integer.parseInt(PropertiesFile.getProperty(s));
+        } catch (Exception e) {
+            System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
+            return 5;
+        }
+    }
 
+    /**
+     * get a Property from properties file and convert it to double.
+     * if it can't convert to Double, it will return 1.
+     *
+     * @param prop - the value of the property
+     * @return the value of the property
+     */
+    public static double getPropertyAsDouble(String prop) {
+        try {
+            return Double.parseDouble(PropertiesFile.getProperty(prop));
+        } catch (Exception e) {
+            System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
+            return 1;
+        }
+    }
 
     /**
      * Fetches a single property whose value will be returned as a String.

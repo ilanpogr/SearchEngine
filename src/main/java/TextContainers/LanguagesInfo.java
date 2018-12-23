@@ -90,4 +90,7 @@ public class LanguagesInfo {
         return new ArrayList<>(languageInfo_map);
     }
 
+    public boolean contains(String lan){
+        return languageInfo_map.contains(lan);
+    }
 }

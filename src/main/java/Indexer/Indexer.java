@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Indexer {
 
     private static double totalPostingSizeByKB = 0;
-    private static final int minNumberOfTf = (int) getPropertyAsDouble("min.tf.to.save");
-    private static final double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
-    private static final int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
+    private static final int minNumberOfTf = PropertiesFile.getPropertyAsInt("min.tf.to.save");
+    private static final double maxIdfForCache = PropertiesFile.getPropertyAsDouble("max.idf.for.cache");
+    private static final int cacheSlice = PropertiesFile.getPropertyAsInt("one.part.to.cache.from");
     private static final String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
     private static final String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static final String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
@@ -38,22 +38,11 @@ public class Indexer {
     private static boolean createdFolder = false;
     private static int termCounter = 0;
 
-
-    /**
-     * get a Property from properties file and convert it to double.
-     * if it can't convert to Double, it will return 1.
-     *
-     * @param prop - the value of the property
-     * @return the value of the property
-     */
-    private static double getPropertyAsDouble(String prop) {
-        try {
-            return Double.parseDouble(PropertiesFile.getProperty(prop));
-        } catch (Exception e) {
-            System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
-            return 1;
-        }
+    public int appendToFile(StringBuilder content, String fileName) {
+        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
+        return WrieFile.writeToDictionary(content,fileName);
     }
+
 
     /**
      * creates and writes a temp file

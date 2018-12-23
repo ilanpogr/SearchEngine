@@ -1,6 +1,8 @@
 package Indexer;
 
 import Controller.PropertiesFile;
+import org.apache.commons.io.FileUtils;
+
 import static org.apache.commons.io.FileUtils.*;
 
 import java.io.*;
@@ -17,6 +19,7 @@ public class WrieFile {
 
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
     private static AtomicInteger fileNum = new AtomicInteger(0);
+    private static LinkedHashMap<String, Integer> pointers = new LinkedHashMap<>();
 
 
     public static void setTargetPath(String targetPath) {
@@ -29,9 +32,10 @@ public class WrieFile {
 
     /**
      * adds a single line to a file
+     *
      * @param writersMap - a map of Buffered Writers
-     * @param fileName - the name of the file that will be written
-     * @param content - the text
+     * @param fileName   - the name of the file that will be written
+     * @param content    - the text
      */
     public static void addLineToFile(LinkedHashMap<String, BufferedWriter> writersMap, String fileName, String content) {
         try {
@@ -44,6 +48,7 @@ public class WrieFile {
 
     /**
      * writes a string to a new temporary file
+     *
      * @param poString - post-string. get it?
      */
     public static void createTempPostingFile(StringBuilder poString) {
@@ -58,17 +63,26 @@ public class WrieFile {
     }
 
     /**
-     * writes a string to a specified file
-     * @param stringBuilder - the content
-     * @param fileName - the name of the file
+     * writes to a file in the current path
+     * @param stringBuilder - the content that will be written to the file
+     * @param fileName - file name
+     * @return the number of bytes to skip to get to this content
      */
-    public static void writeToDictionary(StringBuilder stringBuilder, String fileName) {
+    public static int writeToDictionary(StringBuilder stringBuilder, String fileName) {
+        targetPath = PropertiesFile.getProperty("save.files.path");
+        int pointer=0;
+        if (pointers.putIfAbsent(fileName,0)!=null)
+            pointer = pointers.get(fileName);
         try {
-            writeStringToFile(new File(targetPath+fileName),stringBuilder.toString(),true);
+            File file = new File(targetPath + fileName);
+            String toPrint = stringBuilder.toString();
+            writeStringToFile(file, toPrint, true);
+            pointer += toPrint.getBytes().length;
         } catch (IOException e) {
-            System.out.println("create Dictionary file filed in: " +fileName);
+            System.out.println("create Dictionary file filed in: " + fileName);
             //do nothing
         }
+        return pointers.put(fileName, pointer);
     }
 
     /**
@@ -79,9 +93,9 @@ public class WrieFile {
         fileNum = new AtomicInteger(0);
     }
 
-    public void writeQueryResults(String path){
+    public void writeQueryResults(String path) {
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path,true));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path, true));
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,23 +1,34 @@
 package TextContainers;
 
+import Controller.PropertiesFile;
+import Indexer.Indexer;
+import Indexer.WrieFile;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.ibex.nestedvm.util.Seekable;
+
 import java.util.*;
 
-import static org.apache.commons.lang3.StringUtils.appendIfMissing;
-import static org.apache.commons.lang3.StringUtils.countMatches;
-import static org.apache.commons.lang3.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * class representing a doc in file.
  */
 public class Doc {
 
+    private static Indexer indexer = new Indexer();
+    private static String seperator = PropertiesFile.getProperty("file.posting.delimiter");
+    private static int numberOfPersonalNames = PropertiesFile.getPropertyAsInt("number.of.person.names");
     private String fileName;
     private String city;
     private int length;
     private int max_tf;
     private boolean hasCity = false;
     private String language;
-    private Map<String, String> attributes;
+    private HashMap<String, String> attributes;
+    private TreeMap<Integer,String> entities;
+//    private String [] personasNames;
+//    private int [] personalsFreqs;
+
 
     /**
      * Ctor
@@ -26,6 +37,9 @@ public class Doc {
         this.attributes = new HashMap<>();
         max_tf = -1;
         length = 0;
+        entities = new TreeMap<>(Integer::compareTo);
+//        personasNames = new String[numberOfPersonalNames];
+//        personalsFreqs = new int[numberOfPersonalNames];
     }
 
     /**
@@ -99,13 +113,8 @@ public class Doc {
             this.fileName = fileName;
     }
 
-    public void setLength() {
-        if (length == 0) {
-            for (Map.Entry<String, String> att : attributes.entrySet()
-            ) {
-                length += split(att.getValue(), " ").length + 1;
-            }
-        }
+    public void setLength(int length) {
+        if (this.length==0) this.length=length;
     }
 
     public void setMax_tf(int max_tf) {
@@ -164,5 +173,60 @@ public class Doc {
      */
     public boolean hasCity() {
         return hasCity;
+    }
+
+    /**
+     * add an Entity to the list
+     * @param termKey - name
+     * @param freq - frequency
+     */
+    public void addEntity(String termKey, int freq) {
+        if (!LanguagesInfo.getInstance().contains(termKey) && CityInfo.getInstance().getValueFromCitiesDictionary(termKey)==null) {
+            if (entities.size() < numberOfPersonalNames) entities.put(freq, termKey);
+            if (entities.firstKey() < freq) {
+                entities.pollFirstEntry();
+                entities.put(freq, termKey);
+            }
+        }
+//        for (int i = 0; i < numberOfPersonalNames; i++) {
+//            if (personalsFreqs[i]==0 || personalsFreqs[i]<freq){
+//                personasNames[i]=termKey;
+//                personalsFreqs[i]=freq;
+//                return;
+//            }
+//        }
+    }
+
+    /**
+     * appends the entities to a given string builder
+     * and writes the entities into a file
+     * @param stringBuilder - will append the entities as |<Entity>|<Frequency>|*
+     * @return String that represents the pointer to the entity file in the Entities Dictionary (number in radix 36)
+     */
+    public String appendPersonas(StringBuilder stringBuilder) {
+        while (entities.size()>0){
+            Map.Entry<Integer,String> toPrint =entities.pollLastEntry();
+            stringBuilder.append(toPrint.getValue()).append(seperator).append(toPrint.getKey()).append("\n");
+        }
+//        for (int i = 0; i < numberOfPersonalNames && personalsFreqs[i]!=0; i++) {
+//            stringBuilder.append(personasNames[i]).append(seperator).append(personalsFreqs[i]).append("\n");
+//        }
+        return Integer.toString(stringBuilder.toString().getBytes().length+ indexer.appendToFile(stringBuilder,"Entities")+1,36);
+    }
+
+    public String appendPersonas(){
+        return appendPersonas(new StringBuilder());
+    }
+
+    public String[] getAttributesToIndex() {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            String tag = entry.getKey();
+            if (tag.equalsIgnoreCase("DOCNO") || tag.length()<3 || !isAlphanumeric(tag)) continue;
+            String val = entry.getValue();
+            stringBuilder.append(tag).append(" ").append(val).append(" ");
+        }
+        return new String[] {stringBuilder.toString()};
     }
 }

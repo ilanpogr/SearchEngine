@@ -18,8 +18,8 @@ import static org.apache.commons.lang3.StringUtils.*;
  * The Master Controls the whole Process of indexing the corpus
  */
 public class Master {
-    private static int fileNum = getPropertyAsInt("number.of.files");
-    private static int tmpFileNum = getPropertyAsInt("number.of.temp.files");
+    private static int fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
+    private static int tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
     private static String termSeparator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static String targetPath;
@@ -73,22 +73,6 @@ public class Master {
      */
     public static boolean isStemMode() {
         return isStemMode;
-    }
-
-    /**
-     * get a Property from properties file and convert it to int.
-     * if it can't convert to Integer, it will return 5.
-     *
-     * @param s - the value of the property
-     * @return the value of the property
-     */
-    private static int getPropertyAsInt(String s) {
-        try {
-            return Integer.parseInt(PropertiesFile.getProperty(s));
-        } catch (Exception e) {
-            System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
-            return 5;
-        }
     }
 
     /**
@@ -148,8 +132,8 @@ public class Master {
             String s = PropertiesFile.getProperty("data.set.path") + "corpus\\";
             targetPath = PropertiesFile.getProperty("save.files.path");
             ReadFile readFile = new ReadFile(s);
-            fileNum = getPropertyAsInt("number.of.files");
-            tmpFileNum = getPropertyAsInt("number.of.temp.files");
+            fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
+            tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
             double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1), fileNum);
             Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
@@ -162,7 +146,7 @@ public class Master {
                 filesList = readFile.getFileList();
                 for (Doc aFilesList : filesList) {
                     currDocName = aFilesList.docNum();
-                    HashMap<String, String> map = p.parse(aFilesList.text());
+                    HashMap<String, String> map = p.parse(aFilesList.getAttributesToIndex());
                     handleFile(map);
                 }
                 currentStatus.set(i / fileNum);
@@ -205,10 +189,14 @@ public class Master {
      * @return the number of times the term appears
      */
     private static int getFrequencyFromPosting(Map.Entry<String, String> term) {
-        int termFrequency = countMatches(term.getValue(), Stemmer.getStemDelimiter().charAt(0));
+        return getFrequencyFromPosting(term.getValue());
+    }
+
+    public static int getFrequencyFromPosting(String positions) {
+        int termFrequency = countMatches(positions, Stemmer.getStemDelimiter().charAt(0));
         if (termFrequency == 0)
             termFrequency++;
-        termFrequency += countMatches(term.getValue(), Parser.getGapDelimiter().charAt(0));
+        termFrequency += countMatches(positions, Parser.getGapDelimiter().charAt(0));
         return termFrequency;
     }
 
@@ -219,6 +207,7 @@ public class Master {
      */
     private static void mergeDicts(HashMap<String, String> map) {
         int maxTf = 0, length = 0, docNum = 0;
+        Doc doc =  filesList.get(docNum++);
         for (Map.Entry<String, String> term : map.entrySet()
         ) {
             stringBuilder.setLength(0);
@@ -242,10 +231,17 @@ public class Master {
 
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
+//            if (isUpperCase && termKey.length()>2 && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890")) doc.addEntity(termKey,termFrequency);
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
-        docDic.put(currDocName, "" + maxTf + "," + length + "," + filesList.get(docNum++).getFileName());
+
+        doc.setMax_tf(maxTf);
+        doc.setLength(length);
+        stringBuilder.setLength(0);
+        stringBuilder.append(maxTf).append(",").append(length).append(",").append(doc.getFileName())/*.append(",")*/;
+//        stringBuilder.append(doc.appendPersonas());
+        docDic.put(currDocName, stringBuilder.toString());
         map.clear();
     }
 
@@ -320,8 +316,8 @@ public class Master {
      * clears memory. returns all states back to the beginning. (except stemmer cache..)
      */
     public void clear() {
-        fileNum = getPropertyAsInt("number.of.files");
-        tmpFileNum = getPropertyAsInt("number.of.temp.files");
+        fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
+        tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
         stringBuilder = new StringBuilder();
         docDic = new TreeMap<>();
         tmpTermDic = new LinkedHashMap<>();
@@ -354,4 +350,5 @@ public class Master {
         setAvrageDocLength();
         return (termDictionary != null && cache != null && docDic != null);
     }
+
 }

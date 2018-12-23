@@ -307,4 +307,8 @@ public class ReadFile {
         }
     }
 
+
+//    public static void main(String[] args) {
+//        System.out.println(getTermLine(new StringBuilder("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\חלק ב\\קורפוסNew folder\\Dictionaries without stemming"),"�vk[.sup","15wuhb"));
+//    }
 }
