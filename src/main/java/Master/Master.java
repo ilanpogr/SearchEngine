@@ -51,6 +51,10 @@ public class Master {
         }
     }
 
+    // Part B
+
+    private static HashSet<TreeMap<String, String>> dictionariesCollection;
+
     private static String currDocName;
     private static DoubleProperty currentStatus = new SimpleDoubleProperty(0);
 
