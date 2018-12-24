@@ -18,10 +18,13 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -52,7 +55,7 @@ public class ControllerMenu implements Observer {
      */
     public ControllerMenu() {
         stage = new Stage();
-        fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("menu/ir_menu.fxml"));
+        fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("menu/ir_menu_partB.fxml"));
         try {
             root = fxmlLoader.load();
         } catch (Exception e) {
@@ -132,6 +135,15 @@ public class ControllerMenu implements Observer {
         }
     }
 
+    public void loadQueriesFile() {
+        FileChooser fileChooser = new FileChooser();
+        File selectedFile = fileChooser.showOpenDialog(stage);
+        if (selectedFile != null){
+            String path = selectedFile.getAbsolutePath();
+            PropertiesFile.putProperty("queries.file.path", selectedFile.getAbsolutePath());
+        }
+    }
+
     /**
      * checks if dir contains stop_words and corpus
      */
@@ -163,6 +175,14 @@ public class ControllerMenu implements Observer {
                 if (ir_menuView.stemmer_checkBox.isSelected()) {
                     PropertiesFile.putProperty("stem.mode", "1");
                 } else PropertiesFile.putProperty("stem.mode", "0");
+            } else if (arg.equals("entities")) {
+                if (ir_menuView.stemmer_checkBox.isSelected()) {
+                    PropertiesFile.putProperty("entities.mode", "1");
+                } else PropertiesFile.putProperty("entities.mode", "0");
+            } else if (arg.equals("semantic")) {
+                if (ir_menuView.stemmer_checkBox.isSelected()) {
+                    PropertiesFile.putProperty("semantic.mode", "1");
+                } else PropertiesFile.putProperty("semantic.mode", "0");
             } else if (arg.equals("start")) {
                 this.update(o, "stem");
                 setSceneBeforeStart();
@@ -184,6 +204,12 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("read")) {
                 readDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
+            } else if (arg.equals("search")){
+                List<String> languages = new LinkedList<>();
+                // todo - implement
+                ir_modelMenu.search(languages);
+            } else if (arg.equals("queryFile")){
+                loadQueriesFile();
             }
         } else if (o.equals(ir_modelMenu)) {
             if (arg.equals("done")) {
@@ -191,6 +217,8 @@ public class ControllerMenu implements Observer {
                 ir_menuView.stemmer_checkBox.setDisable(false);
                 end = System.currentTimeMillis();
                 Platform.runLater(this::addSummaryToLabel);
+            } else if (arg.equals("search_done")){
+                // todo - implement
             }
         }
     }

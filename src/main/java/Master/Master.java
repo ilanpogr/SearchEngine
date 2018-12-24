@@ -358,4 +358,8 @@ public class Master {
         setAvrageDocLength();
         return (termDictionary != null && cache != null && docDic != null);
     }
+
+    public void search(List<String> lang) {
+        // todo - implement
+    }
 }
