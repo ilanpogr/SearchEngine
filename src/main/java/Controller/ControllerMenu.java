@@ -20,11 +20,22 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.Format;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.*;
+
+import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.substring;
 
 /**
  * Controller
@@ -172,8 +183,8 @@ public class ControllerMenu implements Observer {
                 thread.setDaemon(true);
                 thread.start();
             } else if (arg.equals("browse")) {
-                loadTargetPath("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\חלק ב\\קורפוסNew folder");
-                loadCorpusPath("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\חלק ב\\קורפוסNew folder");
+                loadTargetPath("C:\\Users\\User\\Documents\\SearchEngineTests");
+                loadCorpusPath("C:\\Users\\User\\Documents\\SearchEngineTests");
                 loadPathFromDirectoryChooser(0);
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
@@ -184,7 +195,7 @@ public class ControllerMenu implements Observer {
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
                 readDictionary();
-                new Treceval_cmd().simulateSearch2Treceval();
+                testBM25();
                 ir_menuView.summary_lbl.setVisible(false);
             }
         } else if (o.equals(ir_modelMenu)) {
@@ -196,6 +207,85 @@ public class ControllerMenu implements Observer {
             }
         }
     }
+
+    private void testBM25() {
+        try {
+            String directory = "C:\\Users\\User\\Documents\\SearchEngineTests";
+            ArrayList<String> queries = new ArrayList<>();
+            ArrayList<String> queryNums = new ArrayList<>();
+            File file = new File(directory + "\\queries.txt");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                if (startsWith(line, "<num> Number: ")) {
+                    queryNums.add(trim(substring(line, 13)));
+                }
+                if (startsWith(line, "<title> ")) {
+                    queries.add(trim(substring(line, 7)));
+                }
+                line = bufferedReader.readLine();
+            }
+            bufferedReader.close();
+            double k = PropertiesFile.getPropertyAsDouble("k"), b = PropertiesFile.getPropertyAsDouble("b"), d = PropertiesFile.getPropertyAsDouble("d"), f = PropertiesFile.getPropertyAsDouble("f"), e = PropertiesFile.getPropertyAsDouble("e");
+            Treceval_cmd tester = new Treceval_cmd();
+            double[] maxVals1 = tester.getResultRanked();
+            double[] maxVals2 = tester.getResultRanked();
+            double[] maxVals3 = tester.getResultRanked();
+            double[] maxVals4 = tester.getResultRanked();
+            Files.delete(Paths.get(directory + "\\results.txt"));
+            CSVPrinter printer1 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\R-Percision.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
+            CSVPrinter printer2 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Percision.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
+            CSVPrinter printer3 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Recall.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
+            CSVPrinter printer4 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Rank.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
+            printer1.flush();
+            printer2.flush();
+            printer3.flush();
+            printer4.flush();
+            double startTests = System.currentTimeMillis();
+            for (double kk = k; kk <= 2; kk += e) {
+                for (double bb = b; bb <= 1; bb += e) {
+                    for (double dd = d; dd <= 1; dd += e) {
+//                        for (double ff = f; ff <= 1; ff += 2 * e) {
+                            tester.simulateSearch2Treceval(queries, queryNums, kk, bb, dd, f);
+                            double[] newVals = tester.getResultRanked();
+                            if (newVals[0] > maxVals1[0]) {
+                                maxVals1 = newVals.clone();
+                                printer1.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer1.flush();
+                            }
+                            if (newVals[1] > maxVals2[1]) {
+                                maxVals2 = newVals.clone();
+                                printer2.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer2.flush();
+                            }
+                            if (newVals[2] > maxVals3[2]) {
+                                maxVals3 = newVals.clone();
+                                printer3.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer3.flush();
+                            }
+                            if (newVals[3] > maxVals4[3]) {
+                                maxVals4 = newVals.clone();
+                                printer4.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer4.flush();
+                            }
+                            Files.delete(Paths.get(directory + "\\results.txt"));
+                            double currentTime = System.currentTimeMillis();
+                                System.out.println((currentTime-startTests)/1000+"\nk = " + kk + "\tb = " + bb + "\tdelta = " + dd + "\tidf = " + f + "\n" +
+                                        Arrays.toString(maxVals1) + "\n" +
+                                        Arrays.toString(maxVals2) + "\n" +
+                                        Arrays.toString(maxVals3) + "\n" +
+                                        Arrays.toString(maxVals4) + "\n"
+                                );
+//                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * Read Dictionary to RAM

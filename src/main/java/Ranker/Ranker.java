@@ -16,12 +16,12 @@ import java.util.TreeMap;
 public class Ranker {
 
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-    private static double averageDocLength = Master.getAvrageDocLength();
-    private static double BM25__b;
-    private static double BM25__k;
-    private static double BM25__idf;
-    private static double BM25__delta;
-    private static double BM25__weight;
+    private  double averageDocLength = Master.getAvrageDocLength();
+    private  double BM25__b;
+    private  double BM25__k;
+    private  double BM25__idf;
+    private  double BM25__delta;
+    private  double BM25__weight;
     private static double Cosine__weight;
     private static double WuPalmer__weight;
     private static double Lin__weight;
@@ -30,8 +30,8 @@ public class Ranker {
     private static double LeacockChodrow__weight;
     private static double Resnik__weight;
     private static double Path__weight;
-    private static TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic = new TreeMap<>();
-    private static TreeMap<String, Double> docsRank = new TreeMap<>();
+    private  TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic = new TreeMap<>();
+    private  TreeMap<String, Double> docsRank = new TreeMap<>();
     private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting = new TreeMap<>();
 
     /**
@@ -125,7 +125,7 @@ public class Ranker {
             String doc = o.getKey();
             Double rank = o.getValue();
             while (res.containsKey(rank))
-                rank += Math.pow(10,-9);
+                rank -= Math.pow(10,-9);
             res.put(rank,doc);
             if (res.size()>i) res.pollFirstEntry();
         }

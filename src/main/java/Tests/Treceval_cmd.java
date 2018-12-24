@@ -10,7 +10,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class Treceval_cmd {
 
-    static String directory = "C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\חלק ב\\קורפוסNew folder";
+    static String directory = "C:\\Users\\User\\Documents\\SearchEngineTests";
     static String command = "treceval.exe qrels.txt results.txt";
 
     private static TreeMap<String, String> dict = new TreeMap<>(String::compareToIgnoreCase);
@@ -40,56 +40,35 @@ public class Treceval_cmd {
         }
     }
 
-    public void simulateSearch2Treceval(){
-        try{
-            ArrayList<String> queries = new ArrayList<>();
-            ArrayList<String> queryNums = new ArrayList<>();
-            File file = new File(directory+"\\queries.txt");
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-            String line = bufferedReader.readLine();
-            while (line!=null){
-                if (startsWith(line,"<num> Number: ")){
-                    queryNums.add(trim(substring(line,13)));
-                }
-                if (startsWith(line,"<title> ")){
-                    queries.add(trim(substring(line,7)));
-                }
-                line = bufferedReader.readLine();
-            }
-            bufferedReader.close();
+    public void simulateSearch2Treceval(ArrayList<String> queries, ArrayList<String> queryNums, double k, double b, double delta, double idf) {
 
-            /************query read and now ready***********/
 
             Ranker ranker = new Ranker();
-            ranker.setBM25Values(2, 0.5,0.2,0.5);
+//            ranker.setBM25Values(1.85, 0.6, 0.25, 0.5);
+            ranker.setBM25Values(k, b, delta, idf);
             for (int i = 0; i < queries.size(); i++) {
                 HashMap<String, Integer> query = Master.makeQueryDic(queries.get(i));
-                TreeMap<Double,String> res = ranker.rank(directory,dict,cache,docs,query);
+                TreeMap<Double, String> res = ranker.rank(directory, dict, cache, docs, query);
                 makeResultsFile(res, queryNums.get(i));
 
             }
 
-
-
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     private void makeResultsFile(TreeMap<Double, String> res, String s) {
-        try{
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(directory+"\\results.txt"),true));
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(directory + "\\results.txt"), true));
             for (Map.Entry<Double, String> entry : res.entrySet()) {
                 String doc = entry.getValue();
                 bufferedWriter.write(s + " 0 " + doc + " 1 0 si\n");
             }
             bufferedWriter.flush();
             bufferedWriter.close();
-        } catch (Exception e){}
+        } catch (Exception e) {
+        }
     }
 
-    public static double[] getResultRanked() {
+    public double[] getResultRanked() {
         StringBuilder s = runCmd();
         String values = "";
         if (s != null)
@@ -101,23 +80,20 @@ public class Treceval_cmd {
 
         double r_precision = Double.parseDouble(trim(substringAfter(values, "Exact:")));
 
-        double precision = c_rel_ret/a_retrieved;
-        double recall = c_rel_ret/b_relevant;
-        double final_rank = 2*c_rel_ret/(a_retrieved+b_relevant);
+        double precision = c_rel_ret / a_retrieved;
+        double recall = c_rel_ret / b_relevant;
+        double final_rank = 2 * c_rel_ret / (a_retrieved + b_relevant);
 
-        System.out.println("R-Percision: " + r_precision + ", " + "Percision: " + precision + ", " + "Recall: " + recall + ", " + "Rank: " + final_rank);
+//        System.out.println("R-Percision: " + r_precision + ", " + "Percision: " + precision + ", " + "Recall: " + recall + ", " + "Rank: " + final_rank);
 
-        return new double[] {r_precision,precision,recall,final_rank};
+        return new double[]{r_precision, precision, recall, final_rank};
     }
 
-    public static void main(String[] args) {
-        double [] res = Treceval_cmd.getResultRanked();
-    }
 
     public void setDics(TreeMap<String, String> termDictionary, TreeMap<String, String> cache, TreeMap<String, String> docDic) {
-        dict = termDictionary;
-        this.cache = cache;
-        docs = docDic;
+            dict = termDictionary;
+            Treceval_cmd.cache = cache;
+            docs = docDic;
     }
 
 
