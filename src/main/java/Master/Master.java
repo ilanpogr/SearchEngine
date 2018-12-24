@@ -347,6 +347,7 @@ public class Master {
         termDictionary = treeMaps.remove('1');
         cache = treeMaps.remove('2');
         docDic = treeMaps.remove('3');
+        //todo-read cities dictionary
         setAvrageDocLength();
         return (termDictionary != null && cache != null && docDic != null);
     }
