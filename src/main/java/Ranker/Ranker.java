@@ -47,7 +47,7 @@ public class Ranker {
      * key - DocNum (name)
      * value - the Rank of the Document (double)
      */
-    public TreeMap<String, Double> rank(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
+    public TreeMap<Double, String> rank(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
         reArrangePostingForQuery(postingPath, termDic, cache, docDic, query);
         arrangeDictionaryForCalculations();
         calculateBM25(termDic, docDic);
@@ -76,7 +76,7 @@ public class Ranker {
             if (endsWith(termVal, "*")) { //it's in cache
                 termVal = substringBeforeLast(termVal, ",");
                 String[] postPoint = split(cache.get(word), ",");
-                fromPosting.append(postPoint[0]).append(ReadFile.getTermLine(new StringBuilder(postingPath), word, postPoint[1]));
+                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(postingPath), word, postPoint[1]));
             } else {
                 fromPosting.append(ReadFile.getTermLine(new StringBuilder(postingPath), word, substringAfterLast(termVal, ",")));
             }
@@ -90,7 +90,7 @@ public class Ranker {
                 for (int i = 0; i < splitted.length; i++) {
                     orderedValue.left.add(splitted[i++]);
                     //todo - choose if positions are useful here
-                    orderedValue.left.add(splitted[i]);
+                    orderedValue.right.add(splitted[i]);
                 }
             }
 
@@ -118,8 +118,18 @@ public class Ranker {
         }
     }
 
-    private TreeMap<String, Double> getBestDocs(int i) {
-        return docsRank;
+    private TreeMap<Double, String> getBestDocs(int i) {
+        TreeMap<Double, String> res = new TreeMap<>(Double::compareTo);
+        for (Map.Entry<String,Double> o:docsRank.entrySet()
+             ) {
+            String doc = o.getKey();
+            Double rank = o.getValue();
+            while (res.containsKey(rank))
+                rank += Math.pow(10,-9);
+            res.put(rank,doc);
+            if (res.size()>i) res.pollFirstEntry();
+        }
+        return res;
     }
 
     /**
@@ -131,8 +141,8 @@ public class Ranker {
     public void calculateBM25(TreeMap<String, String> termDic, TreeMap<String, String> docDic) {
         int N = docDic.size();
         double log2 = StrictMath.log10(2);
-        double res = 0;
         for (Map.Entry<String, ArrayList<ImmutablePair<String, String>>> entry : relationDic.entrySet()) {
+            double res = 0;
             String docNum = entry.getKey();
             ArrayList<ImmutablePair<String, String>> termsList = entry.getValue();
             for (int i = 0; i < termsList.size(); i++) {
@@ -142,12 +152,12 @@ public class Ranker {
                 if (docDic.containsKey(docNum)) {
                     String[] docRecord = split(docDic.get(docNum), ",");
                     int docLength = Integer.parseInt(docRecord[1]);
-                    int df = Integer.parseInt(split(termDic.get(docNum), ",")[1]);
+                    int df = Integer.parseInt(split(termDic.get(term), ",")[1]);
                     double logN = StrictMath.log10(N - df + BM25__idf) / log2;
                     double idf = logN - (StrictMath.log10(df + BM25__idf) / log2);
                     int tf = Master.getFrequencyFromPosting(positions);
                     double tfInDoc = tf * Integer.parseInt(docRecord[0]);
-                    double Dlen = Math.abs(docLength) / averageDocLength;
+                    double Dlen = docLength / averageDocLength;
                     double punishment = 1 - BM25__b + (BM25__b * Dlen);
                     double mone = tfInDoc * (BM25__k + 1);
                     double mehane = tfInDoc + (BM25__k * punishment);
@@ -177,6 +187,13 @@ public class Ranker {
         }
     }
 
+    public void setBM25Values(double k, double b, double delta, double idf) {
+        BM25__k=k;
+        BM25__b=b;
+        BM25__delta=delta;
+        BM25__idf=idf;
+        BM25__weight=1;
+    }
 
 
 //    public static void main(String[] args) {

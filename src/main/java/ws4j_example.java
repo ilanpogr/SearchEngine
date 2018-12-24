@@ -23,7 +23,7 @@ public class ws4j_example {
 
     private static double compute(String word1, String word2, RelatednessCalculator rc) {
         WS4JConfiguration.getInstance().setMFS(true);
-//        double s = new WuPalmer(db).calcRelatednessOfWords(word1, word2);
+        double s = new WuPalmer(db).calcRelatednessOfWords(word1, word2);
         return rc.calcRelatednessOfWords(word1, word2);
     }
 

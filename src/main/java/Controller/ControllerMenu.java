@@ -1,6 +1,7 @@
 package Controller;
 
 import Model.ModelMenu;
+import Tests.Treceval_cmd;
 import TextContainers.LanguagesInfo;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -183,6 +184,7 @@ public class ControllerMenu implements Observer {
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
                 readDictionary();
+                new Treceval_cmd().simulateSearch2Treceval();
                 ir_menuView.summary_lbl.setVisible(false);
             }
         } else if (o.equals(ir_modelMenu)) {

@@ -6,6 +6,7 @@ import Model.ModelMenu;
 import Parser.Parser;
 import ReadFile.ReadFile;
 import Stemmer.Stemmer;
+import Tests.Treceval_cmd;
 import TextContainers.Doc;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -349,6 +350,12 @@ public class Master {
         docDic = treeMaps.remove('3');
         //todo-read cities dictionary
         setAvrageDocLength();
+
+        /** for simulations!           delete after  **/
+                new Treceval_cmd().setDics(termDictionary,cache,docDic);
+        /** for simulations!           delete after  **/
+
+
         return (termDictionary != null && cache != null && docDic != null);
     }
 

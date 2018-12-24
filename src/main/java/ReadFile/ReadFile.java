@@ -133,7 +133,7 @@ public class ReadFile {
      * @return posting line (String)
      */
     public static String getTermLine(StringBuilder postingPath, String term, String skip) {
-        postingPath.append("\\").append(Indexer.getFileName(lowerCase(term).charAt(0))).append(".post");
+        postingPath.append("\\Dictionaries without stemming\\").append(Indexer.getFileName(lowerCase(term).charAt(0))).append(".post");
         try {
             RandomAccessFile file = new RandomAccessFile(postingPath.toString(), "r");
             file.skipBytes(Integer.parseInt(skip,36));
