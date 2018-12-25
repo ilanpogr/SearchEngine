@@ -48,7 +48,6 @@ public class WrieFile {
 
     /**
      * writes a string to a new temporary file
-     *
      * @param poString - post-string. get it?
      */
     public static void createTempPostingFile(StringBuilder poString) {

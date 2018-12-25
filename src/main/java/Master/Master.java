@@ -28,6 +28,7 @@ public class Master {
     private static TreeMap<String, String> docDic = new TreeMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
     private static TreeMap<String, String> termDictionary = new TreeMap<>(String::compareToIgnoreCase);
+    private static TreeMap <String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
     private static ArrayList<Doc> filesList;
     private static boolean isStemMode = setStemMode();
@@ -51,6 +52,10 @@ public class Master {
             //nothing
         }
     }
+
+    // Part B
+
+    private static HashSet<TreeMap<String, String>> dictionariesCollection;
 
     private static String currDocName;
     private static DoubleProperty currentStatus = new SimpleDoubleProperty(0);
@@ -359,4 +364,12 @@ public class Master {
         return (termDictionary != null && cache != null && docDic != null);
     }
 
+    public void search(List<String> lang) {
+        // todo - implement
+    }
+
+//    public boolean loadSolution (String path){
+//        ReadFile.loadSolution(path);
+//        return false;
+//    }
 }

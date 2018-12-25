@@ -2,6 +2,7 @@ package View;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 
 import java.util.Observable;
 
@@ -24,6 +25,9 @@ public class IR_MenuView extends Observable {
     public ProgressBar progressbar;
     public ComboBox docs_language;
     public Button read_dict_btn;
+    public CheckBox entities_checkBox;
+    public CheckBox semantic_checkBox;
+    public ComboBox docs_language_selection;
 
     /**
      * when start button is clicked
@@ -86,5 +90,25 @@ public class IR_MenuView extends Observable {
     public void loadDictToMemory(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("read");
+    }
+
+    public void BrowseQueriesFile(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("queryFile");
+    }
+
+    public void search(MouseEvent mouseEvent) {
+        setChanged();
+        notifyObservers("search");
+    }
+
+    public void setEntitiesMode(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("entities");
+    }
+
+    public void setSemantic(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("semantic");
     }
 }

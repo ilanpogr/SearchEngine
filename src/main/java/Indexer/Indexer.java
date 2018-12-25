@@ -33,7 +33,7 @@ public class Indexer {
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
     private static AtomicInteger tmpFilesCounter = new AtomicInteger(0);
     private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
-    private static final double log2 = StrictMath.log10(2);
+//    private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
     private static boolean createdFolder = false;
     private static int termCounter = 0;
@@ -107,7 +107,8 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("4. Cities Dictionary"));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
-        double logN = StrictMath.log10(Master.getDocCount()) / log2;
+        double logN = StrictMath.log10(Master.getDocCount());
+//        double logN = StrictMath.log10(Master.getDocCount()) / log2;
         while (mergedFilesCounter.get() < tmpFilesCounter.get()){
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
@@ -149,7 +150,8 @@ public class Indexer {
                 stringBuilder.append(d.right.left).append(fileDelimiter).append(d.right.right).append(fileDelimiter);
             }
             int df = sortedPosting.size();
-            double idf = logN - (StrictMath.log10(df) / log2);
+            double idf = logN - StrictMath.log10(df);
+//            double idf = logN - (StrictMath.log10(df) / log2);
 
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
                 String mergedFileName = getFileName(minTerm.charAt(0));

@@ -5,9 +5,11 @@ import Master.Master;
 import ReadFile.ReadFile;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.ibex.nestedvm.util.Seekable;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,12 +18,12 @@ import java.util.TreeMap;
 public class Ranker {
 
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-    private  double averageDocLength = Master.getAvrageDocLength();
-    private  double BM25__b;
-    private  double BM25__k;
-    private  double BM25__idf;
-    private  double BM25__delta;
-    private  double BM25__weight;
+    private double averageDocLength = Master.getAvrageDocLength();
+    private double BM25__b;
+    private double BM25__k;
+    private double BM25__idf;
+    private double BM25__delta;
+    private double BM25__weight;
     private static double Cosine__weight;
     private static double WuPalmer__weight;
     private static double Lin__weight;
@@ -30,8 +32,9 @@ public class Ranker {
     private static double LeacockChodrow__weight;
     private static double Resnik__weight;
     private static double Path__weight;
-    private  TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic = new TreeMap<>();
-    private  TreeMap<String, Double> docsRank = new TreeMap<>();
+    private static TreeMap <String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
+    private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic = new TreeMap<>();
+    private TreeMap<String, Double> docsRank = new TreeMap<>();
     private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting = new TreeMap<>();
 
     /**
@@ -120,14 +123,14 @@ public class Ranker {
 
     private TreeMap<Double, String> getBestDocs(int i) {
         TreeMap<Double, String> res = new TreeMap<>(Double::compareTo);
-        for (Map.Entry<String,Double> o:docsRank.entrySet()
-             ) {
+        for (Map.Entry<String, Double> o : docsRank.entrySet()
+        ) {
             String doc = o.getKey();
             Double rank = o.getValue();
             while (res.containsKey(rank))
-                rank -= Math.pow(10,-9);
-            res.put(rank,doc);
-            if (res.size()>i) res.pollFirstEntry();
+                rank -= Math.pow(10, -9);
+            res.put(rank, doc);
+            if (res.size() > i) res.pollFirstEntry();
         }
         return res;
     }
@@ -140,7 +143,7 @@ public class Ranker {
      */
     public void calculateBM25(TreeMap<String, String> termDic, TreeMap<String, String> docDic) {
         int N = docDic.size();
-        double log2 = StrictMath.log10(2);
+//        double log2 = StrictMath.log10(2);
         for (Map.Entry<String, ArrayList<ImmutablePair<String, String>>> entry : relationDic.entrySet()) {
             double res = 0;
             String docNum = entry.getKey();
@@ -153,8 +156,9 @@ public class Ranker {
                     String[] docRecord = split(docDic.get(docNum), ",");
                     int docLength = Integer.parseInt(docRecord[1]);
                     int df = Integer.parseInt(split(termDic.get(term), ",")[1]);
-                    double logN = StrictMath.log10(N - df + BM25__idf) / log2;
-                    double idf = logN - (StrictMath.log10(df + BM25__idf) / log2);
+                    double idf = StrictMath.log10((N - df + BM25__idf) / (df + BM25__idf));
+//                    double logN = StrictMath.log10(N - df + BM25__idf) / log2;
+//                    double idf = logN - (StrictMath.log10(df + BM25__idf) / log2);
                     int tf = Master.getFrequencyFromPosting(positions);
                     double tfInDoc = tf * Integer.parseInt(docRecord[0]);
                     double Dlen = docLength / averageDocLength;
@@ -188,15 +192,15 @@ public class Ranker {
     }
 
     public void setBM25Values(double k, double b, double delta, double idf) {
-        BM25__k=k;
-        BM25__b=b;
-        BM25__delta=delta;
-        BM25__idf=idf;
-        BM25__weight=1;
+        BM25__k = k;
+        BM25__b = b;
+        BM25__delta = delta;
+        BM25__idf = idf;
+        BM25__weight = 1;
     }
 
 
-//    public static void main(String[] args) {
+    //    public static void main(String[] args) {
 //        double start,end;
 //        String s = "123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123";
 //        start = System.currentTimeMillis();
@@ -220,4 +224,5 @@ public class Ranker {
 ////            System.out.print("123");
 ////        }
 //    }
+
 }

@@ -126,7 +126,11 @@ public class ModelMenu extends Observable {
         }catch (Exception e){
 
         }
-
     }
 
+    public void search(ArrayList<String> lang){
+        master_of_puppets.search(lang);
+        setChanged();
+        notifyObservers("search_done");
+    }
 }

@@ -95,16 +95,16 @@ public class ReadFile {
      * @param delimiter - the delimiter of whats a key and whats a value
      * @return a Map or null
      */
-    public static TreeMap<Character,TreeMap<String, String>> readDictionaries(String dicPath, String delimiter) {
-        TreeMap<Character,TreeMap<String, String>> dicSet = new TreeMap<>();
+    public static TreeMap<Character, TreeMap<String, String>> readDictionaries(String dicPath, String delimiter) {
+        TreeMap<Character, TreeMap<String, String>> dicSet = new TreeMap<>();
         TreeMap<String, String> dic = null;
         BufferedReader bufferedReader = null;
         try {
             File dicDir = new File(dicPath);
-            if (dicDir.isDirectory()){
-                File [] dics = dicDir.listFiles();
+            if (dicDir.isDirectory()) {
+                File[] dics = dicDir.listFiles();
                 for (int i = 0; i < dics.length; i++) {
-                    if (!isNumeric(dics[i].getName().substring(0,1)))continue;
+                    if (!isNumeric(dics[i].getName().substring(0, 1))) continue;
                     //todo - implement
                     bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dics[i].getPath()), StandardCharsets.UTF_8));
                     String s = bufferedReader.readLine();
@@ -115,10 +115,10 @@ public class ReadFile {
                         s = bufferedReader.readLine();
                     }
                     bufferedReader.close();
-                    dicSet.put(dics[i].getName().charAt(0),dic);
+                    dicSet.put(dics[i].getName().charAt(0), dic);
                 }
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("wrong path, look at the instructions!");
         }
 
@@ -127,22 +127,67 @@ public class ReadFile {
 
     /**
      * Getter for the posting of a given term and path to posting file
+     *
      * @param postingPath - the path to the posting directory
-     * @param term - the term we seek
-     * @param skip - the number of bytes before this line
+     * @param term        - the term we seek
+     * @param skip        - the number of bytes before this line
      * @return posting line (String)
      */
     public static String getTermLine(StringBuilder postingPath, String term, String skip) {
         postingPath.append("\\Dictionaries without stemming\\").append(Indexer.getFileName(lowerCase(term).charAt(0))).append(".post");
         try {
             RandomAccessFile file = new RandomAccessFile(postingPath.toString(), "r");
-            file.skipBytes(Integer.parseInt(skip,36));
+            file.skipBytes(Integer.parseInt(skip, 36));
             return file.readLine();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "";
     }
+
+    public static String saveSolution(String path) {
+        File file = new File(path);
+        StringBuilder stringBuilder = new StringBuilder();
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(substringBeforeLast(path, "\\") + "\\tmpsols.txt", true));
+            String line = bufferedReader.readLine().trim();
+            while (line != null) {
+                if (!endsWith(line, "0")) {
+                    bufferedWriter.write(line + "\n");
+                    stringBuilder.append(line).append("\n");
+                }
+                line = bufferedReader.readLine();
+            }
+            bufferedWriter.flush();
+            bufferedReader.close();
+            bufferedWriter.close();
+        } catch (Exception e) {
+            return "";
+        }
+        return stringBuilder.toString();
+    }
+
+//    public static TreeMap <String, ArrayList<String>> loadSolution(String queriespath, String solPath, TreeMap <String, ArrayList<String>> solution) {
+//        File solf = new File(solPath);
+//        File quef = new File(queriespath);
+//        try {
+//            BufferedReader bufferedReader = new BufferedReader(new FileReader(solf));
+//            RandomAccessFile randomAccessFile = new RandomAccessFile(quef,"r");
+//            String line = bufferedReader.readLine().trim();
+//            if (solution.get())
+//            while (line != null) {
+//
+//                line = bufferedReader.readLine();
+//            }
+//            bufferedReader.close();
+//        } catch (Exception e) {
+//            return null;
+//        }
+//        return null;
+//    }
+
+
 
     /**
      * clears the documents lists
@@ -307,8 +352,4 @@ public class ReadFile {
         }
     }
 
-
-//    public static void main(String[] args) {
-//        System.out.println(getTermLine(new StringBuilder("C:\\Users\\User\\Documents\\לימודים\\אחזור מידע\\מנוע חיפוש\\חלק ב\\קורפוסNew folder\\Dictionaries without stemming"),"�vk[.sup","15wuhb"));
-//    }
 }
