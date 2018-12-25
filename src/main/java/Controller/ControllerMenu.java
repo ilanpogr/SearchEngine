@@ -273,6 +273,9 @@ public class ControllerMenu implements Observer {
                     for (double dd = d; dd <= 1; dd += e) {
 //                        for (double ff = f; ff <= 1; ff += 2 * e) {
                             tester.simulateSearch2Treceval(queries, queryNums, kk, bb, dd, f);
+                        System.out.println(Arrays.toString(tester.getResultRanked()));
+                        if (k==1.85)
+                        return;
                             double[] newVals = tester.getResultRanked();
                             if (newVals[0] > maxVals1[0]) {
                                 maxVals1 = newVals.clone();

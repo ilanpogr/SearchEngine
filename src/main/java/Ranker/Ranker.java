@@ -33,9 +33,9 @@ public class Ranker {
     private static double Resnik__weight;
     private static double Path__weight;
     private static TreeMap <String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
-    private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic = new TreeMap<>();
-    private TreeMap<String, Double> docsRank = new TreeMap<>();
-    private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting = new TreeMap<>();
+    private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic;
+    private TreeMap<String, Double> docsRank;
+    private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting;
 
     /**
      * Main Function.
@@ -51,6 +51,9 @@ public class Ranker {
      * value - the Rank of the Document (double)
      */
     public TreeMap<Double, String> rank(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
+        docsRank = new TreeMap<>();
+        relationDic = new TreeMap<>();
+        orderedPosting = new TreeMap<>();
         reArrangePostingForQuery(postingPath, termDic, cache, docDic, query);
         arrangeDictionaryForCalculations();
         calculateBM25(termDic, docDic);
@@ -130,7 +133,8 @@ public class Ranker {
             while (res.containsKey(rank))
                 rank -= Math.pow(10, -9);
             res.put(rank, doc);
-            if (res.size() > i) res.pollFirstEntry();
+            if (res.size() > i)
+                res.pollFirstEntry();
         }
         return res;
     }
@@ -142,7 +146,7 @@ public class Ranker {
      * @param docDic  - docs map
      */
     public void calculateBM25(TreeMap<String, String> termDic, TreeMap<String, String> docDic) {
-        int N = docDic.size();
+//        int N = docDic.size();
 //        double log2 = StrictMath.log10(2);
         for (Map.Entry<String, ArrayList<ImmutablePair<String, String>>> entry : relationDic.entrySet()) {
             double res = 0;
@@ -156,7 +160,7 @@ public class Ranker {
                     String[] docRecord = split(docDic.get(docNum), ",");
                     int docLength = Integer.parseInt(docRecord[1]);
                     int df = Integer.parseInt(split(termDic.get(term), ",")[1]);
-                    double idf = StrictMath.log10((N - df + BM25__idf) / (df + BM25__idf));
+                    double idf = StrictMath.log10((docDic.size() - df + BM25__idf) / (df + BM25__idf));
 //                    double logN = StrictMath.log10(N - df + BM25__idf) / log2;
 //                    double idf = logN - (StrictMath.log10(df + BM25__idf) / log2);
                     int tf = Master.getFrequencyFromPosting(positions);

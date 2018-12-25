@@ -168,26 +168,6 @@ public class ReadFile {
         return stringBuilder.toString();
     }
 
-//    public static TreeMap <String, ArrayList<String>> loadSolution(String queriespath, String solPath, TreeMap <String, ArrayList<String>> solution) {
-//        File solf = new File(solPath);
-//        File quef = new File(queriespath);
-//        try {
-//            BufferedReader bufferedReader = new BufferedReader(new FileReader(solf));
-//            RandomAccessFile randomAccessFile = new RandomAccessFile(quef,"r");
-//            String line = bufferedReader.readLine().trim();
-//            if (solution.get())
-//            while (line != null) {
-//
-//                line = bufferedReader.readLine();
-//            }
-//            bufferedReader.close();
-//        } catch (Exception e) {
-//            return null;
-//        }
-//        return null;
-//    }
-
-
 
     /**
      * clears the documents lists
