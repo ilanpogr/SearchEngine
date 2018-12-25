@@ -1,8 +1,10 @@
 package Searcher;
 
 import com.sun.corba.se.impl.orbutil.ObjectWriter;
+import org.ibex.nestedvm.util.Seekable;
 
 import java.io.*;
+import java.util.Properties;
 import java.util.TreeMap;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -17,7 +19,27 @@ public class QueryDic {
     }
 
     private QueryDic(){
+        try{
+            String dicName = "tested.queries";
+            String postings = "queries.postings";
+            File dic = new File(getClass().getClassLoader().getResource(dicName).getFile());
+            File post = new File(getClass().getClassLoader().getResource(postings).getFile());
 
+//            properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(propertiesFileName));
+        }catch (Exception e){
+
+        }
+//        properties = new Properties();
+//
+//        // Load the properties file into the Properties object
+//        String propertiesFileName = "project.properties";
+//        try {
+//            properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(propertiesFileName));
+//        } catch (IOException e) {
+//            String message = "Exception while reading properties file '" + propertiesFileName + "':" + e.getLocalizedMessage();
+//            throw new RuntimeException(message, e);
+//        }
+//        return properties;
     }
 
     public static void saveNewSQueries(String queriesPath, String targetPath){

@@ -1,5 +1,6 @@
 package Searcher;
 
+import static org.apache.commons.lang3.StringUtils.getLevenshteinDistance;
 import static org.apache.commons.lang3.StringUtils.split;
 
 public class QuerySol {
@@ -49,5 +50,16 @@ public class QuerySol {
     public Integer getqNumAsInt() {
 
         return Integer.parseInt(qNum);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof QuerySol){
+            QuerySol o = (QuerySol) obj;
+            if (o.title.equals(this.title)){
+                return true;
+            }
+        }
+        return false;
     }
 }
