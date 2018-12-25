@@ -1,3 +1,5 @@
+package Ranker;
+
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
