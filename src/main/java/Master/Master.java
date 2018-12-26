@@ -237,7 +237,7 @@ public class Master {
 
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
-//            if (isUpperCase && termKey.length()>2 && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890")) doc.addEntity(termKey,termFrequency);
+            if (isUpperCase && termKey.length()>2 && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890")) doc.addEntity(termKey,termFrequency);
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }

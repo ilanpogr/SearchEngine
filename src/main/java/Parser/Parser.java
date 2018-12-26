@@ -42,7 +42,8 @@ public class Parser {
      * @return : the set of stop-words
      */
     private static HashSet<String> initStopWords() {
-        String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
+//        String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
+        String filesPath = PropertiesFile.getProperty("data.set.path") + "\\stop_words.txt";
         stopWords = new HashSet<>();
         Scanner s = null;
         try {
@@ -122,7 +123,8 @@ public class Parser {
         String[] s = split(str[0], " ");
         boolean expressionFlag;
         stopWordsCounter = 0;
-        if (stopWords==null) stopWords = initStopWords();
+        if (stopWords==null)
+            stopWords = initStopWords();
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             currentPosition = i+1 - stopWordsCounter;
             expressionFlag = false;

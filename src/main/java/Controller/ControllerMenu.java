@@ -201,8 +201,8 @@ public class ControllerMenu implements Observer {
                 thread.setDaemon(true);
                 thread.start();
             } else if (arg.equals("browse")) {
-                loadTargetPath("C:\\Users\\User\\Documents\\SearchEngineTests");
-                loadCorpusPath("C:\\Users\\User\\Documents\\SearchEngineTests");
+                loadTargetPath("C:\\Ilan\\4");
+                loadCorpusPath("C:\\Ilan\\4");
 //                loadPathFromDirectoryChooser(0);
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
@@ -236,7 +236,7 @@ public class ControllerMenu implements Observer {
 
     private void testBM25() {
         try {
-            String directory = "C:\\Users\\User\\Documents\\SearchEngineTests";
+            String directory = "C:\\Ilan\\4";
             ArrayList<String> queries = new ArrayList<>();
             ArrayList<String> queryNums = new ArrayList<>();
             File file = new File(directory + "\\queries.txt");
@@ -252,7 +252,7 @@ public class ControllerMenu implements Observer {
                 line = bufferedReader.readLine();
             }
             bufferedReader.close();
-            double k = PropertiesFile.getPropertyAsDouble("k"), b = PropertiesFile.getPropertyAsDouble("b"), d = PropertiesFile.getPropertyAsDouble("d"), f = PropertiesFile.getPropertyAsDouble("f"), e = PropertiesFile.getPropertyAsDouble("e");
+            double k = PropertiesFile.getPropertyAsDouble("k"), b = PropertiesFile.getPropertyAsDouble("b"), d = PropertiesFile.getPropertyAsDouble("d"), f = PropertiesFile.getPropertyAsDouble("f"), e = PropertiesFile.getPropertyAsDouble("e"),maxk=PropertiesFile.getPropertyAsDouble("maxk");
             Treceval_cmd tester = new Treceval_cmd();
             double[] maxVals1 = tester.getResultRanked();
             double[] maxVals2 = tester.getResultRanked();
@@ -268,44 +268,41 @@ public class ControllerMenu implements Observer {
             printer3.flush();
             printer4.flush();
             double startTests = System.currentTimeMillis();
-            for (double kk = k; kk <= 2; kk += e) {
+            for (double kk = k; kk <= maxk; kk += e) {
                 for (double bb = b; bb <= 1; bb += e) {
-                    for (double dd = d; dd <= 1; dd += e) {
-//                        for (double ff = f; ff <= 1; ff += 2 * e) {
-                            tester.simulateSearch2Treceval(queries, queryNums, kk, bb, dd, f);
-                        System.out.println(Arrays.toString(tester.getResultRanked()));
-                        if (k==1.85)
-                        return;
+                    for (double dd = d; dd <= 1; dd += 2*e) {
+                        for (double ff = f; ff <= 0.6; ff += e) {
+                            tester.simulateSearch2Treceval(queries, queryNums, kk, bb, dd, ff);
                             double[] newVals = tester.getResultRanked();
                             if (newVals[0] > maxVals1[0]) {
                                 maxVals1 = newVals.clone();
-                                printer1.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer1.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, ff);
                                 printer1.flush();
                             }
                             if (newVals[1] > maxVals2[1]) {
                                 maxVals2 = newVals.clone();
-                                printer2.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer2.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, ff);
                                 printer2.flush();
                             }
                             if (newVals[2] > maxVals3[2]) {
                                 maxVals3 = newVals.clone();
-                                printer3.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer3.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, ff);
                                 printer3.flush();
                             }
                             if (newVals[3] > maxVals4[3]) {
                                 maxVals4 = newVals.clone();
-                                printer4.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, f);
+                                printer4.printRecord(newVals[0], newVals[1], newVals[2], newVals[3], kk, bb, dd, ff);
                                 printer4.flush();
                             }
                             Files.delete(Paths.get(directory + "\\results.txt"));
                             double currentTime = System.currentTimeMillis();
-                                System.out.println((currentTime-startTests)/1000+"\nk = " + kk + "\tb = " + bb + "\tdelta = " + dd + "\tidf = " + f + "\n" +
+                                System.out.println((currentTime-startTests)/1000+"\nk = " + kk + "\tb = " + bb + "\tdelta = " + dd + "\tidf = " + ff + "\n" +
                                         Arrays.toString(maxVals1) + "\n" +
                                         Arrays.toString(maxVals2) + "\n" +
                                         Arrays.toString(maxVals3) + "\n" +
                                         Arrays.toString(maxVals4) + "\n"
                                 );
-//                        }
+                        }
                     }
                 }
             }
