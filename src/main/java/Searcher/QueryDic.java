@@ -114,20 +114,15 @@ public class QueryDic {
                     while (line != null && !startsWithIgnoreCase(line, "<narr>")) {
                         line = checkAndAddline(bufferedReader, stringBuilder, line);
                     }
+                    stringBuilder.delete(stringBuilder.length()-2,stringBuilder.length());
                 }
                 if (startsWithIgnoreCase(line, "<narr>")) {
                     line = bufferedReader.readLine();
                     stringBuilder.append("|");
                     while (line != null && !startsWithIgnoreCase(line, "</top>")) {
-                        if (isEmpty(line)) {
-                            line = bufferedReader.readLine();
-                            continue;
-                        }
-                        line = trim(line);
-                        if (!endsWith(line, ";"))
-                            stringBuilder.append(line).append("; ");
-                        line = bufferedReader.readLine();
+                        line = checkAndAddline(bufferedReader, stringBuilder, line);
                     }
+                    stringBuilder.delete(stringBuilder.length()-2,stringBuilder.length());
                     stringBuilder.append("|\n");
 //                    stringBuilder.append("|");
 //                    query = stringBuilder.toString();
@@ -150,10 +145,6 @@ public class QueryDic {
 
     public static int getPointer() {
         return pointer;
-    }
-
-    public static void main(String[] args) {
-        saveNewSQueries("C:\\Users\\User\\Documents\\SearchEngineTests\\solutions\\trimmed.post", "C:\\Users\\User\\Documents\\SearchEngineTests\\solutions\\trimmed(1).post");
     }
 
     public static void saveSolutions(String solutionsPath, String targetPath) {
@@ -216,6 +207,8 @@ public class QueryDic {
                     qw.write(stringBuilder.toString());
                     stringBuilder.setLength(0);
                     pointerCounter += lineS.getBytes().length + 1;
+                } else if (compareIgnoreCase(lineQ,lineS)<1) {
+                    lineS = sr.readLine();
                 }
                 lineS = sr.readLine();
                 lineQ = qr.readLine();
@@ -243,9 +236,10 @@ public class QueryDic {
 
 
     private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line) throws IOException {
-        if (!isEmpty(line)) {
-            stringBuilder.append(trim(line)).append(";");
-        }
+        line = trim(line);
+        stringBuilder.trimToSize();
+        if (!endsWith(stringBuilder, ";") && !isEmpty(line))
+            stringBuilder.append(line).append("; ");
         return bufferedReader.readLine();
     }
 
