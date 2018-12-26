@@ -15,6 +15,7 @@ public class QueryDic {
     private static QueryDic yoda = null;
     private static TreeMap<Integer, QuerySol> qmap = null;
     private static HashMap<String, Integer> inv_qmap = null;
+    private static HashMap<String, ArrayList<Integer>> wordsToQueries = null;
     private static int pointer = 0;
 
 
@@ -39,9 +40,29 @@ public class QueryDic {
      * 0 - not in dictionary
      * 1 - the query is in the dictionary
      */
-    public double queryEvaluator(String query) {
+    public double queryEvaluator(QuerySol query) {
         //todo- implement
         return 0;
+    }
+
+    public ArrayList<QuerySol> readQueries(String path) {
+        try{
+            String [] queries = split(saveNewQueries(path,""),"\n"); //no target path - will not write to disk
+            ArrayList<QuerySol> querySols = new ArrayList<>();
+            for (int i = 0; i < queries.length; i++) {
+                QuerySol querySol = new QuerySol(queries[i]);
+                ArrayList<String> sols =null;
+                try{sols = qmap.get(inv_qmap.get(querySol.getTitle())).getSols();}catch (Exception e){}
+                if (sols!=null){
+                    querySol.addPosting(join(sols,"|"));
+                }
+                querySols.add(querySol);
+            }
+            return querySols;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public ArrayList<String> getSolutions(String query) {
@@ -60,6 +81,9 @@ public class QueryDic {
         return yoda;
     }
 
+    /**
+     * Ctor - private (singleton)
+     *///todo- add substrings to wordsToQueries
     private QueryDic() {
         try {
             String dicName = "tested.queries";
@@ -78,7 +102,12 @@ public class QueryDic {
                 qmap.put(querySol.getPostingPointer(), querySol);
                 inv_qmap.put(querySol.getTitle(), querySol.getqNumAsInt());
                 if (containsAny(querySol.getTitle(), " ,.-")) {
-
+                    String [] words = split(querySol.getTitle(), " ,.-");
+                    for (int i = 0; i < words.length; i++) {
+                        if (wordsToQueries.containsKey(words[i])){
+                            wordsToQueries.get(words[i]).add(querySol.getqNumAsInt());
+                        } else wordsToQueries.put(words[i],new ArrayList<>(querySol.getqNumAsInt()));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -86,10 +115,12 @@ public class QueryDic {
         }
     }
 
-    public static void saveNewSQueries(String queriesPath, String targetPath) {
+    public String saveNewQueries(String queriesPath, String targetPath) {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(queriesPath));
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(getTmpFile(targetPath), true));
+            BufferedWriter bufferedWriter=null;
+            if (!isEmpty(targetPath))
+                bufferedWriter = new BufferedWriter(new FileWriter(getTmpFile(targetPath), true));
             String line = bufferedReader.readLine().trim();
             StringBuilder stringBuilder = new StringBuilder();
 //            String query = "";
@@ -114,7 +145,7 @@ public class QueryDic {
                     while (line != null && !startsWithIgnoreCase(line, "<narr>")) {
                         line = checkAndAddline(bufferedReader, stringBuilder, line);
                     }
-                    stringBuilder.delete(stringBuilder.length()-2,stringBuilder.length());
+                    stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
                 }
                 if (startsWithIgnoreCase(line, "<narr>")) {
                     line = bufferedReader.readLine();
@@ -122,25 +153,22 @@ public class QueryDic {
                     while (line != null && !startsWithIgnoreCase(line, "</top>")) {
                         line = checkAndAddline(bufferedReader, stringBuilder, line);
                     }
-                    stringBuilder.delete(stringBuilder.length()-2,stringBuilder.length());
+                    stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
                     stringBuilder.append("|\n");
-//                    stringBuilder.append("|");
-//                    query = stringBuilder.toString();
-//                    QuerySol sol = new QuerySol(query, pointer);
-//                    stringBuilder.append(pointer).append("|\n");
-//                    qmap.put(sol.getqNumAsInt(),sol);
-//                    pointer += query.getBytes().length + 1;
                 }
                 line = bufferedReader.readLine();
             }
-//            bufferedWriter.write(query);
-            bufferedWriter.write(stringBuilder.toString());
-            bufferedWriter.flush();
+            if (!isEmpty(targetPath)){
+                bufferedWriter.write(stringBuilder.toString());
+                bufferedWriter.flush();
+                bufferedWriter.close();
+            }
             bufferedReader.close();
-            bufferedWriter.close();
+            return stringBuilder.toString();
         } catch (Exception e) {
 
         }
+        return "";
     }
 
     public static int getPointer() {
@@ -187,6 +215,7 @@ public class QueryDic {
      */
     public static void updateQdictPointers(String queriesPath, String solutionsPath, boolean hasPointers) {
         try {
+            pointer = 0;
             BufferedReader qr = new BufferedReader(new FileReader(queriesPath));
             BufferedReader sr = new BufferedReader(new FileReader(solutionsPath));
             File file = getTmpFile(queriesPath);
@@ -194,7 +223,6 @@ public class QueryDic {
             String lineQ = qr.readLine().trim();
             String lineS = sr.readLine().trim();
             StringBuilder stringBuilder = new StringBuilder();
-            int pointerCounter = 0;
             while (lineQ != null && lineS != null) {
                 if (equalsIgnoreCase(substringBefore(lineQ, "|"), substringBefore(lineS, ","))) {
                     stringBuilder.append(lineQ);
@@ -203,11 +231,11 @@ public class QueryDic {
                         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
                         stringBuilder.delete(stringBuilder.lastIndexOf("|") + 1, stringBuilder.length() - 1);
                     }
-                    stringBuilder.append(Integer.toString(pointerCounter, 36)).append("|\n");
+                    stringBuilder.append(Integer.toString(pointer, 36)).append("|\n");
                     qw.write(stringBuilder.toString());
                     stringBuilder.setLength(0);
-                    pointerCounter += lineS.getBytes().length + 1;
-                } else if (compareIgnoreCase(lineQ,lineS)<1) {
+                    pointer += lineS.getBytes().length + 1;
+                } else if (compareIgnoreCase(lineQ, lineS) < 1) {
                     lineS = sr.readLine();
                 }
                 lineS = sr.readLine();

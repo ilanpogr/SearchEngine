@@ -5,6 +5,7 @@ import Indexer.Indexer;
 import Model.ModelMenu;
 import Parser.Parser;
 import ReadFile.ReadFile;
+import Searcher.*;
 import Stemmer.Stemmer;
 import Tests.Treceval_cmd;
 import TextContainers.Doc;
@@ -152,7 +153,7 @@ public class Master {
                 filesList = readFile.getFileList();
                 for (Doc aFilesList : filesList) {
                     currDocName = aFilesList.docNum();
-                    HashMap<String, String> map = p.parse(aFilesList.getAttributesToIndex());
+                    HashMap<String, String> map = p.parse(aFilesList.text());
                     handleFile(map);
                 }
                 currentStatus.set(i / fileNum);
@@ -237,7 +238,7 @@ public class Master {
 
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
-            if (isUpperCase && termKey.length()>2 && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890")) doc.addEntity(termKey,termFrequency);
+//            if (isUpperCase && termKey.length()>2 && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890")) doc.addEntity(termKey,termFrequency);
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
@@ -364,7 +365,10 @@ public class Master {
         return (termDictionary != null && cache != null && docDic != null);
     }
 
-    public void search(List<String> lang) {
+    public void search(ArrayList<String> lang) {
+        Searcher searcher = new Searcher();
+        ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(PropertiesFile.getProperty("queries.file.path"));
+
         // todo - implement
     }
 

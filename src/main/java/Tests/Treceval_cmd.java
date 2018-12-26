@@ -5,6 +5,8 @@ import Ranker.Ranker;
 import Ranker.MultiQueriesHandler;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -12,17 +14,17 @@ import static org.apache.commons.lang3.StringUtils.*;
 public class Treceval_cmd {
 
     static String directory = "C:\\Ilan\\4";
-    static String command = "treceval.exe qrels.txt results.txt";
+    static String command = "treceval.exe qrels.txt ";
 
     private static TreeMap<String, String> dict = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> docs = new TreeMap<>();
 
-    private static StringBuilder runCmd() {
+    private static StringBuilder runCmd(String resultFileName) {
         StringBuilder s = new StringBuilder();
         try {
             ProcessBuilder builder = new ProcessBuilder(
-                    "cmd.exe", "/c", "cd \"" + directory + "\" && " + command);
+                    "cmd.exe", "/c", "cd \"" + directory + "\" && " + command + resultFileName);
             builder.redirectErrorStream(true);
             Process p = builder.start();
             BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -58,17 +60,17 @@ public class Treceval_cmd {
                 TreeMap<Double, String> res = ranker.rank(directory, dict, cache, docs, query);
 //                TreeMap<Double, String> ares = ranker.rank(directory, dict, cache, docs, anti_query);
 
-                makeResultsFile(res, queryNums.get(i));
+                makeResultsFile(new ArrayList<>(res.values()), queryNums.get(i));
 
             }
 
     }
 
-    private void makeResultsFile(TreeMap<Double, String> res, String s) {
+    private void makeResultsFile(ArrayList<String> res, String s) {
         try {
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(directory + "\\results.txt"), true));
-            for (Map.Entry<Double, String> entry : res.entrySet()) {
-                String doc = entry.getValue();
+            for (String docnum : res) {
+                String doc = docnum;
                 bufferedWriter.write(s + " 0 " + doc + " 1 0 si\n");
             }
             bufferedWriter.flush();
@@ -77,11 +79,10 @@ public class Treceval_cmd {
         }
     }
 
-    public double[] getResultRanked() {
-        StringBuilder s = runCmd();
+    public double[] getResultRanked(StringBuilder stringBuilder) {
         String values = "";
-        if (s != null)
-            values = s.toString();
+        if (stringBuilder != null)
+            values = stringBuilder.toString();
 
         double a_retrieved = Double.parseDouble(trim(substringBetween(values, "Retrieved:", "Relevant:")));
         double b_relevant = Double.parseDouble(trim(substringBetween(values, "Relevant:", "Rel_ret:")));
@@ -98,10 +99,27 @@ public class Treceval_cmd {
         return new double[]{r_precision, precision, recall, final_rank,c_rel_ret};
     }
 
+    public double[] getTrecEvalGrades(String resPath, ArrayList<String> res, String qNum) {
+        String dirKeeper = directory;
+        directory = resPath;
+        makeResultsFile(res,qNum);
+        StringBuilder stringBuilder = runCmd("tmpResults.txt");
+        try{
+            Files.deleteIfExists(Paths.get(directory+"\\tmpResults.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        directory =dirKeeper;
+        return getResultRanked(stringBuilder);
+    }
 
     public void setDics(TreeMap<String, String> termDictionary, TreeMap<String, String> cache, TreeMap<String, String> docDic) {
             dict = termDictionary;
             Treceval_cmd.cache = cache;
             docs = docDic;
+    }
+
+    public double[] getResultRanked() {
+        return getResultRanked(runCmd("results.txt"));
     }
 }

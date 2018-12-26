@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Indexer {
 
     private static double totalPostingSizeByKB = 0;
-    private static final int minNumberOfTf = PropertiesFile.getPropertyAsInt("min.tf.to.save");
+    private static final int minNumberOfTf = StrictMath.min(PropertiesFile.getPropertyAsInt("min.tf.to.save"),Master.getDocCount()/50);
     private static final double maxIdfForCache = PropertiesFile.getPropertyAsDouble("max.idf.for.cache");
     private static final int cacheSlice = PropertiesFile.getPropertyAsInt("one.part.to.cache.from");
     private static final String cachePointer = PropertiesFile.getProperty("pointer.to.cache");

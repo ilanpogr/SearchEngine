@@ -201,9 +201,9 @@ public class ControllerMenu implements Observer {
                 thread.setDaemon(true);
                 thread.start();
             } else if (arg.equals("browse")) {
-                loadTargetPath("C:\\Ilan\\4");
-                loadCorpusPath("C:\\Ilan\\4");
-//                loadPathFromDirectoryChooser(0);
+//                loadTargetPath("C:\\Ilan\\4");
+//                loadCorpusPath("C:\\Ilan\\4");
+                loadPathFromDirectoryChooser(0);
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {

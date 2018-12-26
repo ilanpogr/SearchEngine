@@ -20,15 +20,8 @@ import java.util.Observable;
  */
 public class ModelMenu extends Observable {
 
-    private Master master_of_puppets;
+    private Master master_of_puppets=new Master();
     private static DoubleProperty progress;
-
-    /**
-     * Ctor
-     */
-    public ModelMenu() {
-        master_of_puppets = new Master();
-    }
 
     /**
      * get the number of terms in corpus
