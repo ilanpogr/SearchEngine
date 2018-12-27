@@ -96,6 +96,7 @@ public class QuerySol {
     }
 
     public void filterSols(Set<String> docs) {
+        if (docs==null || docs.size()==0) return;
         ArrayList<String> newSols = new ArrayList<>();
         for (String s : sols) {
             if (docs.contains(s)) {
@@ -107,5 +108,13 @@ public class QuerySol {
 
     public void filterSolsNum(int i) {
         while (sols.size()>i) sols.remove(0);
+    }
+
+    public void addSingleDocs(String value) {
+        if (postingPointer==-1) sols.add(value);
+    }
+
+    public int getSolSize() {
+        return sols.size();
     }
 }

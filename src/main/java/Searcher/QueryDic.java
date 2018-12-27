@@ -52,12 +52,12 @@ public class QueryDic {
             String[] queries = split(saveNewQueries(path, ""), "\n"); //no target path - will not write to disk
             ArrayList<QuerySol> querySols = new ArrayList<>();
             for (int i = 0; i < queries.length; i++) {
-                QuerySol querySol = new QuerySol(queries[i]);
+                QuerySol querySol = new QuerySol(queries[i],-1);
                 ArrayList<String> sols = null;
                 try {
                     sols = qmap.get(inv_qmap.get(querySol.getTitle())).getSols();
                 } catch (Exception e) {
-                    e.printStackTrace();
+
                 }
                 if (sols != null) {
                     querySol.addPosting(querySol.getqNum() + "," + join(sols, "|"));

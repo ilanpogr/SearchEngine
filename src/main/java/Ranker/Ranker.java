@@ -3,14 +3,10 @@ package Ranker;
 import Controller.PropertiesFile;
 import Master.Master;
 import ReadFile.ReadFile;
-import Searcher.QueryDic;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.ibex.nestedvm.util.Seekable;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +31,7 @@ public class Ranker {
     private static double Path__weight;
     private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
     private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic;
-    private TreeMap<String, Double> docsRank;
+    public TreeMap<String, Double> docsRank;
     private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting;
 
     /**
@@ -51,15 +47,14 @@ public class Ranker {
      * key - DocNum (name)
      * value - the Rank of the Document (double)
      */
-    public TreeMap<Double, String> rank(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
+    public TreeMap<Double, String> rank(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query, int solSize) {
         docsRank = new TreeMap<>();
         relationDic = new TreeMap<>();
         orderedPosting = new TreeMap<>();
-
         reArrangePostingForQuery(postingPath, termDic, cache, docDic, query);
         arrangeDictionaryForCalculations();
         calculateBM25(termDic, docDic);
-        return getBestDocs(50);
+        return getBestDocs(solSize);
     }
 
 
@@ -75,7 +70,6 @@ public class Ranker {
      * @param query       - query Dictionary
      */
     private void reArrangePostingForQuery(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
-        //TODO - Add Semantics!
         for (Map.Entry<String, Integer> entry : query.entrySet()) {
             StringBuilder fromPosting = new StringBuilder(256);
             String word = entry.getKey();
@@ -87,9 +81,9 @@ public class Ranker {
             if (endsWith(termVal, "*")) { //it's in cache
                 termVal = substringBeforeLast(termVal, ",");
                 String[] postPoint = split(cache.get(word), ",");
-                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(postingPath), word, postPoint[1]));
+                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(postingPath,"\\")), word, postPoint[1]));
             } else {
-                fromPosting.append(ReadFile.getTermLine(new StringBuilder(postingPath), word, substringAfterLast(termVal, ",")));
+                fromPosting.append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(postingPath,"\\")), word, substringAfterLast(termVal, ",")));
             }
             fromPosting.trimToSize();
             if (fromPosting.length() != 0) {
@@ -128,7 +122,7 @@ public class Ranker {
         }
     }
 
-    private TreeMap<Double, String> getBestDocs(int i) {
+    public TreeMap<Double, String> getBestDocs(int i) {
         TreeMap<Double, String> res = new TreeMap<>(Double::compareTo);
         for (Map.Entry<String, Double> o : docsRank.entrySet()
         ) {

@@ -237,10 +237,10 @@ public class ControllerMenu implements Observer {
     }
 
     private void searchQueries() {
-        ArrayList<String> languages = new ArrayList<>();
+        ArrayList<String> cities = new ArrayList<>();
 //        loadQueriesFile();
         PropertiesFile.putProperty("queries.file.path", "C:\\Users\\User\\Documents\\SearchEngineTests\\queries.txt");
-        ArrayList<QuerySol> querySols = ir_modelMenu.multiSearch(languages);
+        ArrayList<QuerySol> querySols = ir_modelMenu.multiSearch(cities);
         for (QuerySol querySol : querySols) {
             System.out.print("\n"+querySol.getqNum()+": "+querySol.getTitle()+": ");
             for (String s : querySol.getSols()) {
@@ -274,10 +274,10 @@ public class ControllerMenu implements Observer {
             double[] maxVals3 = tester.getResultRanked();
             double[] maxVals4 = tester.getResultRanked();
             Files.delete(Paths.get(directory + "\\results.txt"));
-            CSVPrinter printer1 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\R-Percision.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
-            CSVPrinter printer2 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Percision.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
-            CSVPrinter printer3 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Recall.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
-            CSVPrinter printer4 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Rank.csv")), CSVFormat.DEFAULT.withHeader("k", "b", "delta", "idf", "R-Percision", "Percision", "Recall", "Rank"));
+            CSVPrinter printer1 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\R-Percision.csv")), CSVFormat.DEFAULT.withHeader("R-Percision", "Percision", "Recall", "Rank","k", "b", "delta", "idf"));
+            CSVPrinter printer2 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Percision.csv")), CSVFormat.DEFAULT.withHeader("R-Percision", "Percision", "Recall", "Rank","k", "b", "delta", "idf"));
+            CSVPrinter printer3 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Recall.csv")), CSVFormat.DEFAULT.withHeader("R-Percision", "Percision", "Recall", "Rank","k", "b", "delta", "idf"));
+            CSVPrinter printer4 = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\Rank.csv")), CSVFormat.DEFAULT.withHeader("R-Percision", "Percision", "Recall", "Rank","k", "b", "delta", "idf"));
             printer1.flush();
             printer2.flush();
             printer3.flush();

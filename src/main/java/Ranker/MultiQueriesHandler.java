@@ -26,6 +26,7 @@ public class MultiQueriesHandler {
     public MultiQueriesHandler() {
         notRelevantList = new ArrayList<>();
         relevantList = new ArrayList<>();
+        parseMultiQuery();
     }
 
 
@@ -58,7 +59,7 @@ public class MultiQueriesHandler {
      * in this class there are two getter for those ArrayLists. use them after running this function.
      *
      */
-    public void parseMultiQuery() {
+    private void parseMultiQuery() {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(queryFile_path));
             StringBuilder stringBuilder = new StringBuilder();
@@ -77,9 +78,9 @@ public class MultiQueriesHandler {
                     description = replace(strip(substringBetween(query, "Description:", "<narr>")), "and/or", "and or");
                     narrative = replace(strip(substringAfter(query, "Narrative:")), "and/or", "and or");
 
-                    handleTitle(relevantMap);
                     handleDescription(relevantMap);
                     handleNarrative(relevantMap, notRelevantMap);
+                    handleTitle(relevantMap);
                     relevantList.add(relevantMap);
                     notRelevantList.add(notRelevantMap);
                 }
@@ -120,7 +121,7 @@ public class MultiQueriesHandler {
                 dealWithRelevant(sentence, relevantMap);
             }
         }
-        removeQueryWordsFromNotRelevantList(notRelevantMap, relevantMap);
+        removeQueryWordsEqualFromRelevantAndNotRelevantList(notRelevantMap, relevantMap);
     }
 
     private void dealWithRelevant(String sentence, HashMap<String, Integer> relevantMap) {
@@ -171,10 +172,17 @@ public class MultiQueriesHandler {
     /**
      * if term is in query and in not relevant, remove from not relevant.
      */
-    private void removeQueryWordsFromNotRelevantList(HashMap<String, Integer> notRelevantMap, HashMap<String, Integer> relevantMap) {
-        for (String key : relevantMap.keySet()) {
-            notRelevantMap.remove(key);
+    private void removeQueryWordsEqualFromRelevantAndNotRelevantList(HashMap<String, Integer> notRelevantMap, HashMap<String, Integer> relevantMap) {
+        HashSet<String> terms = new HashSet<>();
+        for (String key : notRelevantMap.keySet()) {
+            if (relevantMap.containsKey(key)) {
+                relevantMap.replace(key,-1);
+                terms.add(key);
+            }
         }
+//        for (String term : terms){
+//            notRelevantMap.remove(term);
+//        }
     }
 
 
@@ -222,33 +230,33 @@ public class MultiQueriesHandler {
         }
     }
 
-//    public static void main(String[] args) {
-//        MultiQueriesHandler q = new MultiQueriesHandler();
-//        q.parseMultiQuery();
-//        ArrayList<HashMap<String,Integer>> relevent = q.getRelevantList();
-//        ArrayList<HashMap<String,Integer>> notRelevent = q.getNotRelevantList();
-//        int counter = 1;
-//        while (counter <= relevent.size()) {
-//            System.out.println();
-//            System.out.println("-----------------------QUERY " + counter + "----------------------");
-//            System.out.println();
-//            System.out.println("----------------------------------------------------");
-//            System.out.println("--------------------NOT RELEVANT--------------------");
-//            System.out.println("----------------------------------------------------");
-//            printMap(notRelevent.get(counter - 1));
-//            System.out.println("----------------------------------------------------");
-//            System.out.println();
-//            System.out.println("----------------------RELEVANT----------------------");
-//            System.out.println("----------------------------------------------------");
-//            printMap(relevent.get(counter - 1));
-//            System.out.println("----------------------------------------------------");
-//            counter++;
-//        }
-//    }
-//
-//    private static void printMap(HashMap<String, Integer> stringIntegerHashMap) {
-//        for (String key : stringIntegerHashMap.keySet()){
-//            System.out.println("            " + key + "-->" + stringIntegerHashMap.get(key));
-//        }
-//    }
+    public static void main(String[] args) {
+        MultiQueriesHandler q = new MultiQueriesHandler();
+        q.parseMultiQuery();
+        ArrayList<HashMap<String,Integer>> relevent = q.getRelevantList();
+        ArrayList<HashMap<String,Integer>> notRelevent = q.getNotRelevantList();
+        int counter = 1;
+        while (counter <= relevent.size()) {
+            System.out.println();
+            System.out.println("-----------------------QUERY " + counter + "----------------------");
+            System.out.println();
+            System.out.println("----------------------------------------------------");
+            System.out.println("--------------------NOT RELEVANT--------------------");
+            System.out.println("----------------------------------------------------");
+            printMap(notRelevent.get(counter - 1));
+            System.out.println("----------------------------------------------------");
+            System.out.println();
+            System.out.println("----------------------RELEVANT----------------------");
+            System.out.println("----------------------------------------------------");
+            printMap(relevent.get(counter - 1));
+            System.out.println("----------------------------------------------------");
+            counter++;
+        }
+    }
+
+    private static void printMap(HashMap<String, Integer> stringIntegerHashMap) {
+        for (String key : stringIntegerHashMap.keySet()){
+            System.out.println("            " + key + "-->" + stringIntegerHashMap.get(key));
+        }
+    }
 }

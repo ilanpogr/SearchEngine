@@ -10,6 +10,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
@@ -22,11 +23,12 @@ import java.util.Observable;
  */
 public class ModelMenu extends Observable {
 
-    private Master master_of_puppets=new Master();
+    private Master master_of_puppets = new Master();
     private static DoubleProperty progress;
 
     /**
      * get the number of terms in corpus
+     *
      * @return integer
      */
     public int getNumOfTerms() {
@@ -35,6 +37,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get the number of documents in corpus
+     *
      * @return integer
      */
     public int getDocCount() {
@@ -53,6 +56,7 @@ public class ModelMenu extends Observable {
 
     /**
      * Removes all files created by this program (depends on stem mode)
+     *
      * @return true if removed
      */
     private boolean removeAllFiles() {
@@ -68,6 +72,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get path for the Dictionaries directory (depends on stem mode)
+     *
      * @return the new path
      */
     public String getDicsPath() {
@@ -77,10 +82,11 @@ public class ModelMenu extends Observable {
 
     /**
      * getter for Model Progress property
+     *
      * @return DoubleProperty
      */
     public DoubleProperty getProgress() {
-        if (progress==null){
+        if (progress == null) {
             progress = new SimpleDoubleProperty(0);
         }
         return progress;
@@ -95,6 +101,7 @@ public class ModelMenu extends Observable {
 
     /**
      * Reads dictionary to RAM
+     *
      * @param dicPath - path to the dictionary
      * @return true if was able to read
      */
@@ -103,16 +110,30 @@ public class ModelMenu extends Observable {
     }
 
 
-    public void search(ArrayList<String> lang){
+    public void search(ArrayList<String> lang) {
         master_of_puppets.search(lang);
         setChanged();
         notifyObservers("search_done");
     }
 
     public ArrayList<QuerySol> multiSearch(ArrayList<String> lang) {
-        String path =PropertiesFile.getProperty("queries.file.path");
+        String path = PropertiesFile.getProperty("queries.file.path");
         ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(path);
         master_of_puppets.multiSearch(path, querySols, lang);
+        printSolution(querySols);
         return querySols;
+    }
+
+    private void printSolution(ArrayList<QuerySol> querySols) {
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(PropertiesFile.getProperty("save.files.path")+"\\results.txt"), true));
+            for (QuerySol query : querySols) {
+                for (String docnum : query.getSols())
+                bufferedWriter.write(query.getqNum() + " 0 " + docnum + " 1 0 si\n");
+            }
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        } catch (Exception e) {
+        }
     }
 }
