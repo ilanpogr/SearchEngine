@@ -1,6 +1,7 @@
 package Controller;
 
 import Model.ModelMenu;
+import Searcher.QuerySol;
 import Tests.Treceval_cmd;
 import TextContainers.LanguagesInfo;
 import javafx.application.Platform;
@@ -150,7 +151,7 @@ public class ControllerMenu implements Observer {
         File selectedFile = fileChooser.showOpenDialog(stage);
         if (selectedFile != null){
             String path = selectedFile.getAbsolutePath();
-            PropertiesFile.putProperty("queries.file.path", selectedFile.getAbsolutePath());
+            PropertiesFile.putProperty("queries.file.path", path);
         }
     }
 
@@ -201,9 +202,7 @@ public class ControllerMenu implements Observer {
                 thread.setDaemon(true);
                 thread.start();
             } else if (arg.equals("browse")) {
-//                loadTargetPath("C:\\Ilan\\4");
-//                loadCorpusPath("C:\\Ilan\\4");
-                loadPathFromDirectoryChooser(0);
+//                loadPathFromDirectoryChooser(0);
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {
@@ -213,14 +212,17 @@ public class ControllerMenu implements Observer {
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
                 readDictionary();
-                testBM25();
+//                testBM25();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("search")){
                 ArrayList<String> languages = new ArrayList<>();
                 // todo - implement
                 ir_modelMenu.search(languages);
             } else if (arg.equals("queryFile")){
-                loadQueriesFile();
+                loadTargetPath("C:\\Users\\User\\Documents\\SearchEngineTests");
+                loadCorpusPath("C:\\Users\\User\\Documents\\SearchEngineTests");
+                update(o,"read");
+                searchQueries();
             }
         } else if (o.equals(ir_modelMenu)) {
             if (arg.equals("done")) {
@@ -230,6 +232,19 @@ public class ControllerMenu implements Observer {
                 Platform.runLater(this::addSummaryToLabel);
             } else if (arg.equals("search_done")){
                 // todo - implement
+            }
+        }
+    }
+
+    private void searchQueries() {
+        ArrayList<String> languages = new ArrayList<>();
+//        loadQueriesFile();
+        PropertiesFile.putProperty("queries.file.path", "C:\\Users\\User\\Documents\\SearchEngineTests\\queries.txt");
+        ArrayList<QuerySol> querySols = ir_modelMenu.multiSearch(languages);
+        for (QuerySol querySol : querySols) {
+            System.out.print("\n"+querySol.getqNum()+": "+querySol.getTitle()+": ");
+            for (String s : querySol.getSols()) {
+                System.out.print(s+", ");
             }
         }
     }

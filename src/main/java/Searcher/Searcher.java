@@ -5,6 +5,7 @@ import Master.Master;
 import Ranker.Ranker;
 import Tests.Treceval_cmd;
 
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -24,14 +25,26 @@ public class Searcher {
     }
 
 
-    public void multiSearch(String path, ArrayList<QuerySol> queryList, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs, ArrayList<String> cities) {
+    public void multiSearch(String path, ArrayList<QuerySol> queryList, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs, ArrayList<String> cities, boolean totalRickAll) {
         if (!(dict == null || cache == null || docs == null)) {
             for (int i = 0; i < queryList.size(); i++) {
                 QuerySol query = queryList.get(i);
                 if (QueryDic.getInstance().queryEvaluator(query) == 1) {
-                    queryList.get(i).addPosting(join(QueryDic.getInstance().getSolutions(query.getTitle()), "|"));
-                    double[] results = new Treceval_cmd().getTrecEvalGrades(PropertiesFile.getProperty("save.files.path"), query.getSols(), query.getqNum());
-                    if (results[1] == 1 || results[3] > 0.8) continue;
+                    StringBuilder stringBuilder = new StringBuilder(join(QueryDic.getInstance().getSolutions(query.getTitle()), "|"));
+                    query.addPosting(query.getqNum() + "," + stringBuilder.toString());
+                    query.filterSols(docs.keySet());
+                    if (!totalRickAll)
+                        query.filterSolsNum(50);
+                    try {
+                        double[] results = new Treceval_cmd().getTrecEvalGrades(PropertiesFile.getProperty("save.files.path"), query.getSols(), query.getqNum());
+                        if (results[1] == 1 || results[3] > 0.8) {
+                            //todo - if not total rickall and check docdics
+                            continue;
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
                 //TODO - add nerrative here
                 HashMap<String, Integer> prepQuery = Master.makeQueryDic(query.getTitle());

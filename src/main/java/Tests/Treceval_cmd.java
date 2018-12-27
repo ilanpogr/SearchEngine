@@ -60,15 +60,15 @@ public class Treceval_cmd {
                 TreeMap<Double, String> res = ranker.rank(directory, dict, cache, docs, query);
 //                TreeMap<Double, String> ares = ranker.rank(directory, dict, cache, docs, anti_query);
 
-                makeResultsFile(new ArrayList<>(res.values()), queryNums.get(i));
+                makeResultsFile(new ArrayList<>(res.values()), queryNums.get(i),"results.txt");
 
             }
 
     }
 
-    private void makeResultsFile(ArrayList<String> res, String s) {
+    private void makeResultsFile(ArrayList<String> res, String s,String fileName) {
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(directory + "\\results.txt"), true));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(directory + "\\"+fileName), true));
             for (String docnum : res) {
                 String doc = docnum;
                 bufferedWriter.write(s + " 0 " + doc + " 1 0 si\n");
@@ -102,15 +102,16 @@ public class Treceval_cmd {
     public double[] getTrecEvalGrades(String resPath, ArrayList<String> res, String qNum) {
         String dirKeeper = directory;
         directory = resPath;
-        makeResultsFile(res,qNum);
+        makeResultsFile(res,qNum,"tmpResults.txt");
         StringBuilder stringBuilder = runCmd("tmpResults.txt");
+        double [] ranks = getResultRanked(stringBuilder);
         try{
             Files.deleteIfExists(Paths.get(directory+"\\tmpResults.txt"));
         } catch (IOException e) {
             e.printStackTrace();
         }
         directory =dirKeeper;
-        return getResultRanked(stringBuilder);
+        return ranks;
     }
 
     public void setDics(TreeMap<String, String> termDictionary, TreeMap<String, String> cache, TreeMap<String, String> docDic) {

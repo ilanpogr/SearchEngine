@@ -372,6 +372,11 @@ public class Master {
         // todo - implement
     }
 
+    public void multiSearch(String path, ArrayList<QuerySol> querySols, ArrayList<String> lang) {
+        Searcher searcher = new Searcher();
+        searcher.multiSearch(path,  querySols, termDictionary, cache, docDic, lang, false);
+    }
+
 //    public boolean loadSolution (String path){
 //        ReadFile.loadSolution(path);
 //        return false;

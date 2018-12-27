@@ -2,6 +2,8 @@ package Model;
 
 import Controller.PropertiesFile;
 import Master.Master;
+import Searcher.QueryDic;
+import Searcher.QuerySol;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import org.apache.commons.csv.CSVFormat;
@@ -100,30 +102,17 @@ public class ModelMenu extends Observable {
         return Master.readDictionaries(dicPath);
     }
 
-    public void bm25bnkChecker(){
-        try{
-            CSVFormat csvFormat;
-            CSVPrinter csvPrinter;
-            for (int i = 0; i < 10; i++) {
-                csvFormat = CSVFormat.DEFAULT.withIgnoreEmptyLines().withRecordSeparator(" ").withTrim();
-                File file = new File("BM25 tester"+i);
-                if (!file.exists()) Files.createFile(Paths.get(getDicsPath()));
-                csvPrinter = new CSVPrinter(new FileWriter(file),csvFormat);
-                csvPrinter.printRecord("k","b","delta","grade");
-                for (int k = 0; k < 1000; k++) {
-
-                }
-
-            }
-
-        }catch (Exception e){
-
-        }
-    }
 
     public void search(ArrayList<String> lang){
         master_of_puppets.search(lang);
         setChanged();
         notifyObservers("search_done");
+    }
+
+    public ArrayList<QuerySol> multiSearch(ArrayList<String> lang) {
+        String path =PropertiesFile.getProperty("queries.file.path");
+        ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(path);
+        master_of_puppets.multiSearch(path, querySols, lang);
+        return querySols;
     }
 }

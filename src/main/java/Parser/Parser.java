@@ -43,7 +43,12 @@ public class Parser {
      */
     private static HashSet<String> initStopWords() {
 //        String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
-        String filesPath = PropertiesFile.getProperty("data.set.path") + "\\stop_words.txt";
+        String filesPath;
+        try {
+            filesPath = PropertiesFile.getProperty("data.set.path") + "\\stop_words.txt";
+        } catch (Exception e){
+            filesPath = "src\\main\\resources\\stop_words.txt";
+        }
         stopWords = new HashSet<>();
         Scanner s = null;
         try {

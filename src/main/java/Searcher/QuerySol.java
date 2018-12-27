@@ -2,6 +2,7 @@ package Searcher;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -20,8 +21,11 @@ public class QuerySol {
         desc = q[2];
         narr = q[3];
         if (postingPointer == 0)
-            try {postingPointer = Integer.parseInt(q[4], 36);}
-        catch (Exception e) {QueryDic.getPointer();}
+            try {
+                postingPointer = Integer.parseInt(q[4], 36);
+            } catch (Exception e) {
+                QueryDic.getPointer();
+            }
         sols = new ArrayList<>();
     }
 
@@ -32,6 +36,7 @@ public class QuerySol {
 
     /**
      * do not use the original list
+     *
      * @return docnums
      */
     public ArrayList<String> getSols() {
@@ -79,13 +84,28 @@ public class QuerySol {
     }
 
     public void addPosting(String readLine) {
-        if (!substringBefore(readLine,",").equals(qNum))
+        if (!substringBefore(readLine, ",").equals(qNum))
             return;
-        String [] docnums = split(substringAfter(readLine,","),"|");
+        String[] docnums = split(substringAfter(readLine, ","), "|");
+
         for (int i = 0; i < docnums.length; i++) {
-            if (!sols.contains(docnums[i])){
+            if (!sols.contains(docnums[i])) {
                 sols.add(docnums[i]);
             }
         }
+    }
+
+    public void filterSols(Set<String> docs) {
+        ArrayList<String> newSols = new ArrayList<>();
+        for (String s : sols) {
+            if (docs.contains(s)) {
+                newSols.add(s);
+            }
+        }
+        sols = newSols;
+    }
+
+    public void filterSolsNum(int i) {
+        while (sols.size()>i) sols.remove(0);
     }
 }
