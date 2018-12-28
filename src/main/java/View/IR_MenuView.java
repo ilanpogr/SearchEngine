@@ -2,6 +2,7 @@ package View;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 import java.util.Observable;
@@ -23,11 +24,13 @@ public class IR_MenuView extends Observable {
     public Button browse_btn;
     public Button reset_btn;
     public ProgressBar progressbar;
-    public ComboBox docs_language;
     public Button read_dict_btn;
     public CheckBox entities_checkBox;
     public CheckBox semantic_checkBox;
-    public ComboBox docs_language_selection;
+    public ImageView search_btn;
+    public Button browse_queries_btn;
+    public Button cities_btn;
+    public ComboBox docs_language;
 
     /**
      * when start button is clicked
@@ -110,5 +113,10 @@ public class IR_MenuView extends Observable {
     public void setSemantic(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("semantic");
+    }
+
+    public void chooseCities(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("cities");
     }
 }

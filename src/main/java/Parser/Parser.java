@@ -1110,5 +1110,9 @@ public class Parser {
             termsDict.put(token[0], token[1]);
         }
     }
+
+    public static void main(String[] args) {
+        Parser p = new Parser();
+    }
 }
 

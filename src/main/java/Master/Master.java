@@ -362,4 +362,9 @@ public class Master {
     public void search(List<String> lang) {
         // todo - implement
     }
+
+    public HashSet<String> getCitiesSet() {
+        // todo - implement
+        return null;
+    }
 }

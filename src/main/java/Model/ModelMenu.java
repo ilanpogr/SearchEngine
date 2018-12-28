@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 
@@ -132,5 +133,9 @@ public class ModelMenu extends Observable {
         master_of_puppets.search(lang);
         setChanged();
         notifyObservers("search_done");
+    }
+
+    public HashSet<String> getCitiesSet() {
+        return master_of_puppets.getCitiesSet();
     }
 }
