@@ -252,8 +252,8 @@ public class Master {
         doc.setLength(length);
         stringBuilder.setLength(0);
         stringBuilder.append(maxTf).append(",").append(length).append(",").append(doc.getFileName());
+        stringBuilder.append(",").append(doc.appendPersonas());
         if (doc.hasCity()) stringBuilder.append(",*").append(doc.getCity());
-//        stringBuilder.append(doc.appendPersonas());
         docDic.put(currDocName, stringBuilder.toString());
         map.clear();
     }
@@ -468,9 +468,4 @@ public class Master {
     public ArrayList<String> getCitiesList() {
         return new ArrayList<>(cityTags.keySet());
     }
-
-//    public boolean loadSolution (String path){
-//        ReadFile.loadSolution(path);
-//        return false;
-//    }
 }

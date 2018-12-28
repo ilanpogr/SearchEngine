@@ -3,6 +3,7 @@ package TextContainers;
 import Controller.PropertiesFile;
 import Indexer.Indexer;
 import Indexer.WrieFile;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.ibex.nestedvm.util.Seekable;
 
@@ -25,9 +26,7 @@ public class Doc {
     private boolean hasCity = false;
     private String language;
     private HashMap<String, String> attributes;
-    private TreeMap<Integer, String> entities;
-//    private String [] personasNames;
-//    private int [] personalsFreqs;
+    private PriorityQueue<ImmutablePair<String, Integer>> entities;
 
 
     /**
@@ -37,9 +36,7 @@ public class Doc {
         this.attributes = new HashMap<>();
         max_tf = -1;
         length = 0;
-        entities = new TreeMap<>(Integer::compareTo);
-//        personasNames = new String[numberOfPersonalNames];
-//        personalsFreqs = new int[numberOfPersonalNames];
+        entities = new PriorityQueue<>(Comparator.comparingInt(o -> o.right));
     }
 
     /**
@@ -182,20 +179,11 @@ public class Doc {
      * @param freq    - frequency
      */
     public void addEntity(String termKey, int freq) {
-        if (!LanguagesInfo.getInstance().contains(termKey) && CityInfo.getInstance().getValueFromCitiesDictionary(termKey) == null) {
-            if (entities.size() < numberOfPersonalNames) entities.put(freq, termKey);
-            if (entities.firstKey() < freq) {
-                entities.pollFirstEntry();
-                entities.put(freq, termKey);
-            }
+        if (entities.size() < numberOfPersonalNames) entities.add(new ImmutablePair<>(termKey, freq));
+        if (!entities.isEmpty() && entities.peek().right < freq) {
+            entities.poll();
+            entities.add(new ImmutablePair<>(termKey, freq));
         }
-//        for (int i = 0; i < numberOfPersonalNames; i++) {
-//            if (personalsFreqs[i]==0 || personalsFreqs[i]<freq){
-//                personasNames[i]=termKey;
-//                personalsFreqs[i]=freq;
-//                return;
-//            }
-//        }
     }
 
     /**
@@ -207,12 +195,9 @@ public class Doc {
      */
     public String appendPersonas(StringBuilder stringBuilder) {
         while (entities.size() > 0) {
-            Map.Entry<Integer, String> toPrint = entities.pollLastEntry();
-            stringBuilder.append(toPrint.getValue()).append(seperator).append(toPrint.getKey()).append("\n");
+            ImmutablePair<String, Integer> toPrint = entities.poll();
+            stringBuilder.append(toPrint.getValue()).append(seperator).append(toPrint.left).append(seperator).append(toPrint.right).append("\n");
         }
-//        for (int i = 0; i < numberOfPersonalNames && personalsFreqs[i]!=0; i++) {
-//            stringBuilder.append(personasNames[i]).append(seperator).append(personalsFreqs[i]).append("\n");
-//        }
         return Integer.toString(stringBuilder.toString().getBytes().length + indexer.appendToFile(stringBuilder, "Entities") + 1, 36);
     }
 
@@ -225,11 +210,11 @@ public class Doc {
         int i = 0;
         for (Map.Entry<String, String> entry : attributes.entrySet()) {
             String tag = entry.getKey();
-            if (tag.equalsIgnoreCase("DOCNO") ||tag.equalsIgnoreCase("DOCID")|| !isAlphanumeric(tag)) continue;
+            if (tag.equalsIgnoreCase("DOCNO") || tag.equalsIgnoreCase("DOCID") || !isAlphanumeric(tag)) continue;
             String val = entry.getValue();
             stringBuilder.append(val).append(" ");
         }
-        if (city!=null)stringBuilder.append(city);
+        if (city != null) stringBuilder.append(city);
         return new String[]{stringBuilder.toString()};
     }
 }

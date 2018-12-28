@@ -25,18 +25,15 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.ibex.nestedvm.util.Seekable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.concurrent.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.commons.lang3.StringUtils.substring;
@@ -208,6 +205,7 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("target")) {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("save")) {
+
             } else if (arg.equals("reset")) {
                 ir_modelMenu.reset();
             } else if (arg.equals("show")) {
@@ -439,9 +437,8 @@ public class ControllerMenu implements Observer {
         stage.show();
     }
 
-    private void testBM25() {
+    private void testBM25(String directory) {
         try {
-            String directory = "C:\\Ilan\\4";
             ArrayList<String> queries = new ArrayList<>();
             ArrayList<String> queryNums = new ArrayList<>();
             File file = new File(directory + "\\queries.txt");
