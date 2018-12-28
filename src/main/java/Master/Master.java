@@ -12,6 +12,7 @@ import TextContainers.Doc;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
+import java.io.RandomAccessFile;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -29,8 +30,9 @@ public class Master {
     private static TreeMap<String, String> docDic = new TreeMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
     private static TreeMap<String, String> termDictionary = new TreeMap<>(String::compareToIgnoreCase);
-    private static TreeMap <String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
+    private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
+    private static TreeMap<String, StringBuilder> cityTags = new TreeMap<>(String::compareToIgnoreCase);
     private static ArrayList<Doc> filesList;
     private static boolean isStemMode = setStemMode();
     private static double avrageDocLength = 0;
@@ -84,6 +86,7 @@ public class Master {
 
     /**
      * set the status of external class
+     *
      * @param indexStatus - the status from the indexer
      */
     public static void setCurrentStatus(double indexStatus) {
@@ -121,7 +124,7 @@ public class Master {
         for (Map.Entry<String, String> term : parsed.entrySet()) {
             String word = term.getKey();
             freq = getFrequencyFromPosting(term);
-            queryDic.put(word,freq);
+            queryDic.put(word, freq);
         }
         return queryDic;
     }
@@ -192,6 +195,7 @@ public class Master {
 
     /**
      * takes a term from a map and returns the frequency of it by the positions in the value
+     *
      * @param term - the counted term from the map
      * @return the number of times the term appears
      */
@@ -214,7 +218,7 @@ public class Master {
      */
     private static void mergeDicts(HashMap<String, String> map) {
         int maxTf = 0, length = 0, docNum = 0;
-        Doc doc =  filesList.get(docNum++);
+        Doc doc = filesList.get(docNum++);
         for (Map.Entry<String, String> term : map.entrySet()
         ) {
             stringBuilder.setLength(0);
@@ -238,7 +242,8 @@ public class Master {
 
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
-//            if (isUpperCase && termKey.length()>2 && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890")) doc.addEntity(termKey,termFrequency);
+            if (isUpperCase && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890"))
+                doc.addEntity(termKey, termFrequency);
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
@@ -246,7 +251,8 @@ public class Master {
         doc.setMax_tf(maxTf);
         doc.setLength(length);
         stringBuilder.setLength(0);
-        stringBuilder.append(maxTf).append(",").append(length).append(",").append(doc.getFileName())/*.append(",")*/;
+        stringBuilder.append(maxTf).append(",").append(length).append(",").append(doc.getFileName());
+        if (doc.hasCity()) stringBuilder.append(",*").append(doc.getCity());
 //        stringBuilder.append(doc.appendPersonas());
         docDic.put(currDocName, stringBuilder.toString());
         map.clear();
@@ -354,27 +360,92 @@ public class Master {
         termDictionary = treeMaps.remove('1');
         cache = treeMaps.remove('2');
         docDic = treeMaps.remove('3');
+        getCitiesFromDocDic();
         //todo-read cities dictionary
         setAvrageDocLength();
 
         /** for simulations!           delete after  **/
-                new Treceval_cmd().setDics(termDictionary,cache,docDic);
+        new Treceval_cmd().setDics(termDictionary, cache, docDic);
         /** for simulations!           delete after  **/
 
 
         return (termDictionary != null && cache != null && docDic != null);
     }
 
-    public void search(ArrayList<String> lang) {
+    private static void getCitiesFromDocDic() {
+        for (Map.Entry<String, String> entry : docDic.entrySet()) {
+            String doc = entry.getKey();
+            String post = entry.getValue();
+            String city = substringAfterLast(post, ",*");
+            if (isEmpty(city)) {
+                if (cityTags.containsKey(city)) {
+                    cityTags.get(city).append(doc).append("|");
+                } else {
+                    cityTags.put(city, new StringBuilder(doc));
+                }
+            }
+        }
+    }
+
+
+    public void freeLangSearch(ArrayList<String> cities) {
         Searcher searcher = new Searcher();
-        ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(PropertiesFile.getProperty("queries.file.path"));
+
 
         // todo - implement
     }
 
-    public void multiSearch(String path, ArrayList<QuerySol> querySols, ArrayList<String> lang) {
+    public void multiSearch(String path, ArrayList<QuerySol> querySols, ArrayList<String> cities) {
         Searcher searcher = new Searcher();
-        searcher.multiSearch(path,  querySols, termDictionary, cache, docDic, lang, false);
+        if (cities.size() > 0) {
+            searcher.multiSearch(path, querySols, termDictionary, cache, createFilteredDocDic(cities), cities, false);
+        } else {
+            searcher.multiSearch(path, querySols, termDictionary, cache, docDic, cities, false);
+        }
+    }
+
+    private TreeMap<String, String> createFilteredDocDic(ArrayList<String> cities) {
+        TreeMap<String, String> tmpDocDic = new TreeMap<>(String::compareToIgnoreCase);
+        String skip = "";
+        for (int i = 0; i < cities.size(); i++) {
+            String city = cities.get(i);
+            StringBuilder docList = cityTags.getOrDefault(city, new StringBuilder());
+            if (docList.length() > 0) {
+                String posting = termDictionary.get(city);
+                if (posting != null) {
+                    posting = substringAfterLast(posting, ",");
+                    if (posting.equalsIgnoreCase("*")) {
+                        skip = appendDocsOfCities(split(cache.get(city), "|"), docList);
+                    } else {
+                        skip = appendDocsOfCities(split(ReadFile.getTermLine(new StringBuilder(PropertiesFile.getProperty("save.files.path")),city,posting), "|"),docList);
+                    }
+                    skip = appendDocsOfCities(split(ReadFile.getTermLine(new StringBuilder(PropertiesFile.getProperty("save.files.path")),city,skip), "|"),docList);
+                }
+                String [] docsWithCity = split(docList.toString(),"|");
+                for (int j = 0; j < docsWithCity.length; j++) {
+                    tmpDocDic.putIfAbsent(docsWithCity[j],docDic.get(docsWithCity[j]));
+                }
+            }
+        }
+        return tmpDocDic;
+    }
+
+    /**
+     * appends to a string builder the docNums which contains the cities given to
+     * the calling function
+     * @param citiesFromPost - String array which the values in even places are docNums
+     * @param docList - StringBuilder to append to.
+     * @return the pointer to the posting line in the file (or "" if empty)
+     */
+    private String appendDocsOfCities(String[] citiesFromPost, StringBuilder docList) {
+        for (int j = 0; j < citiesFromPost.length; j += 2) {
+            docList.append(citiesFromPost[j]).append("|");
+        }
+        return substringAfterLast(citiesFromPost[citiesFromPost.length - 1], ",");
+    }
+
+    public ArrayList<String> getCitiesSet() {
+        return new ArrayList<>(cityTags.keySet());
     }
 
 //    public boolean loadSolution (String path){

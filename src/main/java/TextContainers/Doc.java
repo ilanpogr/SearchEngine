@@ -25,7 +25,7 @@ public class Doc {
     private boolean hasCity = false;
     private String language;
     private HashMap<String, String> attributes;
-    private TreeMap<Integer,String> entities;
+    private TreeMap<Integer, String> entities;
 //    private String [] personasNames;
 //    private int [] personalsFreqs;
 
@@ -114,7 +114,7 @@ public class Doc {
     }
 
     public void setLength(int length) {
-        if (this.length==0) this.length=length;
+        if (this.length == 0) this.length = length;
     }
 
     public void setMax_tf(int max_tf) {
@@ -177,11 +177,12 @@ public class Doc {
 
     /**
      * add an Entity to the list
+     *
      * @param termKey - name
-     * @param freq - frequency
+     * @param freq    - frequency
      */
     public void addEntity(String termKey, int freq) {
-        if (!LanguagesInfo.getInstance().contains(termKey) && CityInfo.getInstance().getValueFromCitiesDictionary(termKey)==null) {
+        if (!LanguagesInfo.getInstance().contains(termKey) && CityInfo.getInstance().getValueFromCitiesDictionary(termKey) == null) {
             if (entities.size() < numberOfPersonalNames) entities.put(freq, termKey);
             if (entities.firstKey() < freq) {
                 entities.pollFirstEntry();
@@ -200,21 +201,22 @@ public class Doc {
     /**
      * appends the entities to a given string builder
      * and writes the entities into a file
+     *
      * @param stringBuilder - will append the entities as |<Entity>|<Frequency>|*
      * @return String that represents the pointer to the entity file in the Entities Dictionary (number in radix 36)
      */
     public String appendPersonas(StringBuilder stringBuilder) {
-        while (entities.size()>0){
-            Map.Entry<Integer,String> toPrint =entities.pollLastEntry();
+        while (entities.size() > 0) {
+            Map.Entry<Integer, String> toPrint = entities.pollLastEntry();
             stringBuilder.append(toPrint.getValue()).append(seperator).append(toPrint.getKey()).append("\n");
         }
 //        for (int i = 0; i < numberOfPersonalNames && personalsFreqs[i]!=0; i++) {
 //            stringBuilder.append(personasNames[i]).append(seperator).append(personalsFreqs[i]).append("\n");
 //        }
-        return Integer.toString(stringBuilder.toString().getBytes().length+ indexer.appendToFile(stringBuilder,"Entities")+1,36);
+        return Integer.toString(stringBuilder.toString().getBytes().length + indexer.appendToFile(stringBuilder, "Entities") + 1, 36);
     }
 
-    public String appendPersonas(){
+    public String appendPersonas() {
         return appendPersonas(new StringBuilder());
     }
 
@@ -223,10 +225,11 @@ public class Doc {
         int i = 0;
         for (Map.Entry<String, String> entry : attributes.entrySet()) {
             String tag = entry.getKey();
-            if (tag.equalsIgnoreCase("DOCNO") || tag.length()<3 || !isAlphanumeric(tag)) continue;
+            if (tag.equalsIgnoreCase("DOCNO") ||tag.equalsIgnoreCase("DOCID")|| !isAlphanumeric(tag)) continue;
             String val = entry.getValue();
-            stringBuilder.append(tag).append(" ").append(val).append(" ");
+            stringBuilder.append(val).append(" ");
         }
-        return new String[] {stringBuilder.toString()};
+        if (city!=null)stringBuilder.append(city);
+        return new String[]{stringBuilder.toString()};
     }
 }

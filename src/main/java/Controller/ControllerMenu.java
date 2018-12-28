@@ -202,7 +202,7 @@ public class ControllerMenu implements Observer {
                 thread.setDaemon(true);
                 thread.start();
             } else if (arg.equals("browse")) {
-//                loadPathFromDirectoryChooser(0);
+                loadPathFromDirectoryChooser(0);
             } else if (arg.equals("save")) {
                 loadPathFromDirectoryChooser(1);
             } else if (arg.equals("reset")) {
@@ -214,7 +214,7 @@ public class ControllerMenu implements Observer {
                 readDictionary();
 //                testBM25();
                 ir_menuView.summary_lbl.setVisible(false);
-            } else if (arg.equals("search")){
+            } else if (arg.equals("freeLangSearch")){
                 ArrayList<String> languages = new ArrayList<>();
                 // todo - implement
                 ir_modelMenu.search(languages);

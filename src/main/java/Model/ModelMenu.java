@@ -6,16 +6,12 @@ import Searcher.QueryDic;
 import Searcher.QuerySol;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.csv.QuoteMode;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Observable;
 
 /**
@@ -28,7 +24,6 @@ public class ModelMenu extends Observable {
 
     /**
      * get the number of terms in corpus
-     *
      * @return integer
      */
     public int getNumOfTerms() {
@@ -37,7 +32,6 @@ public class ModelMenu extends Observable {
 
     /**
      * get the number of documents in corpus
-     *
      * @return integer
      */
     public int getDocCount() {
@@ -56,7 +50,6 @@ public class ModelMenu extends Observable {
 
     /**
      * Removes all files created by this program (depends on stem mode)
-     *
      * @return true if removed
      */
     private boolean removeAllFiles() {
@@ -72,7 +65,6 @@ public class ModelMenu extends Observable {
 
     /**
      * get path for the Dictionaries directory (depends on stem mode)
-     *
      * @return the new path
      */
     public String getDicsPath() {
@@ -82,11 +74,10 @@ public class ModelMenu extends Observable {
 
     /**
      * getter for Model Progress property
-     *
      * @return DoubleProperty
      */
     public DoubleProperty getProgress() {
-        if (progress == null) {
+        if (progress==null){
             progress = new SimpleDoubleProperty(0);
         }
         return progress;
@@ -111,7 +102,7 @@ public class ModelMenu extends Observable {
 
 
     public void search(ArrayList<String> lang) {
-        master_of_puppets.search(lang);
+        master_of_puppets.freeLangSearch(lang);
         setChanged();
         notifyObservers("search_done");
     }
@@ -135,5 +126,9 @@ public class ModelMenu extends Observable {
             bufferedWriter.close();
         } catch (Exception e) {
         }
+    }
+
+    public HashSet<String> getCitiesSet() {
+        return master_of_puppets.getCitiesSet();
     }
 }

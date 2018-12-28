@@ -99,7 +99,7 @@ public class IR_MenuView extends Observable {
 
     public void search(MouseEvent mouseEvent) {
         setChanged();
-        notifyObservers("search");
+        notifyObservers("freeLangSearch");
     }
 
     public void setEntitiesMode(ActionEvent actionEvent) {

@@ -128,8 +128,7 @@ public class Parser {
         String[] s = split(str[0], " ");
         boolean expressionFlag;
         stopWordsCounter = 0;
-        if (stopWords==null)
-            stopWords = initStopWords();
+        if (stopWords==null) stopWords = initStopWords();
         for (int i = 0, lastIndex = s.length - 1; i <= lastIndex; i++) {
             currentPosition = i+1 - stopWordsCounter;
             expressionFlag = false;
