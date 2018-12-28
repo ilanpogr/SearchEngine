@@ -166,7 +166,7 @@ public class Indexer {
                     if (city!=null){
                         toPrint.delete(minTerm.length()+1,toPrint.length());
                         toPrint.append(city.getCountryName()).append(",").append(city.getCurrency()).append(",").append(city.getPopulation()).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");
-                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("4. Cities Dictionary"), toPrint.toString());
+                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities Dictionary"), toPrint.toString());
                     }
                     String post = stringBuilder.append("\n").toString();
                     WrieFile.addLineToFile(mergedFilesDic, mergedFileName, post);
@@ -178,7 +178,7 @@ public class Indexer {
                     if (city!=null){
                         toPrint.delete(minTerm.length()+1,toPrint.length());
                         toPrint.append(city.getCountryName()).append(",").append(city.getCurrency()).append(",").append(city.getPopulation()).append(",").append(cachePointer).append("\n");
-                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("4. Cities Dictionary"), toPrint.toString());
+                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities Dictionary"), toPrint.toString());
                     }
                     toPrint = new StringBuilder(cacheSplitedPost[0].length()+64);
                     toPrint.append(minTerm).append(termSeperator).append(cacheSplitedPost[0]).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");

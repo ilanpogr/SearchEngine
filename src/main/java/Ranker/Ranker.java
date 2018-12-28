@@ -38,7 +38,6 @@ public class Ranker {
      * Main Function.
      * Give Ranks to each Document with a given query
      *
-     * @param postingPath - the path to the Posting files Dir
      * @param termDic     - Term Dictionary
      * @param cache       - cache Dictionary
      * @param docDic      - document Dictionary
@@ -47,11 +46,11 @@ public class Ranker {
      * key - DocNum (name)
      * value - the Rank of the Document (double)
      */
-    public TreeMap<Double, String> rank(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query, int solSize) {
+    public TreeMap<Double, String> rank(TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query, int solSize) {
         docsRank = new TreeMap<>();
         relationDic = new TreeMap<>();
         orderedPosting = new TreeMap<>();
-        reArrangePostingForQuery(postingPath, termDic, cache, docDic, query);
+        reArrangePostingForQuery(termDic, cache, docDic, query);
         arrangeDictionaryForCalculations();
         calculateBM25(termDic, docDic);
         return getBestDocs(solSize);
@@ -63,13 +62,12 @@ public class Ranker {
      * and work faster with the postings of each term.
      * Read the report for further information.
      *
-     * @param postingPath - the path to the Posting files Dir
      * @param termDic     - Term Dictionary
      * @param cache       - cache Dictionary
      * @param docDic      - document Dictionary
      * @param query       - query Dictionary
      */
-    private void reArrangePostingForQuery(String postingPath, TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
+    private void reArrangePostingForQuery(TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
         for (Map.Entry<String, Integer> entry : query.entrySet()) {
             StringBuilder fromPosting = new StringBuilder(256);
             String word = entry.getKey();
@@ -81,9 +79,9 @@ public class Ranker {
             if (endsWith(termVal, "*")) { //it's in cache
                 termVal = substringBeforeLast(termVal, ",");
                 String[] postPoint = split(cache.get(word), ",");
-                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(postingPath,"\\")), word, postPoint[1]));
+                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"),"\\")), word, postPoint[1]));
             } else {
-                fromPosting.append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(postingPath,"\\")), word, substringAfterLast(termVal, ",")));
+                fromPosting.append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"),"\\")), word, substringAfterLast(termVal, ",")));
             }
             fromPosting.trimToSize();
             if (fromPosting.length() != 0) {

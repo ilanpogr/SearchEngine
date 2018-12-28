@@ -1,17 +1,14 @@
 package Model;
 
 import Controller.PropertiesFile;
+import Indexer.WrieFile;
 import Master.Master;
 import Searcher.QueryDic;
 import Searcher.QuerySol;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Observable;
 
 /**
@@ -24,6 +21,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get the number of terms in corpus
+     *
      * @return integer
      */
     public int getNumOfTerms() {
@@ -32,6 +30,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get the number of documents in corpus
+     *
      * @return integer
      */
     public int getDocCount() {
@@ -50,6 +49,7 @@ public class ModelMenu extends Observable {
 
     /**
      * Removes all files created by this program (depends on stem mode)
+     *
      * @return true if removed
      */
     private boolean removeAllFiles() {
@@ -65,6 +65,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get path for the Dictionaries directory (depends on stem mode)
+     *
      * @return the new path
      */
     public String getDicsPath() {
@@ -74,10 +75,11 @@ public class ModelMenu extends Observable {
 
     /**
      * getter for Model Progress property
+     *
      * @return DoubleProperty
      */
     public DoubleProperty getProgress() {
-        if (progress==null){
+        if (progress == null) {
             progress = new SimpleDoubleProperty(0);
         }
         return progress;
@@ -101,34 +103,28 @@ public class ModelMenu extends Observable {
     }
 
 
-    public void search(ArrayList<String> lang) {
-        master_of_puppets.freeLangSearch(lang);
+    public ArrayList<QuerySol> search(String query, ArrayList<String> lang) {
         setChanged();
         notifyObservers("search_done");
+        ArrayList<QuerySol> querySols = new ArrayList<>();
+        StringBuilder q = new StringBuilder("000|");
+        q.append(query).append("|s|s|");
+        querySols.add(new QuerySol(q.toString()));
+        master_of_puppets.freeLangSearch(querySols,lang);
+        return querySols;
     }
 
     public ArrayList<QuerySol> multiSearch(ArrayList<String> lang) {
         String path = PropertiesFile.getProperty("queries.file.path");
         ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(path);
-        master_of_puppets.multiSearch(path, querySols, lang);
-        printSolution(querySols);
+        master_of_puppets.multiSearch(querySols, lang);
+        WrieFile.writeQueryResults(querySols, file.getParent(), "results.txt");
         return querySols;
     }
 
-    private void printSolution(ArrayList<QuerySol> querySols) {
-        try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(PropertiesFile.getProperty("save.files.path")+"\\results.txt"), true));
-            for (QuerySol query : querySols) {
-                for (String docnum : query.getSols())
-                bufferedWriter.write(query.getqNum() + " 0 " + docnum + " 1 0 si\n");
-            }
-            bufferedWriter.flush();
-            bufferedWriter.close();
-        } catch (Exception e) {
-        }
-    }
 
-    public HashSet<String> getCitiesSet() {
-        return master_of_puppets.getCitiesSet();
+
+    public ArrayList<String> getCitiesList() {
+        return master_of_puppets.getCitiesList();
     }
 }

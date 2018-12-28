@@ -1,15 +1,13 @@
 package Indexer;
 
 import Controller.PropertiesFile;
-import org.apache.commons.io.FileUtils;
+import Searcher.QuerySol;
 
 import static org.apache.commons.io.FileUtils.*;
+import static org.apache.commons.lang3.StringUtils.*;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -92,12 +90,36 @@ public class WrieFile {
         fileNum = new AtomicInteger(0);
     }
 
-    public void writeQueryResults(String path) {
+    /**
+     * gets a new file from a given path, if file already exists, will create another one
+     * @param targetPath - the path to the location of the written file
+     * @param fileName - the name of the file (will add numbers)
+     * @return the created file
+     */
+    public static File getTmpFile(String targetPath,String fileName) {
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path, true));
+            if (!isEmpty(fileName)) targetPath+="\\"+fileName;
+            File file = new File(targetPath);
+            int i = 1;
+            while (file.exists() && file.isFile()) {
+                file = new File(substringBeforeLast(targetPath, ".") + "(" + (i++) + ")." + substringAfterLast(targetPath, "."));
+            }
+            return file;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static void writeQueryResults(ArrayList<QuerySol> querySols, String parent, String fileName) {
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(PropertiesFile.getProperty("save.files.path"), fileName), true));
+            for (QuerySol query : querySols) {
+                for (String docNum : query.getSols())
+                    bufferedWriter.write(query.getqNum() + " 0 " + docNum + " 1 0 yay\n");
+            }
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        } catch (Exception e) {
         }
     }
 }

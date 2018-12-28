@@ -51,7 +51,12 @@ public class IR_MenuView extends Observable {
      * when Save button is clicked
      * @param actionEvent - Save button is clicked
      */
-    public void savePostingFile_DictionaryFile(ActionEvent actionEvent) {
+    public void savePostingFilePath_DictionaryFilePath(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("target");
+    }
+
+    public void saveResults(ActionEvent actionEvent){
         setChanged();
         notifyObservers("save");
     }

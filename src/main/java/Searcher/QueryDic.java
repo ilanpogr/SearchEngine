@@ -1,5 +1,6 @@
 package Searcher;
 
+import Indexer.WrieFile;
 import com.sun.corba.se.impl.orbutil.ObjectWriter;
 import org.ibex.nestedvm.util.Seekable;
 
@@ -133,7 +134,7 @@ public class QueryDic {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(queriesPath));
             BufferedWriter bufferedWriter = null;
             if (!isEmpty(targetPath))
-                bufferedWriter = new BufferedWriter(new FileWriter(getTmpFile(targetPath), true));
+                bufferedWriter = new BufferedWriter(new FileWriter(WrieFile.getTmpFile(targetPath,""), true));
             String line = bufferedReader.readLine().trim();
             StringBuilder stringBuilder = new StringBuilder();
 //            String query = "";
@@ -191,7 +192,7 @@ public class QueryDic {
     public static void saveSolutions(String solutionsPath, String targetPath) {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(solutionsPath));
-            File file = getTmpFile(targetPath);
+            File file = WrieFile.getTmpFile(targetPath,"");
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
             String line = bufferedReader.readLine().trim();
             String num = substringBefore(line, " ");
@@ -231,7 +232,7 @@ public class QueryDic {
             pointer = 0;
             BufferedReader qr = new BufferedReader(new FileReader(queriesPath));
             BufferedReader sr = new BufferedReader(new FileReader(solutionsPath));
-            File file = getTmpFile(queriesPath);
+            File file = WrieFile.getTmpFile(queriesPath,"");
             BufferedWriter qw = new BufferedWriter(new FileWriter(file, true));
             String lineQ = qr.readLine().trim();
             String lineS = sr.readLine().trim();
@@ -261,20 +262,6 @@ public class QueryDic {
 
         }
     }
-
-    private static File getTmpFile(String targetPath) {
-        try {
-            File file = new File(targetPath);
-            int i = 1;
-            while (file.exists() && file.isFile()) {
-                file = new File(substringBeforeLast(targetPath, ".") + "(" + (i++) + ")." + substringAfterLast(targetPath, "."));
-            }
-            return file;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
 
     private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line) throws IOException {
         line = trim(line);

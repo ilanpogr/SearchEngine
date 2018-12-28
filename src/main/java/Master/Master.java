@@ -360,9 +360,8 @@ public class Master {
         termDictionary = treeMaps.remove('1');
         cache = treeMaps.remove('2');
         docDic = treeMaps.remove('3');
-        getCitiesFromDocDic();
-        //todo-read cities dictionary
         setAvrageDocLength();
+        getCitiesFromDocDic();
 
         /** for simulations!           delete after  **/
         new Treceval_cmd().setDics(termDictionary, cache, docDic);
@@ -372,6 +371,10 @@ public class Master {
         return (termDictionary != null && cache != null && docDic != null);
     }
 
+    /**
+     * creates the dictionary "cityTags" where the key is a city name and the value is a StringBuilder
+     * which describes a list of Documents.
+     */
     private static void getCitiesFromDocDic() {
         for (Map.Entry<String, String> entry : docDic.entrySet()) {
             String doc = entry.getKey();
@@ -388,22 +391,34 @@ public class Master {
     }
 
 
-    public void freeLangSearch(ArrayList<String> cities) {
+    public void freeLangSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {
         Searcher searcher = new Searcher();
 
 
         // todo - implement
     }
 
-    public void multiSearch(String path, ArrayList<QuerySol> querySols, ArrayList<String> cities) {
+    /**
+     * Search multiple queries (in the format as given in the Report)
+     * @param querySols - list of solved queries
+     * @param cities - list of cities to filter the documents by
+     */
+    public void multiSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {
         Searcher searcher = new Searcher();
         if (cities.size() > 0) {
-            searcher.multiSearch(path, querySols, termDictionary, cache, createFilteredDocDic(cities), cities, false);
+            searcher.multiSearch( querySols, termDictionary, cache, createFilteredDocDic(cities), cities, false);
         } else {
-            searcher.multiSearch(path, querySols, termDictionary, cache, docDic, cities, false);
+            searcher.multiSearch( querySols, termDictionary, cache, docDic, cities, false);
         }
     }
 
+    /**
+     * creates a mini Documents Dictionary.
+     * meaning: all the Documents which contain either one of the given cities will be added to the
+     *          mini Dictionary.
+     * @param cities - a list of cities we want to filter by
+     * @return mini Document Dictionary
+     */
     private TreeMap<String, String> createFilteredDocDic(ArrayList<String> cities) {
         TreeMap<String, String> tmpDocDic = new TreeMap<>(String::compareToIgnoreCase);
         String skip = "";
@@ -417,13 +432,14 @@ public class Master {
                     if (posting.equalsIgnoreCase("*")) {
                         skip = appendDocsOfCities(split(cache.get(city), "|"), docList);
                     } else {
-                        skip = appendDocsOfCities(split(ReadFile.getTermLine(new StringBuilder(PropertiesFile.getProperty("save.files.path")),city,posting), "|"),docList);
+                        skip = appendDocsOfCities(split(ReadFile.getTermLine(new StringBuilder(PropertiesFile.getProperty("save.files.path")), city, posting), "|"), docList);
                     }
-                    skip = appendDocsOfCities(split(ReadFile.getTermLine(new StringBuilder(PropertiesFile.getProperty("save.files.path")),city,skip), "|"),docList);
+                    while (!isEmpty(skip))
+                        skip = appendDocsOfCities(split(ReadFile.getTermLine(new StringBuilder(PropertiesFile.getProperty("save.files.path")), city, skip), "|"), docList);
                 }
-                String [] docsWithCity = split(docList.toString(),"|");
+                String[] docsWithCity = split(docList.toString(), "|");
                 for (int j = 0; j < docsWithCity.length; j++) {
-                    tmpDocDic.putIfAbsent(docsWithCity[j],docDic.get(docsWithCity[j]));
+                    tmpDocDic.putIfAbsent(docsWithCity[j], docDic.get(docsWithCity[j]));
                 }
             }
         }
@@ -433,8 +449,9 @@ public class Master {
     /**
      * appends to a string builder the docNums which contains the cities given to
      * the calling function
+     *
      * @param citiesFromPost - String array which the values in even places are docNums
-     * @param docList - StringBuilder to append to.
+     * @param docList        - StringBuilder to append to.
      * @return the pointer to the posting line in the file (or "" if empty)
      */
     private String appendDocsOfCities(String[] citiesFromPost, StringBuilder docList) {
@@ -444,7 +461,11 @@ public class Master {
         return substringAfterLast(citiesFromPost[citiesFromPost.length - 1], ",");
     }
 
-    public ArrayList<String> getCitiesSet() {
+    /**
+     *
+     * @return
+     */
+    public ArrayList<String> getCitiesList() {
         return new ArrayList<>(cityTags.keySet());
     }
 
