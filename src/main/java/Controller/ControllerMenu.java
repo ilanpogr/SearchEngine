@@ -6,11 +6,14 @@ import Searcher.QuerySol;
 import Tests.Treceval_cmd;
 import TextContainers.LanguagesInfo;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import View.IR_MenuView;
 
@@ -18,11 +21,15 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -58,6 +65,9 @@ public class ControllerMenu implements Observer {
 
     private boolean savePath = false;
     private boolean dataPath = false;
+
+    private ArrayList<String> selectedCities = new ArrayList<>();
+    private ArrayList<String> citiesList = null;
 
 
     /**
@@ -193,6 +203,8 @@ public class ControllerMenu implements Observer {
                 if (ir_menuView.stemmer_checkBox.isSelected()) {
                     PropertiesFile.putProperty("semantic.mode", "1");
                 } else PropertiesFile.putProperty("semantic.mode", "0");
+            } else if (arg.equals("cities")) {
+                dealWithCities();
             } else if (arg.equals("start")) {
                 this.update(o, "stem");
                 setSceneBeforeStart();
@@ -210,8 +222,8 @@ public class ControllerMenu implements Observer {
                 ir_modelMenu.reset();
             } else if (arg.equals("show")) {
                 //TODO - give the content to save
-                saveResults(null);
-//                showDictionary();
+//                saveResults(null);
+                showDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
                 readDictionary();
@@ -239,6 +251,39 @@ public class ControllerMenu implements Observer {
         }
     }
 
+    private void dealWithCities() {
+        selectedCities.clear();
+        ListView<String> listView = new ListView<>();
+        for (String city : this.citiesList) {
+            listView.getItems().add(city);
+        }
+        listView.setCellFactory(CheckBoxListCell.forListView(new Callback<String, ObservableValue<Boolean>>() {
+            @Override
+            public ObservableValue<Boolean> call(String item) {
+                BooleanProperty observable = new SimpleBooleanProperty();
+                observable.addListener((obs, wasSelected, isNowSelected) -> {
+                    if (isNowSelected)
+                        selectedCities.add(item);
+                    else
+                        selectedCities.remove(item);
+                });
+                return observable ;
+            }
+        }));
+        Stage citiesStage = new Stage();
+        Button confirm = new Button("Confirm");
+        BorderPane root = new BorderPane(listView,null,null,confirm,null);
+        Scene scene = new Scene(root, 250, 400);
+
+        confirm.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                citiesStage.close();
+            }
+        });
+        citiesStage.setScene(scene);
+        citiesStage.showAndWait();
+    }
+
     private void searchQueries() {
         ArrayList<String> cities = new ArrayList<>();
 //        loadQueriesFile();
@@ -262,6 +307,7 @@ public class ControllerMenu implements Observer {
             File file = new File(dicPath);
             if (file.isDirectory()) {
                 if (ir_modelMenu.readDictionaries(dicPath)) {
+                    this.citiesList = ir_modelMenu.getCitiesList();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Read Dictionaries");
                     alert.setHeaderText("Dictionaries are read and now available to use");

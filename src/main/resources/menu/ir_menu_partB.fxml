@@ -148,11 +148,11 @@
                                           <Insets left="20.0" top="10.0" />
                                        </HBox.margin>
                                     </CheckBox>
-                                    <ComboBox fx:id="docs_language_selection" minHeight="25.0" prefHeight="30.0" prefWidth="240.0" promptText="Please Choose Languages">
+                                     <Button fx:id="cities_btn" minHeight="25.0" prefHeight="30.0" prefWidth="240.0" text="Please Choose Specific Cities" onAction="#chooseCities">
                                        <HBox.margin>
                                           <Insets left="25.0" top="5.0" />
                                        </HBox.margin>
-                                    </ComboBox>
+                                    </Button>
                                  </children>
                               </HBox>
                            </children>

@@ -8,6 +8,7 @@ import Searcher.QuerySol;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Observable;
 
@@ -114,10 +115,10 @@ public class ModelMenu extends Observable {
         return querySols;
     }
 
-    public ArrayList<QuerySol> multiSearch(ArrayList<String> lang) {
-        String path = PropertiesFile.getProperty("queries.file.path");
-        ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(path);
-        master_of_puppets.multiSearch(querySols, lang);
+    public ArrayList<QuerySol> multiSearch(ArrayList<String> cities) {
+        File file = new File(PropertiesFile.getProperty("queries.file.path"));
+        ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(file.getAbsolutePath());
+        master_of_puppets.multiSearch(querySols, cities);
         WrieFile.writeQueryResults(querySols, file.getParent(), "results.txt");
         return querySols;
     }

@@ -30,7 +30,6 @@ public class Master {
     private static TreeMap<String, String> docDic = new TreeMap<>();
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
     private static TreeMap<String, String> termDictionary = new TreeMap<>(String::compareToIgnoreCase);
-    private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, StringBuilder> cityTags = new TreeMap<>(String::compareToIgnoreCase);
     private static ArrayList<Doc> filesList;

@@ -56,7 +56,7 @@ public class Treceval_cmd {
 //                HashMap<String, Integer> query = relevants.get(i);
 //                HashMap<String, Integer> anti_query = notRelevants.get(i);
                 HashMap<String, Integer> query = Master.makeQueryDic(queries.get(i));
-                TreeMap<Double, String> res = ranker.rank(directory, dict, cache, docs, query, 50);
+                TreeMap<Double, String> res = ranker.rank( dict, cache, docs, query, 50);
 //                TreeMap<Double, String> ares = ranker.rank(directory, dict, cache, docs, anti_query);
 
                 makeResultsFile(new ArrayList<>(res.values()), queryNums.get(i),"results.txt");
