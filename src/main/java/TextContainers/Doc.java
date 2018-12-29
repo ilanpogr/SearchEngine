@@ -4,8 +4,6 @@ import Controller.PropertiesFile;
 import Indexer.Indexer;
 import Indexer.WrieFile;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.ibex.nestedvm.util.Seekable;
 
 import java.util.*;
 

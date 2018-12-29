@@ -5,8 +5,6 @@ import Indexer.Indexer;
 import Master.Master;
 import TextContainers.*;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
-import org.ibex.nestedvm.util.Seekable;
 import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -43,6 +41,7 @@ public class ReadFile {
         this.unInstancedDocList = new ArrayList<>();
         this.docList = new ArrayList<>();
     }
+
 
     /**
      * Ctor

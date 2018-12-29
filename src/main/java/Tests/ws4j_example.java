@@ -6,6 +6,8 @@ import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.impl.*;
 import edu.cmu.lti.ws4j.util.WS4JConfiguration;
 
+import java.io.File;
+
 public class ws4j_example {
 
     /**

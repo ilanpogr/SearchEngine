@@ -2,6 +2,7 @@ package Searcher;
 
 import Indexer.WrieFile;
 import Ranker.Ranker;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.*;
 import java.util.*;
@@ -38,32 +39,45 @@ public class QueryDic {
      * 1 - the query is in the dictionary
      */
     public double queryEvaluator(QuerySol query) {
-        if (query.getEvaluationRank()==-1) setMostEvaluatedQuery(query);
+        if (query.getEvaluationRank() == -1) setMostEvaluatedQuery(query);
         return query.getEvaluationRank();
     }
 
     /**
      * get the QuerySol which is the highest ranked (to the given query)
+     *
      * @param query - the given query
      * @return a copy of the original QuerySol
      */
-    public QuerySol getEvaluatedQuerySol(QuerySol query){
+    public QuerySol getEvaluatedQuerySol(QuerySol query) {
         int qNum = query.getEvaluationOtherQueryNum();
-        if (qNum==-1) setMostEvaluatedQuery(query);
+        if (qNum == -1) setMostEvaluatedQuery(query);
         return new QuerySol(qmap.get(query.getEvaluationOtherQueryNum()));
     }
 
     /**
      * set the evaluation to a given query
+     *
      * @param query - the query that will be evaluated
      */
     private void setMostEvaluatedQuery(QuerySol query) {
-        if (inv_qmap.containsKey(query.getTitle())) {
-            QuerySol querySol = qmap.get(query.getqNumAsInt());
-            if (querySol.equals(query))
-                query.setEvaluation(querySol.getqNumAsInt(),1);
+//        if (inv_qmap.containsKey(query.getTitle())) {
+//            QuerySol querySol = qmap.get(query.getqNumAsInt());
+//            if (querySol.equals(query))
+//                query.setEvaluation(querySol.getqNumAsInt(),2);
+//        }
+        String[] wordsTmp = split(query.getTitle(), " ,.-");
+        TreeSet<String> antiDuplicator = new TreeSet<>(String::compareToIgnoreCase);
+        antiDuplicator.addAll(Arrays.asList(wordsTmp));
+        String[] words = new String[antiDuplicator.size()];
+        int d = 0;
+        for (String s : antiDuplicator) {
+            words[d] = s;
+            d++;
         }
-        String[] words = split(query.getTitle(), " ,.-");
+//            String[] words = split(query.getTitle(), " ,.-");
+
+
         HashMap<Integer, Integer> queryIndex = new HashMap<>();
         for (int i = 0; i < words.length; i++) {
             ArrayList<Integer> queries = wordsToQueries.get(words[i]);
@@ -90,23 +104,49 @@ public class QueryDic {
                 potentialQueries.add(qmap.get(queryNum));
             }
         }
-
+        maxCount =0;
         double maxEvaluated = 0;
         double[] rates = new double[potentialQueries.size()];
         for (int i = 0; i < rates.length; i++) {
             String[] title = potentialQueries.get(i).getTitleArray();
             for (int j = 0; j < words.length; j++) {
                 for (int k = 0; k < title.length; k++) {
-                    rates[i] = Double.max(rates[i], Ranker.getWeigthedSimilarity(title[k], words[j]));
+                    if (title[k].equalsIgnoreCase(words[j])) {
+                        rates[i] += Ranker.getWeights();
+                    } else {
+                        rates[i] += Ranker.getWeigthedSimilarity(title[k], words[j]);
+                    }
                 }
             }
+            rates[i] /= title.length;
             if (maxEvaluated < rates[i]) {
                 maxEvaluated = rates[i];
                 maxCount = i;
             }
         }
-        query.setEvaluation(maxCount,maxEvaluated);
+        QuerySol querySol = qmap.get(potentialQueries.get(maxCount).getqNumAsInt());
+        query.copySols(querySol);
+//        System.out.println(querySol.getqNum() + "," + maxEvaluated + ", " + querySol.getTitle() + " , " + query.getTitle());
+        query.setEvaluation(querySol.getqNumAsInt(), maxEvaluated);
+
     }
+
+//    /**
+//     * set the evaluation to a given query
+//     * @param query - the query that will be evaluated
+//     */
+//    private void setMostEvaluatedQueryWithSemantics(QuerySol query) {
+//        if (inv_qmap.containsKey(query.getTitle())) {
+//            QuerySol querySol = qmap.get(query.getqNumAsInt());
+//            if (querySol.equals(query))
+//                query.setEvaluation(querySol.getqNumAsInt(),1);
+//        }
+//        String[] words = split(query.getTitle(), " ,.-");
+//        HashMap<Integer, Integer> queryIndex = new HashMap<>();
+//        for (int i = 0; i < words.length; i++) {
+//
+//        }
+//    }
 
     public ArrayList<QuerySol> readQueries(String path) {
         try {

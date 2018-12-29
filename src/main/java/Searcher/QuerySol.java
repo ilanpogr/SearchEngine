@@ -59,7 +59,7 @@ public class QuerySol {
      * @param semantics
      */
     public void setSemantic(String semantics){
-
+        //TODO - think about it
     }
 
     public QuerySol(String query) {
@@ -89,6 +89,12 @@ public class QuerySol {
      */
     public ArrayList<String> getSols() {
         return new ArrayList<>(sols);
+    }
+
+    public void copySols(QuerySol other){
+        StringBuilder stringBuilder = new StringBuilder(qNum);
+        stringBuilder.append(",").append(join(other.sols,"|")).append("|");
+        addPosting(stringBuilder.toString());
     }
 
     public String getqNum() {
@@ -131,10 +137,10 @@ public class QuerySol {
         return false;
     }
 
-    public void addPosting(String readLine) {
-        if (!substringBefore(readLine, ",").equals(qNum))
+    public void addPosting(String post) {
+        if (!substringBefore(post, ",").equals(qNum))
             return;
-        String[] docnums = split(substringAfter(readLine, ","), "|");
+        String[] docnums = split(substringAfter(post, ","), "|");
 
         for (int i = 0; i < docnums.length; i++) {
             if (!sols.contains(docnums[i])) {
@@ -158,8 +164,8 @@ public class QuerySol {
         while (sols.size() > i) sols.remove(0);
     }
 
-    public void addSingleDocs(String value) {
-        if (postingPointer == -1) sols.add(value);
+    public void addSingleDoc(String value) {
+        if (postingPointer == -1 && !sols.contains(value)) sols.add(value);
     }
 
     public int getSolSize() {
@@ -168,5 +174,9 @@ public class QuerySol {
 
     public String[] getTitleArray() {
         return split(title, " .,-/");
+    }
+
+    public Double getSolRank(String doc) {
+        return sols.contains(doc)? getEvaluationRank(): 0;
     }
 }

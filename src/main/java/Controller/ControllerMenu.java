@@ -226,16 +226,18 @@ public class ControllerMenu implements Observer {
                 showDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
+                loadTargetPath("C:\\Users\\User\\Documents\\SearchEngineTests");
+                loadCorpusPath("C:\\Users\\User\\Documents\\SearchEngineTests");
                 readDictionary();
+                crazyBionicAstroFantasticWeightsTest("C:\\Users\\User\\Documents\\SearchEngineTests");
+//                searchQueries();
 //                testBM25();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("freeLangSearch")) {
                 ArrayList<String> languages = new ArrayList<>();
                 // todo - implement
-                ir_modelMenu.search("query",languages);
+                ir_modelMenu.search("query", languages);
             } else if (arg.equals("queryFile")) {
-                loadTargetPath("C:\\Users\\User\\Documents\\SearchEngineTests");
-                loadCorpusPath("C:\\Users\\User\\Documents\\SearchEngineTests");
                 update(o, "read");
                 searchQueries();
             }
@@ -267,16 +269,17 @@ public class ControllerMenu implements Observer {
                     else
                         selectedCities.remove(item);
                 });
-                return observable ;
+                return observable;
             }
         }));
         Stage citiesStage = new Stage();
         Button confirm = new Button("Confirm");
-        BorderPane root = new BorderPane(listView,null,null,confirm,null);
+        BorderPane root = new BorderPane(listView, null, null, confirm, null);
         Scene scene = new Scene(root, 250, 400);
 
         confirm.setOnAction(new EventHandler<ActionEvent>() {
-            @Override public void handle(ActionEvent e) {
+            @Override
+            public void handle(ActionEvent e) {
                 citiesStage.close();
             }
         });
@@ -289,12 +292,12 @@ public class ControllerMenu implements Observer {
 //        loadQueriesFile();
         PropertiesFile.putProperty("queries.file.path", "C:\\Users\\User\\Documents\\SearchEngineTests\\queries.txt");
         ArrayList<QuerySol> querySols = ir_modelMenu.multiSearch(cities);
-        for (QuerySol querySol : querySols) {
-            System.out.print("\n" + querySol.getqNum() + ": " + querySol.getTitle() + ": ");
-            for (String s : querySol.getSols()) {
-                System.out.print(s + ", ");
-            }
-        }
+//        for (QuerySol querySol : querySols) {
+//            System.out.print("\n" + querySol.getqNum() + ": " + querySol.getTitle() + ": ");
+//            for (String s : querySol.getSols()) {
+//                System.out.print(s + ", ");
+//            }
+//        }
     }
 
 
@@ -311,7 +314,7 @@ public class ControllerMenu implements Observer {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Read Dictionaries");
                     alert.setHeaderText("Dictionaries are read and now available to use");
-                    alert.showAndWait();
+//                    alert.showAndWait(); todo - bring back the confirmation
                 } else throw new Exception();
             } else throw new Exception();
         } catch (Exception e) {
@@ -323,8 +326,8 @@ public class ControllerMenu implements Observer {
     }
 
 
-
     //TODO- fix function and all the derived functions
+
     /**
      * save the results to the Disk
      */
@@ -334,16 +337,16 @@ public class ControllerMenu implements Observer {
             File file = null;
             try {
                 file = new File(PropertiesFile.getProperty("queries.file.path"));
-            } catch (Exception e){
+            } catch (Exception e) {
                 file = new File(PropertiesFile.getProperty("save.files.path"));
             }
             fileChooser.setInitialDirectory(file);
             fileChooser.setInitialFileName("results");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text",".txt",".post"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text", ".txt", ".post"));
             file = fileChooser.showSaveDialog(stage);
             if (file != null) {
                 try {
-                    WrieFile.writeQueryResults(results,file.getParent(),file.getName());
+                    WrieFile.writeQueryResults(results, file.getParent(), file.getName());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -480,8 +483,77 @@ public class ControllerMenu implements Observer {
      * Shows the application window
      */
     public void showStage() {
-        stage.show();
+        double start = System.currentTimeMillis();
+//        stage.show();
+        ir_menuView.browse_queries_btn.fire();//todo - remove fire button
+//        update(ir_menuView,"read");
+        System.out.println("\n");
+        System.out.println((System.currentTimeMillis() - start) / 1000 + " seconds");
     }
+
+
+    private void crazyBionicAstroFantasticWeightsTest(String directory) {
+        try {
+            ArrayList<String> queries = new ArrayList<>();
+            ArrayList<String> queryNums = new ArrayList<>();
+            File file = new File(directory + "\\queries.txt");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                if (startsWith(line, "<num> Number: ")) {
+                    queryNums.add(trim(substring(line, 13)));
+                }
+                if (startsWith(line, "<title> ")) {
+                    queries.add(trim(substring(line, 7)));
+                }
+                line = bufferedReader.readLine();
+            }
+            bufferedReader.close();
+            double bm25 =  PropertiesFile.getPropertyAsDouble("bm25.weight"),
+                    e = PropertiesFile.getPropertyAsDouble("e"),
+                    maxBM25 = PropertiesFile.getPropertyAsDouble("maxBM25");
+            Treceval_cmd tester = new Treceval_cmd();
+            double[] maxVals = new double[7];
+//            double[] maxVals = tester.getResultRanked();
+//            Files.delete(Paths.get(directory + "\\results.txt"));
+            CSVPrinter printer = new CSVPrinter(Files.newBufferedWriter(Paths.get(directory + "\\weights.csv")), CSVFormat.DEFAULT.withHeader("R-Percision", "Percision", "Recall", "Rank","Retrieved","Relevant","Relevant Returned", "BM25", "Wu Palmer", "resnik", "jiang", "lin"));
+            printer.flush();
+            double startTests = System.currentTimeMillis();
+            int iter= 0;
+            for (double bm25i = bm25; bm25i <= maxBM25; bm25i += e) {
+                for (double wupi = 0; wupi+bm25i <= 1; wupi += e) {
+                    for (double resniki = 0; resniki+wupi+bm25i <= 1; resniki += e) {
+                        for (double jiangi = 0; jiangi+resniki+wupi+bm25i <= 1 ; jiangi += e) {
+                            for (double lini = 1-(jiangi+resniki+wupi+bm25i); lini+jiangi+resniki+wupi+bm25i == 1; lini += e) {
+                                bm25i = Math.round(bm25i*1e2) / 1e2;
+                                resniki = Math.round(resniki*1e2) / 1e2;
+                                jiangi = Math.round(jiangi*1e2) / 1e2;
+                                wupi = Math.round(wupi*1e2) / 1e2;
+                                lini = Math.round(lini*1e2) / 1e2;
+                                tester.simulateSearch2Treceval(queries, queryNums, bm25i, wupi, resniki, jiangi, lini);
+                                double[] newVals = tester.getResultRanked();
+                                if (newVals[3] > maxVals[3]) {
+                                    maxVals = newVals.clone();
+                                    printer.printRecord(newVals[0], newVals[1], newVals[2], newVals[3],newVals[4], newVals[5],newVals[6], bm25i, wupi, resniki, jiangi, lini);
+                                    printer.flush();
+                                }
+                                Files.delete(Paths.get(directory + "\\results.txt"));
+                                double currentTime = System.currentTimeMillis();
+                                iter++;
+                                System.out.println((currentTime - startTests) / 1000 + "\tbm25 = " + bm25i + "\twup = " + wupi + "\tresnik = " + resniki + "\tjiang = " + jiangi +"\tlin = " + lini + "\tsum = " + (lini+jiangi+resniki+wupi+bm25i) + "\t\t" + Arrays.toString(newVals));
+                            }
+                        }
+                    }
+                }
+            }
+            System.out.println();
+            System.out.println(iter);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void testBM25(String directory) {
         try {
@@ -520,7 +592,7 @@ public class ControllerMenu implements Observer {
                 for (double bb = b; bb <= 1; bb += e) {
                     for (double dd = d; dd <= 1; dd += 2 * e) {
                         for (double ff = f; ff <= 0.6; ff += e) {
-                            tester.simulateSearch2Treceval(queries, queryNums, kk, bb, dd, ff);
+                            tester.simulateSearch2TrecevalBM25(queries, queryNums, kk, bb, dd, ff);
                             double[] newVals = tester.getResultRanked();
                             if (newVals[0] > maxVals1[0]) {
                                 maxVals1 = newVals.clone();
@@ -558,5 +630,9 @@ public class ControllerMenu implements Observer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void testSearch() {
+        searchQueries();
     }
 }

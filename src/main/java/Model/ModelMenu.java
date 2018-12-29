@@ -111,7 +111,7 @@ public class ModelMenu extends Observable {
         StringBuilder q = new StringBuilder("000|");
         q.append(query).append("|s|s|");
         querySols.add(new QuerySol(q.toString()));
-        master_of_puppets.freeLangSearch(querySols,lang);
+        master_of_puppets.freeLangSearch(querySols.get(0),lang);
         return querySols;
     }
 

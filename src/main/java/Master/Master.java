@@ -12,7 +12,6 @@ import TextContainers.Doc;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
-import java.io.RandomAccessFile;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -100,9 +99,10 @@ public class Master {
      * @param query - the given single query
      * @return the mentioned above dictionary
      */
-    public static HashMap<String, Integer> makeQueryDic(String query) {
+    public static HashMap<String, Integer> makeQueryDic(QuerySol query) {
+        //TODO - add Stem and Semantics
         Parser parser = new Parser();
-        return handleQuery(parser.parse(new String[]{query}));
+        return handleQuery(parser.parse(new String[]{query.getTitle()}));
     }
 
     /**
@@ -390,11 +390,13 @@ public class Master {
     }
 
 
-    public void freeLangSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {
+    public void freeLangSearch(QuerySol query, ArrayList<String> cities) {
         Searcher searcher = new Searcher();
-
-
-        // todo - implement
+        if (cities.size() > 0) {
+            searcher.freeLangSearch( query, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall")!=0);
+        } else {
+            searcher.freeLangSearch( query, termDictionary, cache, docDic, PropertiesFile.getPropertyAsInt("total.rickall")!=0);
+        }
     }
 
     /**
@@ -405,9 +407,9 @@ public class Master {
     public void multiSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {
         Searcher searcher = new Searcher();
         if (cities.size() > 0) {
-            searcher.multiSearch( querySols, termDictionary, cache, createFilteredDocDic(cities), cities, false);
+            searcher.multiSearch( querySols, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall")!=0);
         } else {
-            searcher.multiSearch( querySols, termDictionary, cache, docDic, cities, false);
+            searcher.multiSearch( querySols, termDictionary, cache, docDic, PropertiesFile.getPropertyAsInt("total.rickall")!=0);
         }
     }
 

@@ -1,7 +1,8 @@
 package Tests;
 
-import Master.Master;
+import Controller.ControllerMenu;
 import Ranker.Ranker;
+import Searcher.QuerySol;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class Treceval_cmd {
 
-    static String directory = "C:\\Ilan\\4";
+    static String directory = "C:\\Users\\User\\Documents\\SearchEngineTests";
     static String command = "treceval.exe qrels.txt ";
 
     private static TreeMap<String, String> dict = new TreeMap<>(String::compareToIgnoreCase);
@@ -42,27 +43,20 @@ public class Treceval_cmd {
         }
     }
 
-    public void simulateSearch2Treceval(ArrayList<String> queries, ArrayList<String> queryNums, double k, double b, double delta, double idf) {
+    public void simulateSearch2Treceval(ArrayList<String> queries, ArrayList<String> queryNums, double bm25, double wup, double resnik, double jiang, double lin) {
+        Ranker ranker = new Ranker();
+        ranker.setWeights(bm25, wup, resnik, jiang,lin);
+        new ControllerMenu().testSearch();
+    }
 
-
+    public void simulateSearch2TrecevalBM25(ArrayList<String> queries, ArrayList<String> queryNums, double k, double b, double delta, double idf) {
             Ranker ranker = new Ranker();
-//            ranker.setBM25Values(1.85, 0.6, 0.25, 0.5);
             ranker.setBM25Values(k, b, delta, idf);
-//        MultiQueriesHandler multiQueriesHandler =new MultiQueriesHandler();
-//        multiQueriesHandler.parseMultiQuery();
-//        ArrayList<HashMap<String,Integer>> relevants = multiQueriesHandler.getRelevantList();
-//        ArrayList<HashMap<String,Integer>> notRelevants = multiQueriesHandler.getNotRelevantList();
             for (int i = 0; i < queries.size(); i++) {
-//                HashMap<String, Integer> query = relevants.get(i);
-//                HashMap<String, Integer> anti_query = notRelevants.get(i);
-                HashMap<String, Integer> query = Master.makeQueryDic(queries.get(i));
+                QuerySol query = new QuerySol("000|"+queries.get(i)+"|s|s|");
                 TreeMap<Double, String> res = ranker.rank( dict, cache, docs, query, 50);
-//                TreeMap<Double, String> ares = ranker.rank(directory, dict, cache, docs, anti_query);
-
                 makeResultsFile(new ArrayList<>(res.values()), queryNums.get(i),"results.txt");
-
             }
-
     }
 
     private void makeResultsFile(ArrayList<String> res, String s,String fileName) {
@@ -95,7 +89,7 @@ public class Treceval_cmd {
 
 //        System.out.println("R-Percision: " + r_precision + ", " + "Percision: " + precision + ", " + "Recall: " + recall + ", " + "Rank: " + final_rank);
 
-        return new double[]{r_precision, precision, recall, final_rank,c_rel_ret};
+        return new double[]{r_precision, precision, recall, final_rank,a_retrieved,b_relevant,c_rel_ret};
     }
 
     public double[] getTrecEvalGrades(String resPath, ArrayList<String> res, String qNum) {
@@ -109,7 +103,7 @@ public class Treceval_cmd {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        directory =dirKeeper;
+        directory = dirKeeper;
         return ranks;
     }
 

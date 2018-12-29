@@ -3,6 +3,7 @@ package Ranker;
 import Controller.PropertiesFile;
 import Master.Master;
 import ReadFile.ReadFile;
+import Searcher.QuerySol;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
@@ -29,15 +30,28 @@ public class Ranker {
     private double BM25__delta;
     private double BM25__weight;
     private static ArrayList<ImmutablePair<RelatednessCalculator,Double>> calculators = initCalculators();
+    private static double dbWeights;
 
     private static ArrayList<ImmutablePair<RelatednessCalculator, Double>> initCalculators() {
         ILexicalDatabase db = new NictWordNet();
         ArrayList<ImmutablePair<RelatednessCalculator,Double>> calcList = new ArrayList<>();
-        calcList.add(new ImmutablePair<>(new WuPalmer(db),PropertiesFile.getPropertyAsDouble("wuPalmer.weight")));
-        calcList.add(new ImmutablePair<>(new ResnikMod(db),PropertiesFile.getPropertyAsDouble("resnik.weight")));
-        calcList.add(new ImmutablePair<>(new JiangConrath(db),PropertiesFile.getPropertyAsDouble("jiang.weight")));
-        calcList.add(new ImmutablePair<>(new Lin(db),PropertiesFile.getPropertyAsDouble("lin.weight")));
+        double tmp = PropertiesFile.getPropertyAsDouble("wuPalmer.weight");
+        calcList.add(new ImmutablePair<>(new WuPalmer(db),tmp));
+        dbWeights+=tmp;
+        tmp = PropertiesFile.getPropertyAsDouble("resnik.weight");
+        calcList.add(new ImmutablePair<>(new ResnikMod(db),tmp));
+        dbWeights+=tmp;
+        tmp = PropertiesFile.getPropertyAsDouble("jiang.weight");
+        calcList.add(new ImmutablePair<>(new JiangConrath(db),tmp));
+        dbWeights+=tmp;
+        tmp = PropertiesFile.getPropertyAsDouble("lin.weight");
+        calcList.add(new ImmutablePair<>(new Lin(db),tmp));
+        dbWeights+=tmp;
         return calcList;
+    }
+
+    public static double getWeights() {
+        return dbWeights;
     }
 
     private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
@@ -57,14 +71,14 @@ public class Ranker {
      * key - DocNum (name)
      * value - the Rank of the Document (double)
      */
-    public TreeMap<Double, String> rank(TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query, int solSize) {
+    public TreeMap<Double, String> rank(TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, QuerySol query, int solSize) {
         docsRank = new TreeMap<>();
         relationDic = new TreeMap<>();
         orderedPosting = new TreeMap<>();
-        reArrangePostingForQuery(termDic, cache, docDic, query);
+        reArrangePostingForQuery(termDic, cache, docDic, Master.makeQueryDic(query));
         arrangeDictionaryForCalculations();
         calculateBM25(termDic, docDic);
-        return getBestDocs(solSize);
+        return getBestDocs(query, solSize);
     }
 
 
@@ -131,12 +145,14 @@ public class Ranker {
         }
     }
 
-    public TreeMap<Double, String> getBestDocs(int i) {
+    public TreeMap<Double, String> getBestDocs(QuerySol query, int i) {
         TreeMap<Double, String> res = new TreeMap<>(Double::compareTo);
         for (Map.Entry<String, Double> o : docsRank.entrySet()
         ) {
             String doc = o.getKey();
             Double rank = o.getValue();
+            rank+=query.getSolRank(doc)*dbWeights;
+
             while (res.containsKey(rank))
                 rank -= Math.pow(10, -9);
             res.put(rank, doc);
@@ -201,6 +217,15 @@ public class Ranker {
             res+= (rc.right*Double.min(1,rc.left.calcRelatednessOfWords(w1, w2)));
         }
         return res;
+    }
+
+    public void setWeights(double bm25, double wup, double resnik, double jiang, double lin) {
+        BM25__weight = bm25;
+        calculators.set(0,new ImmutablePair<>(calculators.get(0).left,wup));
+        calculators.set(1,new ImmutablePair<>(calculators.get(1).left,resnik));
+        calculators.set(2,new ImmutablePair<>(calculators.get(2).left,jiang));
+        calculators.set(3,new ImmutablePair<>(calculators.get(3).left,lin));
+        dbWeights = 1-bm25;
     }
 
     /**
