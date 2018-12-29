@@ -6,21 +6,21 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.csv.QuoteMode;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Observable;
+import java.util.*;
 
 /**
  * This class is linking between the controller and the brain of this project (Master Class)
  */
 public class ModelMenu extends Observable {
+
+    HashMap<String, String[]> docsEntitites = new HashMap<>();
+    ArrayList<ArrayList<String>> docsResult = new ArrayList<>();
 
     private Master master_of_puppets;
     private static DoubleProperty progress;
@@ -34,6 +34,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get the number of terms in corpus
+     *
      * @return integer
      */
     public int getNumOfTerms() {
@@ -42,6 +43,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get the number of documents in corpus
+     *
      * @return integer
      */
     public int getDocCount() {
@@ -60,6 +62,7 @@ public class ModelMenu extends Observable {
 
     /**
      * Removes all files created by this program (depends on stem mode)
+     *
      * @return true if removed
      */
     private boolean removeAllFiles() {
@@ -75,6 +78,7 @@ public class ModelMenu extends Observable {
 
     /**
      * get path for the Dictionaries directory (depends on stem mode)
+     *
      * @return the new path
      */
     public String getDicsPath() {
@@ -84,10 +88,11 @@ public class ModelMenu extends Observable {
 
     /**
      * getter for Model Progress property
+     *
      * @return DoubleProperty
      */
     public DoubleProperty getProgress() {
-        if (progress==null){
+        if (progress == null) {
             progress = new SimpleDoubleProperty(0);
         }
         return progress;
@@ -102,6 +107,7 @@ public class ModelMenu extends Observable {
 
     /**
      * Reads dictionary to RAM
+     *
      * @param dicPath - path to the dictionary
      * @return true if was able to read
      */
@@ -109,28 +115,33 @@ public class ModelMenu extends Observable {
         return Master.readDictionaries(dicPath);
     }
 
-    public void bm25bnkChecker(){
-        try{
+    public void bm25bnkChecker() {
+        try {
             CSVFormat csvFormat;
             CSVPrinter csvPrinter;
             for (int i = 0; i < 10; i++) {
                 csvFormat = CSVFormat.DEFAULT.withIgnoreEmptyLines().withRecordSeparator(" ").withTrim();
-                File file = new File("BM25 tester"+i);
+                File file = new File("BM25 tester" + i);
                 if (!file.exists()) Files.createFile(Paths.get(getDicsPath()));
-                csvPrinter = new CSVPrinter(new FileWriter(file),csvFormat);
-                csvPrinter.printRecord("k","b","delta","grade");
+                csvPrinter = new CSVPrinter(new FileWriter(file), csvFormat);
+                csvPrinter.printRecord("k", "b", "delta", "grade");
                 for (int k = 0; k < 1000; k++) {
 
                 }
 
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
     }
 
-    public void search(ArrayList<String> cities){
+    /**
+     * starting the search for the query/ies
+     * @param cities : the cities that represented bvy the documents.
+     *               if empty: -> no restriction
+     */
+    public void search(ArrayList<String> cities) {
         master_of_puppets.search(cities);
         setChanged();
         notifyObservers("search_done");
@@ -138,5 +149,21 @@ public class ModelMenu extends Observable {
 
     public ArrayList<String> getCitiesSet() {
         return master_of_puppets.getCitiesSet();
+    }
+
+    private void setDocsEntities() {
+        // todo - implement
+    }
+
+    public HashMap<String, String[]> getDocsEntities() {
+        return docsEntitites;
+    }
+
+    private void setDocsResults() {
+        // todo - implement
+    }
+
+    public ArrayList<ArrayList<String>> getDocsResults() {
+        return docsResult;
     }
 }

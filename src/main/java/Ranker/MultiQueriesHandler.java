@@ -123,6 +123,11 @@ public class MultiQueriesHandler {
         removeQueryWordsFromNotRelevantList(notRelevantMap, relevantMap);
     }
 
+    /**
+     * takes care of the sentence that have potential additional relevant terms for the query
+     * @param sentence - the relevant sentence
+     * @param relevantMap - Map containing the terms that are relevant for the query
+     */
     private void dealWithRelevant(String sentence, HashMap<String, Integer> relevantMap) {
         HashMap<String, String> local_relevant = new HashMap<>();
         if (contains(sentence, " - ")) {
@@ -146,6 +151,11 @@ public class MultiQueriesHandler {
         }
     }
 
+    /**
+     * takes care of the sentence that have potential NOT relevant terms for the query
+     * @param sentence - the sentence containing info that is NOT relevant for the query
+     * @param notRelevantMap - Map containing the terms that are NOT relevant for the query
+     */
     private void dealWithNotRelevant(String sentence, HashMap<String, Integer> notRelevantMap) {
         HashMap<String, String> local_notRelevant = new HashMap<>();
         if (contains(sentence, " - ")) {

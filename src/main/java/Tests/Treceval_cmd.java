@@ -10,6 +10,10 @@ public class Treceval_cmd {
     static String command = "treceval qrels.txt results.txt";
 
 
+    /**
+     * opens Windows Command Prompt, and enters the "treceval" command to check our answers.
+     * @return - returns the output of using "treceval".
+     */
     private static StringBuilder runCmd() {
         StringBuilder s = new StringBuilder();
         try {
@@ -33,6 +37,13 @@ public class Treceval_cmd {
         }
     }
 
+    /**
+     * using the function above for receiving the output of "treceval".
+     * manipulating cutting the output for wished parameters.
+     * this function used for testing optimal parameters for example: b, m, k, Delta, idf in BM25.
+     * @return - Double array containing the wished result from the out put
+     *          {r_precision, precision, recall, final_rank}
+     */
     public static double[] getResultRanked() {
         StringBuilder s = runCmd();
         String values = "";

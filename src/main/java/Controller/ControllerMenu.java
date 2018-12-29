@@ -24,6 +24,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -36,6 +38,8 @@ import javafx.util.Callback;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.substring;
 
 /**
  * Controller
@@ -58,8 +62,14 @@ public class ControllerMenu implements Observer {
     private boolean savePath = false;
     private boolean dataPath = false;
 
+
     private ArrayList<String> selectedCities = new ArrayList<>();
     private ArrayList<String> citiesList = null;
+
+
+    private final Node rootIcon = new ImageView(new Image(getClass().getResourceAsStream("images/morty.png")));
+    private final Node queryIcon = new ImageView(new Image(getClass().getResourceAsStream("images/searchQuery.png")));
+    private final Image docIcon = new Image(getClass().getResourceAsStream("doc.png"));
 
 
     /**
@@ -77,6 +87,7 @@ public class ControllerMenu implements Observer {
             alert.setContentText("try to run the app again");
             alert.showAndWait();
         }
+        treeViewForResultHandle();
         Scene scene = new Scene(root);
         scene.getStylesheets().add("menu/style_menu.css");
         stage.setScene(scene);
@@ -86,6 +97,35 @@ public class ControllerMenu implements Observer {
         ir_modelMenu.addObserver(this);
         ir_menuView.addObserver(this);
         progress = new SimpleDoubleProperty(0);
+    }
+
+    /**
+     * Adding a Listener for the results treeView.
+     * connecting the listener to the Objects from the model:
+     * docsEntitites and docsResult for retrieving the needed info
+     */
+    private void treeViewForResultHandle() {
+        ir_menuView.result_treeView.getSelectionModel().selectedItemProperty()
+                .addListener(new ChangeListener<TreeItem<String>>() {
+
+                    @Override
+                    public void changed(
+                            ObservableValue<? extends TreeItem<String>> observable,
+                            TreeItem<String> old_val, TreeItem<String> new_val) {
+                        TreeItem<String> selectedItem = new_val;
+                        if (selectedItem.isLeaf()) {
+                            ir_menuView.entities_textArea.clear();
+                            String[] entities = ir_modelMenu.getDocsEntities().get(selectedItem.getValue());
+                            StringBuilder text = new StringBuilder();
+                            int i = 0;
+                            for (String s : entities){
+                                text.append(i).append(". ").append(s).append("\n");
+                            }
+                            ir_menuView.entities_textArea.setText(text.toString());
+                        }
+                    }
+                });
+        ir_menuView.entities_textArea.setEditable(false);
     }
 
     /**
@@ -147,6 +187,9 @@ public class ControllerMenu implements Observer {
         }
     }
 
+    /**
+     * opens an fileChooser for the queries file.
+     */
     public void loadQueriesFile() {
         FileChooser fileChooser = new FileChooser();
         File selectedFile = fileChooser.showOpenDialog(stage);
@@ -218,10 +261,12 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("read")) {
                 readDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
-            } else if (arg.equals("search")) {
+            } else if (arg.equals("search_single")) {
                 ir_modelMenu.search(citiesList);
             } else if (arg.equals("queryFile")) {
                 loadQueriesFile();
+            } else if (arg.equals("save_results")) {
+                // todo - save the results to file
             }
         } else if (o.equals(ir_modelMenu)) {
             if (arg.equals("done")) {
@@ -230,196 +275,238 @@ public class ControllerMenu implements Observer {
                 end = System.currentTimeMillis();
                 Platform.runLater(this::addSummaryToLabel);
             } else if (arg.equals("search_done")) {
-                // todo - implement
+                showResultView();
             }
-        }
-    }
-
-    private void dealWithCities() {
-        selectedCities.clear();
-        ListView<String> listView = new ListView<>();
-        for (String city : this.citiesList) {
-            listView.getItems().add(city);
-        }
-        listView.setCellFactory(CheckBoxListCell.forListView(new Callback<String, ObservableValue<Boolean>>() {
-            @Override
-            public ObservableValue<Boolean> call(String item) {
-                BooleanProperty observable = new SimpleBooleanProperty();
-                observable.addListener((obs, wasSelected, isNowSelected) -> {
-                    if (isNowSelected)
-                        selectedCities.add(item);
-                    else
-                        selectedCities.remove(item);
-                });
-                return observable ;
-            }
-        }));
-        Stage citiesStage = new Stage();
-        Button confirm = new Button("Confirm");
-        BorderPane root = new BorderPane(listView,null,null,confirm,null);
-        Scene scene = new Scene(root, 250, 400);
-
-        confirm.setOnAction(new EventHandler<ActionEvent>() {
-            @Override public void handle(ActionEvent e) {
-                citiesStage.close();
-            }
-        });
-        citiesStage.setScene(scene);
-        citiesStage.showAndWait();
-    }
-
-
-    /**
-     * Read Dictionary to RAM
-     */
-    private void readDictionary() {
-        String dicPath = ir_modelMenu.getDicsPath();
-        try {
-            File file = new File(dicPath);
-            if (file.isDirectory()) {
-                if (ir_modelMenu.readDictionaries(dicPath)) {
-                    this.citiesList = ir_modelMenu.getCitiesSet();
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Read Dictionaries");
-                    alert.setHeaderText("Dictionaries are read and now available to use");
-                    alert.showAndWait();
-                } else throw new Exception();
-            } else throw new Exception();
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("OMG!");
-            alert.setHeaderText("Couldn't read Dictionaries. try showing them");
-            alert.showAndWait();
         }
     }
 
     /**
-     * Shows the Dictionary.
-     * if program is ran by jar - dictionary won't be shown as notepad++
+     * making all the Objects that connected to showing the search result
+     * visible or not visible.
+     * @param status the state of visibility
      */
-    private void showDictionary() {
-        StringBuilder stringBuilder = new StringBuilder(ir_modelMenu.getDicsPath());
-        String dicPath = stringBuilder.append("\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming").toString();
-        stringBuilder.setLength(0);
-        File file = new File(dicPath);
-        if (file.isFile()) {
+    private void setSceneForResults(boolean status){
+        ir_menuView.result_lbl.setVisible(status);
+        ir_menuView.result_treeView.setVisible(status);
+        ir_menuView.save_results_img.setVisible(status);
+    }
+
+    /**
+     * generating the treeView as need with query number and the docs result.
+     * only if user selected the entities then the textArea will be visible with the Entities info.
+     */
+    private void showResultView() {
+        setSceneForResults(true);
+        if (!PropertiesFile.getProperty("entities.mode").equals("0")) {
+            ir_menuView.entities_textArea.setVisible(true);
+            ir_menuView.entities_textArea.setEditable(true);
+        }
+        // init the result list
+            TreeItem<String> rootItem = new TreeItem<String>("Results", rootIcon);
+            rootItem.setExpanded(true);
+            int i = 1;
+            for (ArrayList<String> result : ir_modelMenu.getDocsResults()) {
+                TreeItem<String> queryItem = new TreeItem<String>("Query " + i++);
+                queryItem.setExpanded(true);
+                rootItem.getChildren().add(queryItem);
+                for (String s : result) {
+                    TreeItem<String> docItem = new TreeItem<String>(s);
+                    queryItem.getChildren().add(queryItem);
+                }
+            }
+    }
+
+    /**
+     * opens new stage with a list containing all the cities that received from master.
+     * multi selection enabled and after confirm button pressed:
+     * selectedCities updated and containing all the selectedCities in the list.
+     */
+        private void dealWithCities () {
+            selectedCities.clear();
+            ListView<String> listView = new ListView<>();
+            for (String city : this.citiesList) {
+                listView.getItems().add(city);
+            }
+            listView.setCellFactory(CheckBoxListCell.forListView(new Callback<String, ObservableValue<Boolean>>() {
+                @Override
+                public ObservableValue<Boolean> call(String item) {
+                    BooleanProperty observable = new SimpleBooleanProperty();
+                    observable.addListener((obs, wasSelected, isNowSelected) -> {
+                        if (isNowSelected)
+                            selectedCities.add(item);
+                        else
+                            selectedCities.remove(item);
+                    });
+                    return observable;
+                }
+            }));
+            Stage citiesStage = new Stage();
+            Button confirm = new Button("Confirm");
+            BorderPane root = new BorderPane(listView, null, null, confirm, null);
+            Scene scene = new Scene(root, 250, 400);
+
+            confirm.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent e) {
+                    citiesStage.close();
+                }
+            });
+            citiesStage.setScene(scene);
+            citiesStage.showAndWait();
+        }
+
+
+        /**
+         * Read Dictionary to RAM
+         */
+        private void readDictionary () {
+            String dicPath = ir_modelMenu.getDicsPath();
             try {
-                file.setWritable(false);
-                Runtime runtime = Runtime.getRuntime();
-                Process process = runtime.exec("./Notepad++\\Notepad++.exe " + dicPath);
-                new SimpleBooleanProperty(false).addListener(new ChangeListener<Boolean>() {
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                        if (newValue.booleanValue())
-                            file.setWritable(true);
-                    }
-                });
-            } catch (IOException ioe) {
-                try {
-                    Stage dicShow = new Stage();
-                    dicShow.setTitle("Term Dictionary");
-                    ListView<String> termsDic = new ListView<>();
-                    termsDic.setPrefSize(300, 400);
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
-                    String s = bufferedReader.readLine();
-                    while (s != null) {
-                        termsDic.getItems().add(s);
-                        s = bufferedReader.readLine();
-                    }
-                    Pane root = new Pane();
-                    root.getChildren().add(termsDic);
-                    dicShow.setScene(new Scene(root, 300, 400));
-                    dicShow.show();
-                    bufferedReader.close();
-                } catch (Exception e) {
-                    showAlert(
-                            "Wrong Path",
-                            "Couldn't Find The Requested Dictionary",
-                            "try to change path to be the directory that contains:" +
-                                    " \"Dictionaries with/out stemming\"" +
-                                    "\nand click on the \'show\' button again");
-                }
+                File file = new File(dicPath);
+                if (file.isDirectory()) {
+                    if (ir_modelMenu.readDictionaries(dicPath)) {
+                        this.citiesList = ir_modelMenu.getCitiesSet();
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Read Dictionaries");
+                        alert.setHeaderText("Dictionaries are read and now available to use");
+                        alert.showAndWait();
+                    } else throw new Exception();
+                } else throw new Exception();
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("OMG!");
+                alert.setHeaderText("Couldn't read Dictionaries. try showing them");
+                alert.showAndWait();
             }
-        } else {
-            showAlert(
-                    "Wrong Path",
-                    "Couldn't Find The Requested Dictionary",
-                    "try to change path to be the directory that contains:" +
-                            " \"Dictionaries with/out stemming\"" +
-                            "\nand click on the \'show\' button again");
+        }
+
+        /**
+         * Shows the Dictionary.
+         * if program is ran by jar - dictionary won't be shown as notepad++
+         */
+        private void showDictionary () {
+            StringBuilder stringBuilder = new StringBuilder(ir_modelMenu.getDicsPath());
+            String dicPath = stringBuilder.append("\\1. Term Dictionary with").append(PropertiesFile.getProperty("stem.mode").equals("0") ? "out " : " ").append("stemming").toString();
+            stringBuilder.setLength(0);
+            File file = new File(dicPath);
+            if (file.isFile()) {
+                try {
+                    file.setWritable(false);
+                    Runtime runtime = Runtime.getRuntime();
+                    Process process = runtime.exec("./Notepad++\\Notepad++.exe " + dicPath);
+                    new SimpleBooleanProperty(false).addListener(new ChangeListener<Boolean>() {
+                        @Override
+                        public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                            if (newValue.booleanValue())
+                                file.setWritable(true);
+                        }
+                    });
+                } catch (IOException ioe) {
+                    try {
+                        Stage dicShow = new Stage();
+                        dicShow.setTitle("Term Dictionary");
+                        ListView<String> termsDic = new ListView<>();
+                        termsDic.setPrefSize(300, 400);
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
+                        String s = bufferedReader.readLine();
+                        while (s != null) {
+                            termsDic.getItems().add(s);
+                            s = bufferedReader.readLine();
+                        }
+                        Pane root = new Pane();
+                        root.getChildren().add(termsDic);
+                        dicShow.setScene(new Scene(root, 300, 400));
+                        dicShow.show();
+                        bufferedReader.close();
+                    } catch (Exception e) {
+                        showAlert(
+                                "Wrong Path",
+                                "Couldn't Find The Requested Dictionary",
+                                "try to change path to be the directory that contains:" +
+                                        " \"Dictionaries with/out stemming\"" +
+                                        "\nand click on the \'show\' button again");
+                    }
+                }
+            } else {
+                showAlert(
+                        "Wrong Path",
+                        "Couldn't Find The Requested Dictionary",
+                        "try to change path to be the directory that contains:" +
+                                " \"Dictionaries with/out stemming\"" +
+                                "\nand click on the \'show\' button again");
+            }
+        }
+
+
+        /**
+         * Sets the stage to be "blocked" fro use before starting indexing
+         */
+        private void setSceneBeforeStart () {
+            ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
+            ir_menuView.summary_lbl.setText("IN PROCESS!!");
+            ir_menuView.summary_lbl.setVisible(true);
+            ir_menuView.start_btn.setDisable(true);
+            ir_menuView.dict_btn.setDisable(true);
+            ir_menuView.read_dict_btn.setDisable(true);
+            ir_menuView.browse_btn.setDisable(true);
+            ir_menuView.save_btn.setDisable(true);
+            ir_menuView.reset_btn.setDisable(true);
+            ir_menuView.stemmer_checkBox.setDisable(true);
+            ir_menuView.progressbar.setVisible(true);
+            ir_menuView.progress_lbl.setVisible(true);
+            ir_menuView.docs_language.setDisable(true);
+            ir_menuView.docs_language.getItems().clear();
+            progress.addListener(new ChangeListener<Number>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                    double val = newValue.doubleValue();
+                    if (val > 1) {
+                        val -= 1;
+                        double finalVal = val;
+                        Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%" + (int) (finalVal * 100)));
+                    } else {
+                        double finalVal = val;
+                        Platform.runLater(() -> ir_menuView.progress_lbl.setText("Creating temporary files\t%" + (int) (finalVal * 100)));
+                    }
+                    ir_menuView.progressbar.progressProperty().set(val);
+                }
+            });
+            progress.bind(ir_modelMenu.getProgress());
+        }
+
+        /**
+         * edits the stage to be set after done indexing
+         */
+        private void addSummaryToLabel () {
+            ir_menuView.dict_btn.setDisable(false);
+            ir_menuView.read_dict_btn.setDisable(false);
+            ir_menuView.browse_btn.setDisable(false);
+            ir_menuView.save_btn.setDisable(false);
+            ir_menuView.reset_btn.setDisable(false);
+            ir_menuView.summary_lbl.setAlignment(Pos.TOP_LEFT);
+            String time = "Time for the whole operation: " + (end - start) / 1000 + " seconds";
+            String numOfterms = "Total number of term: " + ir_modelMenu.getNumOfTerms();
+            String numOfDocs = "Total number of Documents: " + ir_modelMenu.getDocCount();
+            String summary = "Summary:\n" +
+                    "\t" + time + "\n" +
+                    "\t" + numOfterms + "\n" +
+                    "\t" + numOfDocs;
+            ir_menuView.summary_lbl.setText(summary);
+            ir_menuView.progressbar.setVisible(false);
+            ir_menuView.progress_lbl.setVisible(false);
+            ir_menuView.docs_language.setDisable(false);
+            ir_menuView.docs_language.getItems().addAll(LanguagesInfo.getInstance().getLanguagesAsList());
+            if (!ir_menuView.docs_language.getItems().isEmpty())
+                ir_menuView.docs_language.setPromptText("Please Choose Language");
+            ir_menuView.docs_language.setDisable(false);
+            loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
+            loadTargetPath(PropertiesFile.getProperty("save.files.path"));
+        }
+
+        /**
+         * Shows the application window
+         */
+        public void showStage () {
+            stage.show();
         }
     }
-
-
-    /**
-     * Sets the stage to be "blocked" fro use before starting indexing
-     */
-    private void setSceneBeforeStart() {
-        ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
-        ir_menuView.summary_lbl.setText("IN PROCESS!!");
-        ir_menuView.summary_lbl.setVisible(true);
-        ir_menuView.start_btn.setDisable(true);
-        ir_menuView.dict_btn.setDisable(true);
-        ir_menuView.read_dict_btn.setDisable(true);
-        ir_menuView.browse_btn.setDisable(true);
-        ir_menuView.save_btn.setDisable(true);
-        ir_menuView.reset_btn.setDisable(true);
-        ir_menuView.stemmer_checkBox.setDisable(true);
-        ir_menuView.progressbar.setVisible(true);
-        ir_menuView.progress_lbl.setVisible(true);
-        ir_menuView.docs_language.setDisable(true);
-        ir_menuView.docs_language.getItems().clear();
-        progress.addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                double val = newValue.doubleValue();
-                if (val > 1) {
-                    val -= 1;
-                    double finalVal = val;
-                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Merging temporary files\t%" + (int) (finalVal * 100)));
-                } else {
-                    double finalVal = val;
-                    Platform.runLater(() -> ir_menuView.progress_lbl.setText("Creating temporary files\t%" + (int) (finalVal * 100)));
-                }
-                ir_menuView.progressbar.progressProperty().set(val);
-            }
-        });
-        progress.bind(ir_modelMenu.getProgress());
-    }
-
-    /**
-     * edits the stage to be set after done indexing
-     */
-    private void addSummaryToLabel() {
-        ir_menuView.dict_btn.setDisable(false);
-        ir_menuView.read_dict_btn.setDisable(false);
-        ir_menuView.browse_btn.setDisable(false);
-        ir_menuView.save_btn.setDisable(false);
-        ir_menuView.reset_btn.setDisable(false);
-        ir_menuView.summary_lbl.setAlignment(Pos.TOP_LEFT);
-        String time = "Time for the whole operation: " + (end - start) / 1000 + " seconds";
-        String numOfterms = "Total number of term: " + ir_modelMenu.getNumOfTerms();
-        String numOfDocs = "Total number of Documents: " + ir_modelMenu.getDocCount();
-        String summary = "Summary:\n" +
-                "\t" + time + "\n" +
-                "\t" + numOfterms + "\n" +
-                "\t" + numOfDocs;
-        ir_menuView.summary_lbl.setText(summary);
-        ir_menuView.progressbar.setVisible(false);
-        ir_menuView.progress_lbl.setVisible(false);
-        ir_menuView.docs_language.setDisable(false);
-        ir_menuView.docs_language.getItems().addAll(LanguagesInfo.getInstance().getLanguagesAsList());
-        if (!ir_menuView.docs_language.getItems().isEmpty())
-            ir_menuView.docs_language.setPromptText("Please Choose Language");
-        ir_menuView.docs_language.setDisable(false);
-        loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
-        loadTargetPath(PropertiesFile.getProperty("save.files.path"));
-    }
-
-    /**
-     * Shows the application window
-     */
-    public void showStage() {
-        stage.show();
-    }
-}
