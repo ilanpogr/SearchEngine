@@ -16,7 +16,6 @@ public class ws4j_example {
      */
 
     private static ILexicalDatabase db = new NictWordNet();
-//    available options of metrics
     private static RelatednessCalculator[] rcs = {new WuPalmer(db),
             new Resnik(db), new JiangConrath(db), new Lin(db)};
 
@@ -25,12 +24,12 @@ public class ws4j_example {
 
     private static double compute(String word1, String word2, RelatednessCalculator rc) {
         WS4JConfiguration.getInstance().setMFS(true);
-        double s = new WuPalmer(db).calcRelatednessOfWords(word1, word2);
+//        double s = new WuPalmer(db).calcRelatednessOfWords(word1, word2);
         return rc.calcRelatednessOfWords(word1, word2);
     }
 
     public static void main(String[] args) {
-        String[] words = {"add", "get", "filter", "remove", "check", "find", "collect", "create", "hurricane", "cyclone", "home", "house", "car", "vehicle","cat","dog","pet","puppy"};
+        String[] words = {"add","add get", "filter", "remove", "check", "find", "collect", "create", "hurricane", "cyclone", "home", "house", "car", "vehicle","cat","dog","pet","puppy","england","UK","falkland"};
         long start;
         long finish;
         for (int j = 0; j < rcs.length; j++) {

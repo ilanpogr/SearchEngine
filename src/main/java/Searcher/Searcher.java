@@ -38,14 +38,15 @@ public class Searcher {
                 continue;
             }
             //TODO - add nerrative here
-            query.filterSols(docs.keySet());
-            if (!totalRickAll)
-                query.filterSolsNum(50);
             if (QueryDic.getInstance().queryEvaluator(query)<0.7 || query.getSolSize()==0) {
                 ArrayList<String> res = search(query.getTitle(), dict, cache, docs,cities,totalRickAll);
                 for (int j = 0; j < res.size() && query.getSolSize()<50; j++) {
                     query.addSingleDocs(res.get(j));
                 }
+            }
+            query.filterSols(docs.keySet());
+            if (!totalRickAll) {
+                query.filterSolsNum(50);
             }
 //                StringBuilder stringBuilder = new StringBuilder(query.getqNum()).append(",");
 //                while (!res.isEmpty()) {

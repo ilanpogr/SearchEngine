@@ -1,14 +1,10 @@
 package Searcher;
 
 import Indexer.WrieFile;
-import com.sun.corba.se.impl.orbutil.ObjectWriter;
-import org.ibex.nestedvm.util.Seekable;
+import Ranker.Ranker;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -42,10 +38,74 @@ public class QueryDic {
      * 1 - the query is in the dictionary
      */
     public double queryEvaluator(QuerySol query) {
-        //todo- implement
-        if (inv_qmap.containsKey(query.getTitle()) && qmap.get(query.getqNumAsInt()).equals(query))
-            return 1;
-        return 0;
+        if (query.getEvaluationRank()==-1) setMostEvaluatedQuery(query);
+        return query.getEvaluationRank();
+    }
+
+    /**
+     * get the QuerySol which is the highest ranked (to the given query)
+     * @param query - the given query
+     * @return a copy of the original QuerySol
+     */
+    public QuerySol getEvaluatedQuerySol(QuerySol query){
+        int qNum = query.getEvaluationOtherQueryNum();
+        if (qNum==-1) setMostEvaluatedQuery(query);
+        return new QuerySol(qmap.get(query.getEvaluationOtherQueryNum()));
+    }
+
+    /**
+     * set the evaluation to a given query
+     * @param query - the query that will be evaluated
+     */
+    private void setMostEvaluatedQuery(QuerySol query) {
+        if (inv_qmap.containsKey(query.getTitle())) {
+            QuerySol querySol = qmap.get(query.getqNumAsInt());
+            if (querySol.equals(query))
+                query.setEvaluation(querySol.getqNumAsInt(),1);
+        }
+        String[] words = split(query.getTitle(), " ,.-");
+        HashMap<Integer, Integer> queryIndex = new HashMap<>();
+        for (int i = 0; i < words.length; i++) {
+            ArrayList<Integer> queries = wordsToQueries.get(words[i]);
+            if (queries == null || queries.size() == 0) {
+                continue;
+            }
+            for (int j = 0; j < queries.size(); j++) {
+                if (!queryIndex.containsKey(queries.get(j)))
+                    queryIndex.put(queries.get(j), 1);
+                else {
+                    queryIndex.put(queries.get(j), queryIndex.get(queries.get(j)) + 1);
+                }
+            }
+        }
+        int maxCount = 0;
+        for (Integer counter : queryIndex.values()) {
+            if (counter > maxCount) maxCount = counter;
+        }
+        ArrayList<QuerySol> potentialQueries = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : queryIndex.entrySet()) {
+            Integer queryNum = entry.getKey();
+            Integer counter = entry.getValue();
+            if (counter == maxCount) {
+                potentialQueries.add(qmap.get(queryNum));
+            }
+        }
+
+        double maxEvaluated = 0;
+        double[] rates = new double[potentialQueries.size()];
+        for (int i = 0; i < rates.length; i++) {
+            String[] title = potentialQueries.get(i).getTitleArray();
+            for (int j = 0; j < words.length; j++) {
+                for (int k = 0; k < title.length; k++) {
+                    rates[i] = Double.max(rates[i], Ranker.getWeigthedSimilarity(title[k], words[j]));
+                }
+            }
+            if (maxEvaluated < rates[i]) {
+                maxEvaluated = rates[i];
+                maxCount = i;
+            }
+        }
+        query.setEvaluation(maxCount,maxEvaluated);
     }
 
     public ArrayList<QuerySol> readQueries(String path) {
@@ -53,7 +113,7 @@ public class QueryDic {
             String[] queries = split(saveNewQueries(path, ""), "\n"); //no target path - will not write to disk
             ArrayList<QuerySol> querySols = new ArrayList<>();
             for (int i = 0; i < queries.length; i++) {
-                QuerySol querySol = new QuerySol(queries[i],-1);
+                QuerySol querySol = new QuerySol(queries[i], -1);
                 ArrayList<String> sols = null;
                 try {
                     sols = qmap.get(inv_qmap.get(querySol.getTitle())).getSols();
@@ -117,9 +177,10 @@ public class QueryDic {
                 if (containsAny(querySol.getTitle(), " ,.-")) {
                     String[] words = split(querySol.getTitle(), " ,.-");
                     for (int i = 0; i < words.length; i++) {
-                        if (wordsToQueries.containsKey(words[i])) {
-                            wordsToQueries.get(words[i]).add(querySol.getqNumAsInt());
-                        } else wordsToQueries.put(words[i], new ArrayList<>(querySol.getqNumAsInt()));
+                        if (!wordsToQueries.containsKey(words[i])) {
+                            wordsToQueries.put(words[i], new ArrayList<>());
+                        }
+                        wordsToQueries.get(words[i]).add(querySol.getqNumAsInt());
                     }
                 }
                 q = bufferedReader.readLine();
@@ -134,7 +195,7 @@ public class QueryDic {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(queriesPath));
             BufferedWriter bufferedWriter = null;
             if (!isEmpty(targetPath))
-                bufferedWriter = new BufferedWriter(new FileWriter(WrieFile.getTmpFile(targetPath,""), true));
+                bufferedWriter = new BufferedWriter(new FileWriter(WrieFile.getTmpFile(targetPath, ""), true));
             String line = bufferedReader.readLine().trim();
             StringBuilder stringBuilder = new StringBuilder();
 //            String query = "";
@@ -192,7 +253,7 @@ public class QueryDic {
     public static void saveSolutions(String solutionsPath, String targetPath) {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(solutionsPath));
-            File file = WrieFile.getTmpFile(targetPath,"");
+            File file = WrieFile.getTmpFile(targetPath, "");
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, true));
             String line = bufferedReader.readLine().trim();
             String num = substringBefore(line, " ");
@@ -232,7 +293,7 @@ public class QueryDic {
             pointer = 0;
             BufferedReader qr = new BufferedReader(new FileReader(queriesPath));
             BufferedReader sr = new BufferedReader(new FileReader(solutionsPath));
-            File file = WrieFile.getTmpFile(queriesPath,"");
+            File file = WrieFile.getTmpFile(queriesPath, "");
             BufferedWriter qw = new BufferedWriter(new FileWriter(file, true));
             String lineQ = qr.readLine().trim();
             String lineS = sr.readLine().trim();

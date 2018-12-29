@@ -3,6 +3,13 @@ package Ranker;
 import Controller.PropertiesFile;
 import Master.Master;
 import ReadFile.ReadFile;
+import edu.cmu.lti.lexical_db.ILexicalDatabase;
+import edu.cmu.lti.lexical_db.NictWordNet;
+import edu.cmu.lti.ws4j.RelatednessCalculator;
+import edu.cmu.lti.ws4j.impl.JiangConrath;
+import edu.cmu.lti.ws4j.impl.Lin;
+import edu.cmu.lti.ws4j.impl.Resnik;
+import edu.cmu.lti.ws4j.impl.WuPalmer;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -21,14 +28,18 @@ public class Ranker {
     private double BM25__idf;
     private double BM25__delta;
     private double BM25__weight;
-    private static double Cosine__weight;
-    private static double WuPalmer__weight;
-    private static double Lin__weight;
-    private static double JiangConrath__weight;
-    private static double Lesk__weight;
-    private static double LeacockChodrow__weight;
-    private static double Resnik__weight;
-    private static double Path__weight;
+    private static ArrayList<ImmutablePair<RelatednessCalculator,Double>> calculators = initCalculators();
+
+    private static ArrayList<ImmutablePair<RelatednessCalculator, Double>> initCalculators() {
+        ILexicalDatabase db = new NictWordNet();
+        ArrayList<ImmutablePair<RelatednessCalculator,Double>> calcList = new ArrayList<>();
+        calcList.add(new ImmutablePair<>(new WuPalmer(db),PropertiesFile.getPropertyAsDouble("wuPalmer.weight")));
+        calcList.add(new ImmutablePair<>(new ResnikMod(db),PropertiesFile.getPropertyAsDouble("resnik.weight")));
+        calcList.add(new ImmutablePair<>(new JiangConrath(db),PropertiesFile.getPropertyAsDouble("jiang.weight")));
+        calcList.add(new ImmutablePair<>(new Lin(db),PropertiesFile.getPropertyAsDouble("lin.weight")));
+        return calcList;
+    }
+
     private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
     private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic;
     public TreeMap<String, Double> docsRank;
@@ -38,10 +49,10 @@ public class Ranker {
      * Main Function.
      * Give Ranks to each Document with a given query
      *
-     * @param termDic     - Term Dictionary
-     * @param cache       - cache Dictionary
-     * @param docDic      - document Dictionary
-     * @param query       - query Dictionary
+     * @param termDic - Term Dictionary
+     * @param cache   - cache Dictionary
+     * @param docDic  - document Dictionary
+     * @param query   - query Dictionary
      * @return a Map with all the docs to return by a given query
      * key - DocNum (name)
      * value - the Rank of the Document (double)
@@ -62,10 +73,10 @@ public class Ranker {
      * and work faster with the postings of each term.
      * Read the report for further information.
      *
-     * @param termDic     - Term Dictionary
-     * @param cache       - cache Dictionary
-     * @param docDic      - document Dictionary
-     * @param query       - query Dictionary
+     * @param termDic - Term Dictionary
+     * @param cache   - cache Dictionary
+     * @param docDic  - document Dictionary
+     * @param query   - query Dictionary
      */
     private void reArrangePostingForQuery(TreeMap<String, String> termDic, TreeMap<String, String> cache, TreeMap<String, String> docDic, HashMap<String, Integer> query) {
         for (Map.Entry<String, Integer> entry : query.entrySet()) {
@@ -79,9 +90,9 @@ public class Ranker {
             if (endsWith(termVal, "*")) { //it's in cache
                 termVal = substringBeforeLast(termVal, ",");
                 String[] postPoint = split(cache.get(word), ",");
-                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"),"\\")), word, postPoint[1]));
+                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"), "\\")), word, postPoint[1]));
             } else {
-                fromPosting.append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"),"\\")), word, substringAfterLast(termVal, ",")));
+                fromPosting.append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"), "\\")), word, substringAfterLast(termVal, ",")));
             }
             fromPosting.trimToSize();
             if (fromPosting.length() != 0) {
@@ -142,8 +153,6 @@ public class Ranker {
      * @param docDic  - docs map
      */
     public void calculateBM25(TreeMap<String, String> termDic, TreeMap<String, String> docDic) {
-//        int N = docDic.size();
-//        double log2 = StrictMath.log10(2);
         for (Map.Entry<String, ArrayList<ImmutablePair<String, String>>> entry : relationDic.entrySet()) {
             double res = 0;
             String docNum = entry.getKey();
@@ -161,8 +170,6 @@ public class Ranker {
                     int docLength = Integer.parseInt(docRecord[1]);
                     int df = Integer.parseInt(split(termDic.get(term), ",")[1]);
                     double idf = StrictMath.log10((docDic.size() - df + BM25__idf) / (df + BM25__idf));
-//                    double logN = StrictMath.log10(N - df + BM25__idf) / log2;
-//                    double idf = logN - (StrictMath.log10(df + BM25__idf) / log2);
                     int tf = Master.getFrequencyFromPosting(positions);
                     double tfInDoc = tf * Integer.parseInt(docRecord[0]);
                     double Dlen = docLength / averageDocLength;
@@ -181,6 +188,32 @@ public class Ranker {
         BM25__b = b;
         BM25__delta = delta;
         BM25__idf = idf;
-        BM25__weight = 1;
+        BM25__weight = PropertiesFile.getPropertyAsDouble("bm25.weight");
+    }
+
+
+
+
+    public static double getWeigthedSimilarity(String w1, String w2) {
+        double res = 0;
+        for (int i = 0; i < calculators.size(); i++) {
+            ImmutablePair<RelatednessCalculator, Double> rc = calculators.get(i);
+            res+= (rc.right*Double.min(1,rc.left.calcRelatednessOfWords(w1, w2)));
+        }
+        return res;
+    }
+
+    /**
+     * Overriding the similarity of Resnik for normalitation
+     */
+    private static class ResnikMod extends Resnik{
+        public ResnikMod(ILexicalDatabase db) {
+            super(db);
+        }
+
+        @Override
+        public double calcRelatednessOfWords(String word1, String word2) {
+            return Double.min(super.calcRelatednessOfWords(word1, word2)/10,1);
+        }
     }
 }
