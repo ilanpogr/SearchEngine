@@ -58,7 +58,8 @@ public class ControllerMenu implements Observer {
     private boolean savePath = false;
     private boolean dataPath = false;
 
-    private HashSet<String> selectedCities = new HashSet<>();
+    private ArrayList<String> selectedCities = new ArrayList<>();
+    private ArrayList<String> citiesList = null;
 
 
     /**
@@ -218,9 +219,7 @@ public class ControllerMenu implements Observer {
                 readDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("search")) {
-                List<String> languages = new LinkedList<>();
-                // todo - implement
-                ir_modelMenu.search(languages);
+                ir_modelMenu.search(citiesList);
             } else if (arg.equals("queryFile")) {
                 loadQueriesFile();
             }
@@ -239,9 +238,8 @@ public class ControllerMenu implements Observer {
     private void dealWithCities() {
         selectedCities.clear();
         ListView<String> listView = new ListView<>();
-        for (int i = 1; i <= 20 ; i++) {
-            String item = "Item "+i ;
-            listView.getItems().add(item);
+        for (String city : this.citiesList) {
+            listView.getItems().add(city);
         }
         listView.setCellFactory(CheckBoxListCell.forListView(new Callback<String, ObservableValue<Boolean>>() {
             @Override
@@ -280,6 +278,7 @@ public class ControllerMenu implements Observer {
             File file = new File(dicPath);
             if (file.isDirectory()) {
                 if (ir_modelMenu.readDictionaries(dicPath)) {
+                    this.citiesList = ir_modelMenu.getCitiesSet();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Read Dictionaries");
                     alert.setHeaderText("Dictionaries are read and now available to use");

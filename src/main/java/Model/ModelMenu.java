@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
@@ -129,13 +130,13 @@ public class ModelMenu extends Observable {
         }
     }
 
-    public void search(List<String> lang){
-        master_of_puppets.search(lang);
+    public void search(ArrayList<String> cities){
+        master_of_puppets.search(cities);
         setChanged();
         notifyObservers("search_done");
     }
 
-    public HashSet<String> getCitiesSet() {
+    public ArrayList<String> getCitiesSet() {
         return master_of_puppets.getCitiesSet();
     }
 }

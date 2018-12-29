@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<?import javafx.scene.image.Image?>
+<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/10.0.1"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.IR_QResultView">
+    <children>
+        <HBox prefHeight="600.0" prefWidth="800.0">
+            <children>
+                <TreeView fx:id="treeView" prefHeight="600.0" prefWidth="276.0"/>
+                <VBox prefHeight="600.0" prefWidth="535.0">
+                    <children>
+                        <Label fx:id="content_lbl" text="Content" underline="true">
+                            <font>
+                                <Font size="15.0"/>
+                            </font>
+                            <VBox.margin>
+                                <Insets left="15.0" top="5.0"/>
+                            </VBox.margin>
+                        </Label>
+                        <TextArea fx:id="content_textArea" maxWidth="500.0" prefHeight="354.0" prefWidth="500.0">
+                            <VBox.margin>
+                                <Insets left="15.0"/>
+                            </VBox.margin>
+                        </TextArea>
+                        <Label fx:id="entities_lbl" text="Entities" underline="true">
+                            <font>
+                                <Font size="15.0"/>
+                            </font>
+                            <VBox.margin>
+                                <Insets left="15.0" top="5.0"/>
+                            </VBox.margin>
+                        </Label>
+                        <HBox prefHeight="180.0" prefWidth="502.0">
+                            <children>
+                                <TextArea fx:id="entities_textArea" editable="false" maxWidth="418.0" prefHeight="180.0"
+                                          prefWidth="383.0">
+                                    <HBox.margin>
+                                        <Insets left="15.0"/>
+                                    </HBox.margin>
+                                </TextArea>
+                                <ImageView fitHeight="67.0" fitWidth="67.0" pickOnBounds="true" preserveRatio="true">
+                                    <HBox.margin>
+                                        <Insets left="50.0" top="110.0"/>
+                                    </HBox.margin>
+                                    <image>
+                                        <Image url="@images/save.png"/>
+                                    </image>
+                                </ImageView>
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+    </children>
+</AnchorPane>

@@ -1,5 +1,6 @@
 package Tests;
 
+import Stemmer.Stemmer;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
@@ -16,11 +17,27 @@ public class SemanticDB {
     private static String filePath = "D:\\Documents\\school\\semester e 3\\Ihzur\\Project\\PartB\\Files\\semantic_DB\\ppdb-2.0-xxl-all";
     private static String semanticSeperator = "|";
     private static String keySeperator = "~";
-    private static boolean stem = false;
+    private static String stemSeperaot = "^";
+    private static Stemmer stemmer = new Stemmer();
 
     private static double compute(String word1, String word2, RelatednessCalculator rc) {
         WS4JConfiguration.getInstance().setMFS(true);
         return rc.calcRelatednessOfWords(word1, word2);
+    }
+
+    private static void writeToFile(TreeMap<String,String> map, String fileName) throws IOException {
+        // write to file
+        FileWriter fstreamToText;
+        BufferedWriter out;
+
+        fstreamToText = new FileWriter(fileName, true);
+        out = new BufferedWriter(fstreamToText);
+
+        while (!map.isEmpty()) {
+            Map.Entry<String, String> pairs = map.pollFirstEntry();
+            out.write(pairs.getKey() + keySeperator + pairs.getValue() + "\n");
+        }
+        out.close();
     }
 
     private static void createSemanticHashMapFiles() throws IOException {
@@ -47,19 +64,7 @@ public class SemanticDB {
         br.close();
 
         map = arrangeValueByWeight(map);
-
-        // write to file
-        FileWriter fstreamToText;
-        BufferedWriter out;
-
-        fstreamToText = new FileWriter("semantic_DB_XXL", true);
-        out = new BufferedWriter(fstreamToText);
-
-        while (!map.isEmpty()) {
-            Map.Entry<String, String> pairs = map.pollFirstEntry();
-            out.write(pairs.getKey() + keySeperator + pairs.getValue() + "\n");
-        }
-        out.close();
+        writeToFile(map, "semantic_DB_XXL");
     }
 
     private static TreeMap<String, String> arrangeValueByWeight(TreeMap<String, String> map) {
@@ -107,12 +112,50 @@ public class SemanticDB {
         return mapArranged;
     }
 
-    private static void stemSemanticFile(){
-        // todo implement
+    private static void stemSemanticFile() throws IOException {
+        FileInputStream fstream = new FileInputStream("semantic_DB_XXL");
+        BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+        String strLine;
+        HashMap<String, String> singleWord = new HashMap<>();
+        TreeMap<String, String> stemmedSemanticDB = new TreeMap<>(String::compareToIgnoreCase);
+        while ((strLine = br.readLine()) != null) {
+            String[] content = split(strLine, keySeperator);
+            String key = content[0];
+            singleWord.put(key,"");
+            key = stemWord(singleWord);
+            String[] values = split(content[1], semanticSeperator);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < values.length; i++) {
+                singleWord.clear();
+                singleWord.put(values[i], "");
+                values[i] = stemWord(singleWord);
+                if (stringBuilder.length() == 0) {
+                    stringBuilder.append(values[i]);
+                } else {
+                    stringBuilder.append(semanticSeperator).append(values[i]);
+                }
+            }
+            String value = stringBuilder.toString();
+            if (stemmedSemanticDB.containsKey(key)) {
+                value += stemSeperaot + stemmedSemanticDB.get(key);
+                stemmedSemanticDB.replace(key, value);
+            } else {
+                stemmedSemanticDB.put(key, value);
+            }
+        }
+        br.close();
+
+        writeToFile(stemmedSemanticDB, "semantic_DB_XXL_stem");
     }
 
-    public static void main(String[] args) throws IOException {
-        createSemanticHashMapFiles();
+    private static String stemWord(HashMap<String, String> singleWord) {
+        singleWord = stemmer.stem(singleWord);
+        String res = "";
+        for (String s : singleWord.keySet()) {
+            res = s;
+        }
+        return res;
     }
+
 }
 

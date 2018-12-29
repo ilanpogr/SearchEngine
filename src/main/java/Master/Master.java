@@ -363,7 +363,7 @@ public class Master {
         // todo - implement
     }
 
-    public HashSet<String> getCitiesSet() {
+    public ArrayList<String> getCitiesSet() {
         // todo - implement
         return null;
     }

@@ -1,4 +1,4 @@
-package Ranker;
+package Tests;
 
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
