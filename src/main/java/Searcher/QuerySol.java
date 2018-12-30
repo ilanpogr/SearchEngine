@@ -63,14 +63,6 @@ public class QuerySol {
     }
 
     /**
-     * appends the semantic words to the query title
-     * @param semantics
-     */
-    public void setSemantic(String semantics){
-        //TODO - think about it
-    }
-
-    /**
      * Ctor
      * @param query - the query string as read from QueryDic class
      */

@@ -38,8 +38,8 @@ public class QueryDic {
 //            File dic = new File(classLoader.getResource(dicName).getFile());
             File dic = new File("src\\main\\resources", dicName);
             File post = new File("src\\main\\resources", "sols.post");
-            dic.setWritable(false);
-            post.setWritable(false);
+//            dic.setWritable(false);
+//            post.setWritable(false);
             BufferedReader bufferedReader = new BufferedReader(new FileReader(dic.getCanonicalFile()));
             String q = bufferedReader.readLine();
             qmap = new TreeMap<>();
@@ -394,7 +394,4 @@ public class QueryDic {
         }
     }
 
-    public static void main(String[] args) {
-
-    }
 }

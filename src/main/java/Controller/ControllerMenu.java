@@ -75,9 +75,9 @@ public class ControllerMenu implements Observer {
     private ArrayList<String> citiesList = null;
 
 
-    private final Node rootIcon = new ImageView(new Image(getClass().getResourceAsStream("images/morty.png")));
-    private final Node queryIcon = new ImageView(new Image(getClass().getResourceAsStream("images/searchQuery.png")));
-    private final Image docIcon = new Image(getClass().getResourceAsStream("doc.png"));
+    private final Node rootIcon = new ImageView(new Image(getClass().getResourceAsStream("/menu/images/morty.png")));
+    private final Node queryIcon = new ImageView(new Image(getClass().getResourceAsStream("/menu/images/searchQuery.png")));
+    private final Image docIcon = new Image(getClass().getResourceAsStream("/menu/images/doc.png"));
 
 
     /**
@@ -95,7 +95,6 @@ public class ControllerMenu implements Observer {
             alert.setContentText("try to run the app again");
             alert.showAndWait();
         }
-        treeViewForResultHandle();
         Scene scene = new Scene(root);
         scene.getStylesheets().add("menu/style_menu.css");
         stage.setScene(scene);
@@ -105,6 +104,7 @@ public class ControllerMenu implements Observer {
         ir_modelMenu.addObserver(this);
         ir_menuView.addObserver(this);
         progress = new SimpleDoubleProperty(0);
+        treeViewForResultHandle();
     }
 
     /**

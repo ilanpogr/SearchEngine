@@ -14,7 +14,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class SemanticDB {
 
-    private static String filePath = "D:\\Documents\\school\\semester e 3\\Ihzur\\Project\\PartB\\Files\\semantic_DB\\ppdb-2.0-xxl-all";
+    private static String filePath = "C:\\Users\\User\\Documents\\Java Projects\\SearchEngine\\src\\main\\resources\\semanticDB\\ppdb-2.0-xxl-all";
     private static String semanticSeperator = "|";
     private static String keySeperator = "~";
     private static String stemSeperaot = "^";

@@ -14,10 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -163,6 +160,25 @@ public class ReadFile {
             return "";
         }
         return stringBuilder.toString();
+    }
+
+    public HashMap<String, ArrayList<String>> readSemantics(String dbName) {
+        HashMap<String, ArrayList<String>> res = new HashMap<>();
+        try {
+            BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/semanticDB/" + dbName)));
+            for (String line; (line = inputStreamReader.readLine()) != null; ) {
+                String[] splitLine = split(line, "~");
+                String[] values = split(splitLine[1],"|");
+                ArrayList<String> valuesArrayList = new ArrayList<>();
+                for (String s : values){
+                    valuesArrayList.add(s);
+                }
+                res.put(splitLine[0], valuesArrayList);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return res;
     }
 
 
@@ -328,5 +344,4 @@ public class ReadFile {
             }
         }
     }
-
 }
