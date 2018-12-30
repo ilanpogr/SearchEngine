@@ -29,8 +29,12 @@ public class IR_MenuView extends Observable {
     public CheckBox semantic_checkBox;
     public ImageView search_btn;
     public Button browse_queries_btn;
-    public ComboBox docs_language;
     public Button cities_btn;
+    public ComboBox docs_language;
+    public Label result_lbl;
+    public ImageView save_results_img;
+    public TreeView result_treeView;
+    public TextArea entities_textArea;
 
     /**
      * when start button is clicked
@@ -57,11 +61,6 @@ public class IR_MenuView extends Observable {
     public void savePostingFilePath_DictionaryFilePath(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("target");
-    }
-
-    public void saveResults(ActionEvent actionEvent){
-        setChanged();
-        notifyObservers("save");
     }
 
     /**
@@ -100,28 +99,57 @@ public class IR_MenuView extends Observable {
         notifyObservers("read");
     }
 
-    public void BrowseQueriesFile(ActionEvent actionEvent) {
-        setChanged();
-        notifyObservers("queryFile");
-    }
-
-    public void search(MouseEvent mouseEvent) {
-        setChanged();
-        notifyObservers("freeLangSearch");
-    }
-
+    /**
+     * when Entities CheckBox is clicked
+     * @param actionEvent - Entities CheckBox is clicked
+     */
     public void setEntitiesMode(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("entities");
     }
 
+    /**
+     * when Semantic CheckBox is clicked
+     * @param actionEvent - Semantic CheckBox is clicked
+     */
     public void setSemantic(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("semantic");
     }
 
+    /**
+     * when Choose Specific Cities Button is clicked
+     * @param actionEvent - Choose Specific Cities Button is clicked
+     */
     public void chooseCities(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("cities");
+    }
+
+    /**
+     * when Search Image is clicked
+     * @param mouseEvent - Search Image is clicked
+     */
+    public void searchSingleQuery(MouseEvent mouseEvent) {
+        setChanged();
+        notifyObservers("search_single");
+    }
+
+    /**
+     * when Save Image is clicked for saving the search results
+     * @param mouseEvent - Save Image is clicked
+     */
+    public void saveResults(MouseEvent mouseEvent) {
+        setChanged();
+        notifyObservers("save_results");
+    }
+
+    /**
+     * when BrowseQueriesFile button is clicked for loading the queries file and start the multiSearch
+     * @param actionEvent - BrowseQueriesFile button is clicked
+     */
+    public void BrowseQueriesFileAndSearch(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("queryFile");
     }
 }

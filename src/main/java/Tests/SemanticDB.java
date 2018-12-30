@@ -20,11 +20,24 @@ public class SemanticDB {
     private static String stemSeperaot = "^";
     private static Stemmer stemmer = new Stemmer();
 
+    /**
+     * Computes similarity for two words by using a received RelatednessCalculator object
+     * @param word1 - first word
+     * @param word2 - second word
+     * @param rc - RelatednessCalculator object
+     * @return - Double representing the similarity
+     */
     private static double compute(String word1, String word2, RelatednessCalculator rc) {
         WS4JConfiguration.getInstance().setMFS(true);
         return rc.calcRelatednessOfWords(word1, word2);
     }
 
+    /**
+     * writes the map to project folder with given file name
+     * @param map - the map we wish to write into file
+     * @param fileName - the wished fileName
+     * @throws IOException - exception from using FileWriter
+     */
     private static void writeToFile(TreeMap<String,String> map, String fileName) throws IOException {
         // write to file
         FileWriter fstreamToText;
@@ -40,6 +53,12 @@ public class SemanticDB {
         out.close();
     }
 
+    /**
+     * using the filePath from the class Object, opening a DB, reading it
+     * after filtering only one word terms from each side,
+     * creates a Map with key term and all the semantics for this word.
+     * @throws IOException - using Files
+     */
     private static void createSemanticHashMapFiles() throws IOException {
         TreeMap<String, String> map = new TreeMap<>(String::compareToIgnoreCase);
         FileInputStream fstream = new FileInputStream(filePath);
@@ -67,6 +86,13 @@ public class SemanticDB {
         writeToFile(map, "semantic_DB_XXL");
     }
 
+    /**
+     * for each term in the TreeMap takes the String value (writen as posting),
+     * separates the words and ordering them by weight computed with Compute function above.
+     * returnes the value inside the TreeMap.
+     * @param map - key: term, value: words with same semantic meaning separated with delimiter defined by: semanticSeperator.
+     * @return : new TreeMap after rearranged by weights
+     */
     private static TreeMap<String, String> arrangeValueByWeight(TreeMap<String, String> map) {
         ILexicalDatabase db = new NictWordNet();
         RelatednessCalculator rc = new WuPalmer(db);
@@ -112,6 +138,12 @@ public class SemanticDB {
         return mapArranged;
     }
 
+    /**
+     * reads the Semantic file, stemming the terms and the words inside the map key's value.
+     * after stemming different terms can be represented the same, so merging the values with a separator defined by: stemSeperaot.
+     * saving the new file by the name ending with Stem
+     * @throws IOException - usuing Files
+     */
     private static void stemSemanticFile() throws IOException {
         FileInputStream fstream = new FileInputStream("semantic_DB_XXL");
         BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
@@ -148,6 +180,12 @@ public class SemanticDB {
         writeToFile(stemmedSemanticDB, "semantic_DB_XXL_stem");
     }
 
+    /**
+     * stemming the word.
+     * @param singleWord - HashMap containing only one word
+     *                   the Stemmer uses HashMap so created as Stemmer wants.
+     * @return - the word as String after stemming
+     */
     private static String stemWord(HashMap<String, String> singleWord) {
         singleWord = stemmer.stem(singleWord);
         String res = "";

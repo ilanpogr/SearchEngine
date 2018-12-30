@@ -27,8 +27,6 @@ import java.util.stream.Stream;
  */
 public class ReadFile {
 
-    //TODO- return all Tags as Atributes from a Doc
-
     private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
     private ArrayList<Doc> docList; //a list of Docs, from a single File
     private static ArrayList<String> rootPath; //paths list of all files in the corpus
@@ -104,7 +102,6 @@ public class ReadFile {
                 File[] dics = dicDir.listFiles();
                 for (int i = 0; i < dics.length; i++) {
                     if (!isNumeric(dics[i].getName().substring(0, 1))) continue;
-                    //todo - implement
                     bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dics[i].getPath()), StandardCharsets.UTF_8));
                     String s = bufferedReader.readLine();
                     dic = new TreeMap<>(String::compareToIgnoreCase);

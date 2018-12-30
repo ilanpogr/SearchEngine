@@ -10,12 +10,16 @@ import javafx.beans.property.SimpleDoubleProperty;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Observable;
 
 /**
  * This class is linking between the controller and the brain of this project (Master Class)
  */
 public class ModelMenu extends Observable {
+
+    HashMap<String, String[]> docsEntitites = new HashMap<>();
+    ArrayList<ArrayList<String>> docsResult = new ArrayList<>();
 
     private Master master_of_puppets = new Master();
     private static DoubleProperty progress;
@@ -123,9 +127,20 @@ public class ModelMenu extends Observable {
         return querySols;
     }
 
+    public HashMap<String, String[]> getDocsEntities() {
+        return docsEntitites;
+    }
 
+    private void setDocsResults() {
+        // todo - implement
+    }
 
     public ArrayList<String> getCitiesList() {
         return master_of_puppets.getCitiesList();
     }
+
+    public ArrayList<ArrayList<String>> getDocsResults() {
+        return docsResult;
+    }
+
 }

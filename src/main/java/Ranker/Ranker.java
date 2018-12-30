@@ -152,7 +152,6 @@ public class Ranker {
             String doc = o.getKey();
             Double rank = o.getValue();
             rank+=query.getSolRank(doc)*dbWeights;
-
             while (res.containsKey(rank))
                 rank -= Math.pow(10, -9);
             res.put(rank, doc);

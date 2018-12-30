@@ -191,7 +191,7 @@ public class QueryDic {
 
     /**
      * Ctor - private (singleton)
-     *///todo- add substrings to wordsToQueries
+     */
     private QueryDic() {
         try {
             String dicName = "tested.queries";

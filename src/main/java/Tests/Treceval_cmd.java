@@ -20,6 +20,10 @@ public class Treceval_cmd {
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> docs = new TreeMap<>();
 
+    /**
+     * opens Windows Command Prompt, and enters the "treceval" command to check our answers.
+     * @return - returns the output of using "treceval".
+     */
     private static StringBuilder runCmd(String resultFileName) {
         StringBuilder s = new StringBuilder();
         try {
@@ -72,6 +76,13 @@ public class Treceval_cmd {
         }
     }
 
+    /**
+     * using the function above for receiving the output of "treceval".
+     * manipulating cutting the output for wished parameters.
+     * this function used for testing optimal parameters for example: b, m, k, Delta, idf in BM25.
+     * @return - Double array containing the wished result from the out put
+     *          {r_precision, precision, recall, final_rank}
+     */
     public double[] getResultRanked(StringBuilder stringBuilder) {
         String values = "";
         if (stringBuilder != null)

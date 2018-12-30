@@ -5,7 +5,9 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -129,7 +131,7 @@
                                     <Insets left="5.0" />
                                  </VBox.margin>
                               </TextField>
-                              <Button fx:id="browse_queries_btn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#BrowseQueriesFile" prefHeight="40.0" prefWidth="280.0" text="Browse Queries File">
+                              <Button fx:id="browse_queries_btn" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#BrowseQueriesFileAndSearch" prefHeight="40.0" prefWidth="280.0" text="Browse Queries File and SEARCH">
                                  <VBox.margin>
                                     <Insets left="120.0" top="10.0" />
                                  </VBox.margin></Button>
@@ -138,17 +140,17 @@
                                     <Insets top="3.0" />
                                  </VBox.margin>
                                  <children>
-                                    <CheckBox fx:id="entities_checkBox" mnemonicParsing="false" text="Entities" onAction="#setEntitiesMode">
+                                    <CheckBox fx:id="entities_checkBox" mnemonicParsing="false" onAction="#setEntitiesMode" text="Entities">
                                        <HBox.margin>
                                           <Insets left="10.0" top="10.0" />
                                        </HBox.margin>
                                     </CheckBox>
-                                    <CheckBox fx:id="semantic_checkBox" mnemonicParsing="false" text="Semantic treatment" onAction="#setSemantic">
+                                    <CheckBox fx:id="semantic_checkBox" mnemonicParsing="false" onAction="#setSemantic" text="Semantic treatment">
                                        <HBox.margin>
                                           <Insets left="20.0" top="10.0" />
                                        </HBox.margin>
                                     </CheckBox>
-                                     <Button fx:id="cities_btn" minHeight="25.0" prefHeight="30.0" prefWidth="240.0" text="Please Choose Specific Cities" onAction="#chooseCities">
+                                     <Button fx:id="cities_btn" minHeight="25.0" onAction="#chooseCities" prefHeight="30.0" prefWidth="240.0" text="Please Choose Specific Cities">
                                        <HBox.margin>
                                           <Insets left="25.0" top="5.0" />
                                        </HBox.margin>
@@ -157,14 +159,76 @@
                               </HBox>
                            </children>
                         </VBox>
-                        <ImageView fx:id="search_btn" fitHeight="65.0" fitWidth="65.0" onMouseClicked="#search" pickOnBounds="true" preserveRatio="true">
-                           <HBox.margin>
-                              <Insets left="2.0" top="25.0" />
-                           </HBox.margin>
-                            <image>
-                                <Image url="@images/search.png" />
-                            </image>
-                        </ImageView>
+                        <VBox prefHeight="200.0" prefWidth="100.0">
+                           <children>
+                               <fx:define>
+                                   <Image fx:id="search_btnImage" url="@images/search.png" />
+                               </fx:define>
+                              <ImageView fx:id="search_btn" fitHeight="50.0" fitWidth="30.0" onMouseClicked="#searchSingleQuery" pickOnBounds="true" preserveRatio="true">
+                                  <image>
+                                      <Image url="@images/search.png" />
+                                  </image>
+                                 <VBox.margin>
+                                    <Insets left="10.0" />
+                                 </VBox.margin>
+                              </ImageView>
+                              <Label text="Total Rickall:">
+                                 <VBox.margin>
+                                    <Insets top="10.0" />
+                                 </VBox.margin>
+                                 <font>
+                                    <Font name="System Italic" size="12.0" />
+                                 </font>
+                              </Label>
+                              <HBox prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <CheckBox mnemonicParsing="false">
+                                       <HBox.margin>
+                                          <Insets bottom="7.0" left="15.0" right="7.0" top="7.0" />
+                                       </HBox.margin>
+                                    </CheckBox>
+                                    <ImageView fitHeight="35.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@images/supersearch.png" />
+                                       </image>
+                                       <HBox.margin>
+                                          <Insets />
+                                       </HBox.margin>
+                                    </ImageView>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <Label fx:id="result_lbl" text="Results:" underline="true" visible="false">
+                     <VBox.margin>
+                        <Insets top="15.0" />
+                     </VBox.margin>
+                  </Label>
+                  <HBox prefHeight="408.0" prefWidth="600.0">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <children>
+                        <TreeView fx:id="result_treeView" prefHeight="420.0" visible="false" prefWidth="220.0" />
+                        <VBox prefHeight="408.0" prefWidth="380.0">
+                           <children>
+                              <TextArea fx:id="entities_textArea" visible="false" maxHeight="300.0" maxWidth="300.0" minHeight="300.0" minWidth="300.0" prefHeight="300.0" prefWidth="300.0" promptText="Please select a document to see the top 5 entities">
+                                 <VBox.margin>
+                                    <Insets left="50.0" top="20.0" />
+                                 </VBox.margin>
+                              </TextArea>
+                              <ImageView fx:id="save_results_img" fitHeight="65.0" fitWidth="65.0" visible="false" onMouseClicked="#saveResults" pickOnBounds="true" preserveRatio="true">
+                                 <VBox.margin>
+                                    <Insets left="300.0" top="15.0" />
+                                 </VBox.margin>
+                                  <image>
+                                      <Image url="@images/save.png" />
+                                  </image>
+                              </ImageView>
+                           </children>
+                        </VBox>
                      </children>
                   </HBox>
                </children></VBox>
