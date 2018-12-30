@@ -46,6 +46,7 @@ public class WrieFile {
 
     /**
      * writes a string to a new temporary file
+     *
      * @param poString - post-string. get it?
      */
     public static void createTempPostingFile(StringBuilder poString) {
@@ -61,14 +62,15 @@ public class WrieFile {
 
     /**
      * writes to a file in the current path
+     *
      * @param stringBuilder - the content that will be written to the file
-     * @param fileName - file name
+     * @param fileName      - file name
      * @return the number of bytes to skip to get to this content
      */
     public static int writeToDictionary(StringBuilder stringBuilder, String fileName) {
         targetPath = PropertiesFile.getProperty("save.files.path");
-        int pointer=0;
-        if (pointers.putIfAbsent(fileName,0)!=null)
+        int pointer = 0;
+        if (pointers.putIfAbsent(fileName, 0) != null)
             pointer = pointers.get(fileName);
         try {
             File file = new File(targetPath + fileName);
@@ -83,6 +85,20 @@ public class WrieFile {
     }
 
     /**
+     * Returns the Pointer of the given file without writing it
+     * @param stringBuilder - the string that WON'T be written
+     * @param fileName - the name of the file
+     * @return int - pointer
+     */
+    public static int putAndGetPointer(StringBuilder stringBuilder, String fileName) {
+        Integer pointer = pointers.put(fileName, 0);
+        if (pointer == null)
+            pointer = 0;
+        pointer += stringBuilder.toString().getBytes().length;
+        return pointers.put(fileName, pointer);
+    }
+
+    /**
      * clears static fields from memory
      */
     public static void clear() {
@@ -92,13 +108,14 @@ public class WrieFile {
 
     /**
      * gets a new file from a given path, if file already exists, will create another one
+     *
      * @param targetPath - the path to the location of the written file
-     * @param fileName - the name of the file (will add numbers)
+     * @param fileName   - the name of the file (will add numbers)
      * @return the created file
      */
-    public static File getTmpFile(String targetPath,String fileName) {
+    public static File getTmpFile(String targetPath, String fileName) {
         try {
-            if (!isEmpty(fileName)) targetPath+="\\"+fileName;
+            if (!isEmpty(fileName)) targetPath += "\\" + fileName;
             File file = new File(targetPath);
             int i = 1;
             while (file.exists() && file.isFile()) {
@@ -112,9 +129,10 @@ public class WrieFile {
 
     /**
      * Writes results from a QuerySol list in Trec_eval Format
+     *
      * @param querySols - list of queries containing solutions
-     * @param parent - the directory of the new file
-     * @param fileName - the name of the new file
+     * @param parent    - the directory of the new file
+     * @param fileName  - the name of the new file
      */
     public static void writeQueryResults(ArrayList<QuerySol> querySols, String parent, String fileName) {
         try {

@@ -3,6 +3,7 @@ package TextContainers;
 import Controller.PropertiesFile;
 import Indexer.Indexer;
 import Indexer.WrieFile;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.*;
@@ -14,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 public class Doc {
 
-    private static Indexer indexer = new Indexer();
+    private static StringBuilder entitiesPrinter = new StringBuilder();
     private static String seperator = PropertiesFile.getProperty("file.posting.delimiter");
     private static int numberOfPersonalNames = PropertiesFile.getPropertyAsInt("number.of.person.names");
     private String fileName;
@@ -24,7 +25,7 @@ public class Doc {
     private boolean hasCity = false;
     private String language;
     private HashMap<String, String> attributes;
-    private PriorityQueue<ImmutablePair<String, Integer>> entities;
+    private TreeSet<ImmutablePair<String, Integer>> entities;
 
 
     /**
@@ -34,7 +35,16 @@ public class Doc {
         this.attributes = new HashMap<>();
         max_tf = -1;
         length = 0;
-        entities = new PriorityQueue<>(Comparator.comparingInt(o -> o.right));
+        entities = new TreeSet<>(new Comparator<ImmutablePair<String, Integer>>() {
+            @Override
+            public int compare(ImmutablePair<String, Integer> o1, ImmutablePair<String, Integer> o2) {
+                int res = Integer.compare(o1.right, o2.right);
+                if (res == 0) {
+                    res = StringUtils.compareIgnoreCase(o1.left, o2.left);
+                }
+                return res;
+            }
+        });
     }
 
     /**
@@ -58,6 +68,10 @@ public class Doc {
         for (int i = 0; i < tag.length; i++) {
             tag[i] = attributes.getOrDefault(tag[i], "");
         }
+    }
+
+    public static StringBuilder getEntitiesPrinter() {
+        return entitiesPrinter;
     }
 
     public String getAttribute(String key) {
@@ -119,6 +133,7 @@ public class Doc {
 
     public void setCity(String city) {
         this.city = city;
+        if (isEmpty(city)) hasCity = false;
     }
 
     public void setLanguage(String language) {
@@ -177,9 +192,12 @@ public class Doc {
      * @param freq    - frequency
      */
     public void addEntity(String termKey, int freq) {
-        if (entities.size() < numberOfPersonalNames) entities.add(new ImmutablePair<>(termKey, freq));
-        if (!entities.isEmpty() && entities.peek().right < freq) {
-            entities.poll();
+        if (entities.size() < numberOfPersonalNames) {
+            entities.add(new ImmutablePair<>(termKey, freq));
+            return;
+        }
+        if (entities.first().right < freq) {
+            entities.pollFirst();
             entities.add(new ImmutablePair<>(termKey, freq));
         }
     }
@@ -193,10 +211,12 @@ public class Doc {
      */
     public String appendPersonas(StringBuilder stringBuilder) {
         while (entities.size() > 0) {
-            ImmutablePair<String, Integer> toPrint = entities.poll();
-            stringBuilder.append(toPrint.left).append(seperator).append(toPrint.right).append("\n");
+            ImmutablePair<String, Integer> toPrint = entities.pollLast();
+            stringBuilder.append(toPrint.left).append(seperator).append(toPrint.right).append("|");
         }
-        return Integer.toString(stringBuilder.toString().getBytes().length + indexer.appendToFile(stringBuilder, "Entities") + 1, 36);
+        entitiesPrinter.append(stringBuilder.append("\n"));
+
+        return Integer.toString(entitiesPrinter.toString().getBytes().length + 1, 36);
     }
 
     /**
@@ -211,6 +231,7 @@ public class Doc {
 
     /**
      * get all tags of this document to index it
+     *
      * @return String array to parse
      */
     public String[] getAttributesToIndex() {

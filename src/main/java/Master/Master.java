@@ -37,6 +37,7 @@ public class Master {
     private static DoubleProperty currentStatus = new SimpleDoubleProperty(0);
     // Part B
     private static HashSet<TreeMap<String, String>> dictionariesCollection;
+    private static HashMap<String, ArrayList<String>> semanticDic = null;
     private static String currDocName;
 
 
@@ -81,13 +82,27 @@ public class Master {
     public static HashMap<String, Integer> makeQueryDic(QuerySol query) {
         //TODO - add Stem and Semantics
         Parser parser = new Parser();
-        return handleQuery(parser.parse(new String[]{query.getTitle()+(PropertiesFile.getPropertyAsInt("semantic.mode") == 0?getSemantics(query):"")}));
+        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? getSemantics(query) : "")}));
     }
 
+    /**
+     * gets the semantics to a given query
+     * @param query - the query we want semantics for
+     * @return String of words with semantic contents to the query words
+     */
     private static String getSemantics(QuerySol query) {
-        HashMap<String,ArrayList<String>> semanticDic = new ReadFile().readSemantics("semantic_DB_XXL"+(isStemMode?"_stem":""));
-
-        return "";
+        if (semanticDic == null)
+            semanticDic = new ReadFile().readSemantics("semantic_DB_XXL" + (isStemMode ? "_stem" : ""));
+        StringBuilder stringBuilder = new StringBuilder();
+        int semantic = PropertiesFile.getPropertyAsInt("semantic.mode");
+        String[] q = query.getTitleArray();
+        for (int i = 0; i < q.length; i++) {
+            ArrayList<String> semantics = semanticDic.get(q[i]);
+            for (int j = semantic, k = 0; j > 0 && k < semantics.size(); j--, k++) {
+                stringBuilder.append(" ").append(semantics.get(k));
+            }
+        }
+        return isEmpty(stringBuilder) ? "" : stringBuilder.toString();
     }
 
     /**
@@ -138,13 +153,16 @@ public class Master {
             while (ReadFile.hasNextFile()) {
                 i++;
                 filesList = readFile.getFileList();
+                int docCount = 0;
                 for (Doc aFilesList : filesList) {
                     currDocName = aFilesList.docNum();
                     HashMap<String, String> map = p.parse(aFilesList.getAttributesToIndex());
-                    handleFile(map);
+                    handleFile(map, docCount++);
                 }
                 currentStatus.set(i / fileNum);
                 if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
+                    indexer.appendToFile(Doc.getEntitiesPrinter(), "Entities");
+                    Doc.getEntitiesPrinter().setLength(0);
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
                     tmpFileIndex++;
@@ -152,6 +170,11 @@ public class Master {
                 }
             }
             System.out.println("MERGING");
+            Thread t = new Thread(() -> {
+                indexer.appendToFile(Doc.getEntitiesPrinter(), "Entities");
+                Doc.getEntitiesPrinter().setLength(0);
+            });
+            t.start();
             indexer.mergePostingTempFiles();
             indexer.writeToDictionary(docDic, "3. Documents Dictionary");
         } catch (Exception e) {
@@ -170,22 +193,23 @@ public class Master {
     private void writeLanguagesToFile(Indexer indexer) {
         ArrayList<String> langs = LanguagesInfo.getInstance().getLanguagesAsList();
         StringBuilder langsContent = new StringBuilder(join(langs, "\n"));
-        indexer.writeLanguages(langsContent,"Languages");
+        indexer.writeLanguages(langsContent, "Languages");
     }
 
     /**
      * handles each document,(if checked) Stemmers it and Merges it.
      *
      * @param parsedDic - A Dictionary of a single parsed document
+     * @param docCount
      */
-    private static void handleFile(HashMap<String, String> parsedDic) {
+    private static void handleFile(HashMap<String, String> parsedDic, int docCount) {
         if (isStemMode) {
             Stemmer stemmer = new Stemmer();
             HashMap<String, String> stemmed = stemmer.stem(parsedDic);
-            mergeDicts(stemmed);
+            mergeDicts(stemmed, docCount);
         } else {
             parsedDic.replaceAll((key, value) -> value = substring(value, 2));
-            mergeDicts(parsedDic);
+            mergeDicts(parsedDic, docCount);
         }
     }
 
@@ -210,11 +234,12 @@ public class Master {
     /**
      * Merging the Dictionary of a single Document into the Main Dictionaries
      *
-     * @param map - the Dictionary that will be merged
+     * @param map      - the Dictionary that will be merged
+     * @param docCount
      */
-    private static void mergeDicts(HashMap<String, String> map) {
-        int maxTf = 0, length = 0, docNum = 0;
-        Doc doc = filesList.get(docNum++);
+    private static void mergeDicts(HashMap<String, String> map, int docCount) {
+        int maxTf = 0, length = 0;
+        Doc doc = filesList.get(docCount);
         for (Map.Entry<String, String> term : map.entrySet()
         ) {
             stringBuilder.setLength(0);
@@ -317,22 +342,9 @@ public class Master {
         clear();
         termDictionary = new TreeMap<>(String::compareToIgnoreCase);
         cache = new TreeMap<>(String::compareToIgnoreCase);
+        cityTags = new TreeMap<>(String::compareToIgnoreCase);
+        semanticDic = new HashMap<>();
         Indexer.reset();
-    }
-
-    /**
-     * clears memory. returns all states back to the beginning. (except stemmer cache..)
-     */
-    public void clear() {
-        fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
-        tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
-        stringBuilder = new StringBuilder();
-        docDic = new TreeMap<>();
-        tmpTermDic = new LinkedHashMap<>();
-        isStemMode = setStemMode();
-        currentStatus.set(0);
-        Indexer.clear();
-        ReadFile.clear();
     }
 
     /**
@@ -485,5 +497,20 @@ public class Master {
         } catch (Exception e) {
             //nothing
         }
+    }
+
+    /**
+     * clears memory. returns all states back to the beginning. (except stemmer cache..)
+     */
+    public void clear() {
+        fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
+        tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
+        stringBuilder = new StringBuilder();
+        docDic = new TreeMap<>();
+        tmpTermDic = new LinkedHashMap<>();
+        isStemMode = setStemMode();
+        currentStatus.set(0);
+        Indexer.clear();
+        ReadFile.clear();
     }
 }

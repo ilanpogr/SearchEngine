@@ -135,7 +135,7 @@ public class Parser {
             doneWithToken = true;
             String[] token = new String[]{s[i], parametersDelimiter};
             cleanToken(token);
-            if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$') || containsOnly(token[0], '%')) {
+            if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$') || containsOnly(token[0], '%') || startsWithIgnoreCase(token[0],"type:")) {
                 stopWordsCounter++;
                 continue;
             }
@@ -158,7 +158,7 @@ public class Parser {
             if (Character.isUpperCase(firstCharOfToken) && !specialCharSet.contains(ourRuleToken[0].charAt(ourRuleToken[0].length() - 1))) {
                 if (i + 1 < s.length) {
                     char firstCharOfNextToken = s[i + 1].charAt(0);
-                    if (Character.isUpperCase(firstCharOfNextToken) || s[i + 1].toLowerCase().equals("of")) {          //    ADDITIONAL RULE: continues expression of upper case words.
+                    if ((Character.isUpperCase(firstCharOfNextToken) || s[i + 1].toLowerCase().equals("of")) && !endsWithIgnoreCase(s[i+1],":bfn")) {  //    ADDITIONAL RULE: continues expression of upper case words.
                         token[0] = replace(token[0], "--", "-");
                         continuesUpperCaseExpression(termsDict, token, s, i);
                         continue;
@@ -316,6 +316,8 @@ public class Parser {
                 i++;
                 nextToken[0] = s[i + 1];
             }
+            if (startsWithIgnoreCase(nextToken[0],"type:"))
+                break;
             if ((Character.isUpperCase(nextToken[0].charAt(0))) && !specialCharSet.contains(nextToken[0].charAt(0))) {
                 if (specialCharSet.contains(nextToken[0].charAt(nextToken[0].length() - 1))) {
                     stopFlag = true;

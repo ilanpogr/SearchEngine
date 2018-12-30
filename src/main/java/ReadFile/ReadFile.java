@@ -139,6 +139,7 @@ public class ReadFile {
         return "";
     }
 
+
     public static String saveSolution(String path) {
         File file = new File(path);
         StringBuilder stringBuilder = new StringBuilder();
@@ -169,10 +170,7 @@ public class ReadFile {
             for (String line; (line = inputStreamReader.readLine()) != null; ) {
                 String[] splitLine = split(line, "~");
                 String[] values = split(splitLine[1],"|");
-                ArrayList<String> valuesArrayList = new ArrayList<>();
-                for (String s : values){
-                    valuesArrayList.add(s);
-                }
+                ArrayList<String> valuesArrayList = new ArrayList<>(Arrays.asList(values));
                 res.put(splitLine[0], valuesArrayList);
             }
         } catch (Exception e) {
@@ -287,9 +285,12 @@ public class ReadFile {
      */
     private void createAndUpdateCity(Doc doc, StringBuilder stringBuilder) {
         String tag = trim(substringBetween(stringBuilder.toString(), ">", "<"));
-        if (tag != null && !tag.equals("")) {
+        if (!isEmpty(tag) && !tag.equalsIgnoreCase("null")) {
+            if (tag.charAt(0)=='(') tag = substringBetween(tag,"(",")");
             CityInfo cityInfo = CityInfo.getInstance();
             cityInfo.setInfo(tag, doc);
+        } else {
+            doc.setCity("");
         }
     }
 

@@ -98,11 +98,10 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "tuvwxyz");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("1. Term Dictionary"));
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("4. Cities Dictionary"));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("Cities"));
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         double logN = StrictMath.log10(Master.getDocCount());
-//        double logN = StrictMath.log10(Master.getDocCount()) / log2;
         while (mergedFilesCounter.get() < tmpFilesCounter.get()){
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
@@ -160,7 +159,7 @@ public class Indexer {
                     if (city!=null){
                         toPrint.delete(minTerm.length()+1,toPrint.length());
                         toPrint.append(city.getCountryName()).append(",").append(city.getCurrency()).append(",").append(city.getPopulation()).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");
-                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities Dictionary"), toPrint.toString());
+                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities"), toPrint.toString());
                     }
                     String post = stringBuilder.append("\n").toString();
                     WrieFile.addLineToFile(mergedFilesDic, mergedFileName, post);
@@ -172,7 +171,7 @@ public class Indexer {
                     if (city!=null){
                         toPrint.delete(minTerm.length()+1,toPrint.length());
                         toPrint.append(city.getCountryName()).append(",").append(city.getCurrency()).append(",").append(city.getPopulation()).append(",").append(cachePointer).append("\n");
-                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities Dictionary"), toPrint.toString());
+                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities"), toPrint.toString());
                     }
                     toPrint = new StringBuilder(cacheSplitedPost[0].length()+64);
                     toPrint.append(minTerm).append(termSeperator).append(cacheSplitedPost[0]).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");
