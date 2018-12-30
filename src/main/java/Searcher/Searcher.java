@@ -38,7 +38,7 @@ public class Searcher {
 
     public void freeLangSearch(QuerySol query, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs, boolean totalRickAll) {
         ArrayList<String> res = rankQuery(query, dict, cache, docs, totalRickAll);
-        for (int j = 0; j < res.size() && query.getSolSize() < 50; j++) {
+        for (int j = 0; j < res.size() && (query.getSolSize() < 50 || totalRickAll); j++) { //todo - check if insertion of new docnums will help
             query.addSingleDoc(res.get(j));
         }
         query.filterSols(docs.keySet());

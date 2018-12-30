@@ -16,12 +16,73 @@ public class QueryDic {
     private static HashMap<String, ArrayList<Integer>> wordsToQueries = null;
     private static int pointer = 0;
 
+    /**
+     * get the QueryDic Single Instance
+     * @return the QueryDic
+     */
+    public static QueryDic getInstance() {
+        if (yoda == null) {
+            yoda = new QueryDic();
+        }
+        return yoda;
+    }
 
+    /**
+     * Ctor - private (singleton)
+     */
+    private QueryDic() {
+        try {
+            String dicName = "tested.queries";
+            String postings = "queries.postings";
+//            ClassLoader classLoader = getClass().getClassLoader();
+//            File dic = new File(classLoader.getResource(dicName).getFile());
+            File dic = new File("src\\main\\resources", dicName);
+            File post = new File("src\\main\\resources", "sols.post");
+            dic.setWritable(false);
+            post.setWritable(false);
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(dic.getCanonicalFile()));
+            String q = bufferedReader.readLine();
+            qmap = new TreeMap<>();
+            inv_qmap = new HashMap<>();
+            wordsToQueries = new HashMap<>();
+            while (q != null) {
+                QuerySol querySol = new QuerySol(q);
+                RandomAccessFile posting = new RandomAccessFile(post, "r");
+                posting.skipBytes(querySol.getPostingPointer());
+                querySol.addPosting(posting.readLine());
+                qmap.put(querySol.getqNumAsInt(), querySol);
+                inv_qmap.put(querySol.getTitle(), querySol.getqNumAsInt());
+                if (containsAny(querySol.getTitle(), " ,.-")) {
+                    String[] words = split(querySol.getTitle(), " ,.-");
+                    for (int i = 0; i < words.length; i++) {
+                        if (!wordsToQueries.containsKey(words[i])) {
+                            wordsToQueries.put(words[i], new ArrayList<>());
+                        }
+                        wordsToQueries.get(words[i]).add(querySol.getqNumAsInt());
+                    }
+                }
+                q = bufferedReader.readLine();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * does the dictionary has the query
+     * @param num - the number of the query
+     * @return T/F
+     */
     public boolean containsNum(String num) {
         if (isNumeric(num)) return qmap.containsKey(Integer.parseInt(num));
         return false;
     }
 
+    /**
+     * does the dictionary has the query
+     * @param query - the title of the query
+     * @return T/F
+     */
     public boolean containsQuery(String query) {
         if (inv_qmap.containsKey(query)) {
             return true;
@@ -61,11 +122,12 @@ public class QueryDic {
      * @param query - the query that will be evaluated
      */
     private void setMostEvaluatedQuery(QuerySol query) {
-//        if (inv_qmap.containsKey(query.getTitle())) {
-//            QuerySol querySol = qmap.get(query.getqNumAsInt());
-//            if (querySol.equals(query))
-//                query.setEvaluation(querySol.getqNumAsInt(),2);
-//        }
+        if (query==null) return;
+        if (inv_qmap.containsKey(query.getTitle())) {
+            QuerySol querySol = qmap.get(query.getqNumAsInt());
+            if (querySol.equals(query))
+                query.setEvaluation(querySol.getqNumAsInt(),2);
+        }
         String[] wordsTmp = split(query.getTitle(), " ,.-");
         TreeSet<String> antiDuplicator = new TreeSet<>(String::compareToIgnoreCase);
         antiDuplicator.addAll(Arrays.asList(wordsTmp));
@@ -75,9 +137,6 @@ public class QueryDic {
             words[d] = s;
             d++;
         }
-//            String[] words = split(query.getTitle(), " ,.-");
-
-
         HashMap<Integer, Integer> queryIndex = new HashMap<>();
         for (int i = 0; i < words.length; i++) {
             ArrayList<Integer> queries = wordsToQueries.get(words[i]);
@@ -131,23 +190,11 @@ public class QueryDic {
 
     }
 
-//    /**
-//     * set the evaluation to a given query
-//     * @param query - the query that will be evaluated
-//     */
-//    private void setMostEvaluatedQueryWithSemantics(QuerySol query) {
-//        if (inv_qmap.containsKey(query.getTitle())) {
-//            QuerySol querySol = qmap.get(query.getqNumAsInt());
-//            if (querySol.equals(query))
-//                query.setEvaluation(querySol.getqNumAsInt(),1);
-//        }
-//        String[] words = split(query.getTitle(), " ,.-");
-//        HashMap<Integer, Integer> queryIndex = new HashMap<>();
-//        for (int i = 0; i < words.length; i++) {
-//
-//        }
-//    }
-
+    /**
+     * by a given path, read the query file and make a list of QuerySol objects
+     * @param path - the path of the file containing the queries
+     * @return ArrayList of QuerySols
+     */
     public ArrayList<QuerySol> readQueries(String path) {
         try {
             String[] queries = split(saveNewQueries(path, ""), "\n"); //no target path - will not write to disk
@@ -173,61 +220,18 @@ public class QueryDic {
         return null;
     }
 
-    public ArrayList<String> getSolutions(String query) {
+    /**
+     * Returns the solution of a given query (number or title)
+     * @param query (number or title)
+     * @return ArrayList of DocNums
+     */
+    public ArrayList<String> getSolutionsAsList(String query) {
         if (isNumeric(query)) {
             return qmap.get(Integer.parseInt(query)).getSols();
         } else if (inv_qmap.containsKey(query)) {
             return qmap.get(inv_qmap.get(query)).getSols();
         }
         return null;
-    }
-
-    public static QueryDic getInstance() {
-        if (yoda == null) {
-            yoda = new QueryDic();
-        }
-        return yoda;
-    }
-
-    /**
-     * Ctor - private (singleton)
-     */
-    private QueryDic() {
-        try {
-            String dicName = "tested.queries";
-            String postings = "queries.postings";
-//            ClassLoader classLoader = getClass().getClassLoader();
-//            File dic = new File(classLoader.getResource(dicName).getFile());
-            File dic = new File("src\\main\\resources", dicName);
-            File post = new File("src\\main\\resources", "sols.post");
-            dic.setWritable(false);
-            post.setWritable(false);
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(dic.getCanonicalFile()));
-            String q = bufferedReader.readLine();
-            qmap = new TreeMap<>();
-            inv_qmap = new HashMap<>();
-            wordsToQueries = new HashMap<>();
-            while (q != null) {
-                QuerySol querySol = new QuerySol(q);
-                RandomAccessFile posting = new RandomAccessFile(post, "r");
-                posting.skipBytes(querySol.getPostingPointer());
-                querySol.addPosting(posting.readLine());
-                qmap.put(querySol.getqNumAsInt(), querySol);
-                inv_qmap.put(querySol.getTitle(), querySol.getqNumAsInt());
-                if (containsAny(querySol.getTitle(), " ,.-")) {
-                    String[] words = split(querySol.getTitle(), " ,.-");
-                    for (int i = 0; i < words.length; i++) {
-                        if (!wordsToQueries.containsKey(words[i])) {
-                            wordsToQueries.put(words[i], new ArrayList<>());
-                        }
-                        wordsToQueries.get(words[i]).add(querySol.getqNumAsInt());
-                    }
-                }
-                q = bufferedReader.readLine();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public String saveNewQueries(String queriesPath, String targetPath) {
@@ -286,10 +290,19 @@ public class QueryDic {
         return "";
     }
 
+    /**
+     * Get the current pointer
+     * @return int - number of bytes to skip
+     */
     public static int getPointer() {
         return pointer;
     }
 
+    /**
+     * Save the solutions to the disk
+     * @param solutionsPath - path of the solutions
+     * @param targetPath - the path to the target directory
+     */
     public static void saveSolutions(String solutionsPath, String targetPath) {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(solutionsPath));
@@ -364,72 +377,24 @@ public class QueryDic {
         }
     }
 
-    private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line) throws IOException {
-        line = trim(line);
-        stringBuilder.trimToSize();
-        if (!endsWith(stringBuilder, ";") && !isEmpty(line))
-            stringBuilder.append(line).append("; ");
-        return bufferedReader.readLine();
+    /**
+     * Inner function to append multi lines
+     */
+    private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line){
+        try {
+
+            line = trim(line);
+            stringBuilder.trimToSize();
+            if (!endsWith(stringBuilder, ";") && !isEmpty(line)) {
+                stringBuilder.append(line).append("; ");
+            }
+            return bufferedReader.readLine();
+        }catch (Exception e){
+            return "";
+        }
     }
 
+    public static void main(String[] args) {
 
-//    public static void main(String[] args) {
-//        File file = new File("C:\\Users\\User\\Documents\\SearchEngineTests\\solutions\\sols.post");
-//        File file2 = new File("C:\\Users\\User\\Documents\\SearchEngineTests\\solutions\\qs.post");
-//        try {
-//            BufferedReader bufferedReader = new BufferedReader(new FileReader(file2));
-//            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\Documents\\SearchEngineTests\\solutions\\trimmed.post", true));
-//            String line = bufferedReader.readLine().trim();
-//            StringBuilder stringBuilder = new StringBuilder();
-//            String query = "";
-//            while (line != null) {
-//                if (isEmpty(line)){
-//                    line = bufferedReader.readLine();
-//                    continue;
-//                }
-//                if (startsWithIgnoreCase(line, "<num>")) {
-//                    stringBuilder.append(substringAfterLast(trim(line), " ")).append("|");
-//                } else if (startsWithIgnoreCase(line, "<title>")) {
-//                    line = substringAfter(line, ">");
-//                    if (contains(line, ":"))
-//                        line = substringAfter(line, ":");
-//                    stringBuilder.append(trim(line)).append("|");
-//                } else if (startsWithIgnoreCase(trim(line), "<desc>")) {
-//                    line = bufferedReader.readLine();
-//                    while (line != null && !startsWithIgnoreCase(line, "<narr>")) {
-//                        if (isEmpty(line)){
-//                            line = bufferedReader.readLine();
-//                            continue;
-//                        }
-//                        stringBuilder.append(trim(line)).append(";");
-//                        line = bufferedReader.readLine();
-//                    }
-//                }
-//                if (startsWithIgnoreCase(line, "<narr>")) {
-//                    line = bufferedReader.readLine();
-//                    stringBuilder.append("|");
-//                    while (line != null && !startsWithIgnoreCase(line, "</top>")) {
-//                        if (isEmpty(line)){
-//                            line = bufferedReader.readLine();
-//                            continue;
-//                        }
-//                        stringBuilder.append(trim(line)).append(";");
-//                        line = bufferedReader.readLine();
-//                    }
-//                    stringBuilder.append("|\n");
-//                    query = stringBuilder.toString();
-//                    QuerySol sol = new QuerySol(query, pointer);
-//                    qmap.put(sol.getqNumAsInt(),sol);
-//                    pointer += query.getBytes().length + 1;
-//                }
-//                line = bufferedReader.readLine();
-//            }
-//            bufferedWriter.write(query);
-//            bufferedWriter.flush();
-//            bufferedReader.close();
-//            bufferedWriter.close();
-//        } catch (Exception e) {
-//
-//        }
-//    }
+    }
 }

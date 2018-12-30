@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Ranker Class Ranks Documents by a given Query
+ */
 public class Ranker {
 
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
@@ -29,9 +32,26 @@ public class Ranker {
     private double BM25__idf;
     private double BM25__delta;
     private double BM25__weight;
-    private static ArrayList<ImmutablePair<RelatednessCalculator,Double>> calculators = initCalculators();
     private static double dbWeights;
+    private static ArrayList<ImmutablePair<RelatednessCalculator,Double>> calculators = initCalculators();
+    private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting;
+    private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic;
+    private TreeMap<String, Double> docsRank;
+    private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
 
+
+    /**
+     * similarity functions weights
+     * @return double - weights     Range:[0,1]
+     */
+    public static double getWeights() {
+        return dbWeights;
+    }
+
+    /**
+     * Initialize the Similarity functions ArrayList
+     * @return the calculators list
+     */
     private static ArrayList<ImmutablePair<RelatednessCalculator, Double>> initCalculators() {
         ILexicalDatabase db = new NictWordNet();
         ArrayList<ImmutablePair<RelatednessCalculator,Double>> calcList = new ArrayList<>();
@@ -49,15 +69,6 @@ public class Ranker {
         dbWeights+=tmp;
         return calcList;
     }
-
-    public static double getWeights() {
-        return dbWeights;
-    }
-
-    private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
-    private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic;
-    public TreeMap<String, Double> docsRank;
-    private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting;
 
     /**
      * Main Function.
@@ -77,6 +88,7 @@ public class Ranker {
         orderedPosting = new TreeMap<>();
         reArrangePostingForQuery(termDic, cache, docDic, Master.makeQueryDic(query));
         arrangeDictionaryForCalculations();
+        //todo - Wiq and CosSim
         calculateBM25(termDic, docDic);
         return getBestDocs(query, solSize);
     }
@@ -145,7 +157,15 @@ public class Ranker {
         }
     }
 
-    public TreeMap<Double, String> getBestDocs(QuerySol query, int i) {
+    /**
+     * Sorts and Filters the Documents with their values.
+     *  the query is given to give bonus to known pre-calculated answers
+     *
+     * @param query - the query object to Evaluate the bonus (read Report)
+     * @param maxSolSize - max amount of documents in the solution
+     * @return TreeMap of the Rank as key and DocNum as value
+     */
+    public TreeMap<Double, String> getBestDocs(QuerySol query, int maxSolSize) {
         TreeMap<Double, String> res = new TreeMap<>(Double::compareTo);
         for (Map.Entry<String, Double> o : docsRank.entrySet()
         ) {
@@ -155,7 +175,7 @@ public class Ranker {
             while (res.containsKey(rank))
                 rank -= Math.pow(10, -9);
             res.put(rank, doc);
-            if (res.size() > i)
+            if (res.size() > maxSolSize)
                 res.pollFirstEntry();
         }
         return res;
@@ -198,6 +218,13 @@ public class Ranker {
         }
     }
 
+    /**
+     * Sets the Values of BM25 Function
+     * @param k - parameter k       Range: [1.2,2]
+     * @param b - parameter b       Range: [0,1]
+     * @param delta - read report   Range: [0,1]
+     * @param idf - read report     Range: [0,1]
+     */
     public void setBM25Values(double k, double b, double delta, double idf) {
         BM25__k = k;
         BM25__b = b;
@@ -207,24 +234,53 @@ public class Ranker {
     }
 
 
-
-
+    /**
+     * Calculate and Sum the Similarity between two words.
+     * the values given by the calculations is weighted.
+     * means that each function is multiplied respectively to the weight of the function
+     * @param w1 - first word
+     * @param w2 - second word
+     * @return double - the Similarity between the two words
+     */
     public static double getWeigthedSimilarity(String w1, String w2) {
         double res = 0;
+        if (w1.equalsIgnoreCase(w2)) return dbWeights;
         for (int i = 0; i < calculators.size(); i++) {
             ImmutablePair<RelatednessCalculator, Double> rc = calculators.get(i);
-            res+= (rc.right*Double.min(1,rc.left.calcRelatednessOfWords(w1, w2)));
+            res+= (rc.right*rc.left.calcRelatednessOfWords(w1, w2));
         }
         return res;
     }
 
+    /**
+     * sets the Weights of the Similarity functions in the ranker
+     * the Weights have to sum to 1.
+     * @param bm25 - the weight will be given to the similarity function - BM25             (default 0.2)
+     * @param wup - the weight will be given to the similarity function  - Wu Palmer        (default 0.32)
+     * @param resnik - the weight will be given to the similarity function - Resnik         (default 0.08)
+     * @param jiang - the weight will be given to the similarity function - Jiang Conrath   (default 0.16)
+     * @param lin - the weight will be given to the similarity function - Lin               (default 0.24)
+     */
     public void setWeights(double bm25, double wup, double resnik, double jiang, double lin) {
+        if (bm25>1 || bm25+wup+resnik+jiang+lin>1) setWeights();
         BM25__weight = bm25;
         calculators.set(0,new ImmutablePair<>(calculators.get(0).left,wup));
         calculators.set(1,new ImmutablePair<>(calculators.get(1).left,resnik));
         calculators.set(2,new ImmutablePair<>(calculators.get(2).left,jiang));
         calculators.set(3,new ImmutablePair<>(calculators.get(3).left,lin));
         dbWeights = 1-bm25;
+    }
+
+    /**
+     * Sets default Weights
+     */
+    private void setWeights() {
+        BM25__weight = 0.2;
+        calculators.set(0,new ImmutablePair<>(calculators.get(0).left,0.32));
+        calculators.set(1,new ImmutablePair<>(calculators.get(1).left,0.08));
+        calculators.set(2,new ImmutablePair<>(calculators.get(2).left,0.16));
+        calculators.set(3,new ImmutablePair<>(calculators.get(3).left,0.24));
+        dbWeights = 0.8;
     }
 
     /**

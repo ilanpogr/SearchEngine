@@ -9,6 +9,7 @@ import Searcher.*;
 import Stemmer.Stemmer;
 import Tests.Treceval_cmd;
 import TextContainers.Doc;
+import TextContainers.LanguagesInfo;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
@@ -169,11 +170,22 @@ public class Master {
             System.out.println("MERGING");
             indexer.mergePostingTempFiles();
             indexer.writeToDictionary(docDic, "3. Documents Dictionary");
+            writeLanguagesToFile(indexer);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             PropertiesFile.putProperty("save.files.path", targetPath);
         }
+    }
+
+    /**
+     * Writes all the languages from an indexed corpus into a file
+     * @param indexer - the indexer which indexed the last corpus
+     */
+    private void writeLanguagesToFile(Indexer indexer) {
+        ArrayList<String> langs = LanguagesInfo.getInstance().getLanguagesAsList();
+        StringBuilder langsContent = new StringBuilder(join(langs,"\n"));
+        indexer.appendToFile(langsContent,"Languages");
     }
 
     /**
@@ -463,8 +475,8 @@ public class Master {
     }
 
     /**
-     *
-     * @return
+     *  get the List of cities from the Corpus "F" tag's attribute "p=104"
+     * @return list of strings, city names
      */
     public ArrayList<String> getCitiesList() {
         return new ArrayList<>(cityTags.keySet());

@@ -123,6 +123,7 @@ public class ModelMenu extends Observable {
         File file = new File(PropertiesFile.getProperty("queries.file.path"));
         ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(file.getAbsolutePath());
         master_of_puppets.multiSearch(querySols, cities);
+        setDocsResults(querySols);
         WrieFile.writeQueryResults(querySols, file.getParent(), "results.txt");
         return querySols;
     }
@@ -131,7 +132,8 @@ public class ModelMenu extends Observable {
         return docsEntitites;
     }
 
-    private void setDocsResults() {
+    private void setDocsResults( ArrayList<QuerySol> querySols) {
+
         // todo - implement
     }
 

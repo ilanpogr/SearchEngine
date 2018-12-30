@@ -110,9 +110,15 @@ public class WrieFile {
         }
     }
 
+    /**
+     * Writes results from a QuerySol list in Trec_eval Format
+     * @param querySols - list of queries containing solutions
+     * @param parent - the directory of the new file
+     * @param fileName - the name of the new file
+     */
     public static void writeQueryResults(ArrayList<QuerySol> querySols, String parent, String fileName) {
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(PropertiesFile.getProperty("save.files.path"), fileName), true));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(parent, fileName), true));
             for (QuerySol query : querySols) {
                 for (String docNum : query.getSols())
                     bufferedWriter.write(query.getqNum() + " 0 " + docNum + " 1 0 yay\n");
