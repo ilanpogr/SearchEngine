@@ -583,4 +583,14 @@ public class Indexer {
         termCounter = 0;
         WrieFile.clear();
     }
+
+    /**
+     * Writes after indexing the Languages to a file
+     * @param langsContent - the languages
+     * @param fileName - file name
+     */
+    public void writeLanguages(StringBuilder langsContent, String fileName) {
+        targetPath = PropertiesFile.getProperty("save.files.path");
+        appendToFile(langsContent,fileName);
+    }
 }

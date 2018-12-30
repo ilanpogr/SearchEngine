@@ -86,6 +86,7 @@ public class Master {
 
     private static String getSemantics(QuerySol query) {
         HashMap<String,ArrayList<String>> semanticDic = new ReadFile().readSemantics("semantic_DB_XXL"+(isStemMode?"_stem":""));
+
         return "";
     }
 
@@ -119,8 +120,8 @@ public class Master {
     public void indexCorpus() {
         double tmpFileIndex = 0;
         double i = 0;
-        Indexer indexer = new Indexer();
         try {
+            Indexer indexer = new Indexer();
             ModelMenu.setProgress();
             isStemMode = setStemMode();
             String s = PropertiesFile.getProperty("data.set.path") + "corpus\\";
@@ -157,7 +158,7 @@ public class Master {
             e.printStackTrace();
         } finally {
             PropertiesFile.putProperty("save.files.path", targetPath);
-            writeLanguagesToFile(indexer);
+            writeLanguagesToFile(new Indexer());
         }
     }
 
@@ -169,7 +170,7 @@ public class Master {
     private void writeLanguagesToFile(Indexer indexer) {
         ArrayList<String> langs = LanguagesInfo.getInstance().getLanguagesAsList();
         StringBuilder langsContent = new StringBuilder(join(langs, "\n"));
-        indexer.appendToFile(langsContent, "Languages");
+        indexer.writeLanguages(langsContent,"Languages");
     }
 
     /**
@@ -234,10 +235,9 @@ public class Master {
             } else {
                 stringBuilder.append(isUpperCase ? "1" : "0").append(termSeparator);
             }
-
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
-            if (isUpperCase && Character.isUpperCase(termKey.charAt(0)))
+            if (isUpperCase && Character.isLetter(termKey.charAt(0)))
                 doc.addEntity(termKey, termFrequency);
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
