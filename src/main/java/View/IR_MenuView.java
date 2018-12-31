@@ -25,16 +25,17 @@ public class IR_MenuView extends Observable {
     public Button reset_btn;
     public ProgressBar progressbar;
     public Button read_dict_btn;
-    public CheckBox entities_checkBox;
     public CheckBox semantic_checkBox;
     public ImageView search_btn;
     public Button browse_queries_btn;
     public Button cities_btn;
     public ComboBox docs_language;
     public Label result_lbl;
-    public ImageView save_results_img;
+    public Button save_results_img;
     public TreeView result_treeView;
     public TextArea entities_textArea;
+    public TextField freeSearch_textField;
+    public ToggleButton totalRickAll_toggle;
 
     /**
      * when start button is clicked
@@ -100,15 +101,6 @@ public class IR_MenuView extends Observable {
     }
 
     /**
-     * when Entities CheckBox is clicked
-     * @param actionEvent - Entities CheckBox is clicked
-     */
-    public void setEntitiesMode(ActionEvent actionEvent) {
-        setChanged();
-        notifyObservers("entities");
-    }
-
-    /**
      * when Semantic CheckBox is clicked
      * @param actionEvent - Semantic CheckBox is clicked
      */
@@ -151,5 +143,22 @@ public class IR_MenuView extends Observable {
     public void BrowseQueriesFileAndSearch(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("queryFile");
+    }
+
+    /**
+     * Empty Summary Label
+     */
+    public void resetSummary() {
+        setChanged();
+        notifyObservers("resetLabel");
+    }
+
+    /**
+     * when totalRickall toggle is clicked for activating the total recall option (more that 50 documents for queries)
+     * @param actionEvent - TotalRickAll toggle is clicked
+     */
+    public void totalRickall(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("totalRickall");
     }
 }

@@ -1,25 +1,26 @@
 package Model;
 
 import Controller.PropertiesFile;
-import Indexer.WrieFile;
 import Master.Master;
 import Searcher.QueryDic;
 import Searcher.QuerySol;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Observable;
+
+import static org.apache.commons.lang3.StringUtils.split;
 
 /**
  * This class is linking between the controller and the brain of this project (Master Class)
  */
 public class ModelMenu extends Observable {
 
-    HashMap<String, String[]> docsEntitites = new HashMap<>();
-    ArrayList<ArrayList<String>> docsResult = new ArrayList<>();
+    private HashMap<String, String[]> docsEntitites = new HashMap<>();
+    private ArrayList<QuerySol> docsResult = new ArrayList<>();
 
     private Master master_of_puppets = new Master();
     private static DoubleProperty progress;
@@ -49,7 +50,7 @@ public class ModelMenu extends Observable {
         removeAllFiles();
         master_of_puppets.indexCorpus();
         setChanged();
-        notifyObservers("done");
+        notifyObservers("index_done");
     }
 
     /**
@@ -107,42 +108,144 @@ public class ModelMenu extends Observable {
         return Master.readDictionaries(dicPath);
     }
 
-
-    public ArrayList<QuerySol> search(String query, ArrayList<String> lang) {
-        setChanged();
-        notifyObservers("search_done");
+    /**
+     * search a single query (only title), preparing the query as the master need to the input.
+     * saving the search results to docResult class's object.
+     * notifies the observer when search is finished
+     *
+     * @param query  - the query title
+     * @param cities - an Array containing the cities the user chose
+     *               - if the user didn't chose any, the Array is empty
+     */
+    public void search(String query, ArrayList<String> cities) {
         ArrayList<QuerySol> querySols = new ArrayList<>();
         StringBuilder q = new StringBuilder("000|");
         q.append(query).append("|s|s|");
         querySols.add(new QuerySol(q.toString()));
-        master_of_puppets.freeLangSearch(querySols.get(0),lang);
-        return querySols;
+        master_of_puppets.freeLangSearch(querySols.get(0), cities);
+        docsResult = querySols;
+        setChanged();
+        notifyObservers("search_done");
     }
 
-    public ArrayList<QuerySol> multiSearch(ArrayList<String> cities) {
+    /**
+     * search a query file that may contain more than one query (containing: title, description, and nerrative)
+     * preparing the queries file as the master need to the input.
+     * saving the search results to docResult class's object.
+     * notifies the observer when search is finished
+     *
+     * @param cities - an Array containing the cities the user chose
+     *               - if the user didn't chose any, the Array is empty
+     */
+    public void multiSearch(ArrayList<String> cities) {
         File file = new File(PropertiesFile.getProperty("queries.file.path"));
         ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(file.getAbsolutePath());
         master_of_puppets.multiSearch(querySols, cities);
-        setDocsResults(querySols);
-        WrieFile.writeQueryResults(querySols, file.getParent(), "results.txt");
-        return querySols;
+        docsResult = querySols;
+        setChanged();
+        notifyObservers("search_done");
     }
 
+    /**
+     * returns HashMap- key: docNum, value: string array containing the entities.
+     *
+     * @return : docsEntities containing the entities info
+     */
     public HashMap<String, String[]> getDocsEntities() {
         return docsEntitites;
     }
 
-    private void setDocsResults( ArrayList<QuerySol> querySols) {
-
-        // todo - implement
-    }
-
+    /**
+     * returns a list of all the corpus documents's cities representation
+     *
+     * @return : list of the cities
+     */
     public ArrayList<String> getCitiesList() {
         return master_of_puppets.getCitiesList();
     }
 
-    public ArrayList<ArrayList<String>> getDocsResults() {
+    /**
+     * creates a list representing the query as first index that containing list of relevant docs as the result
+     *
+     * @return : the list of lists
+     */
+    public ArrayList<ArrayList<String>> getDocsResultsAsArray() {
+        ArrayList<ArrayList<String>> res = new ArrayList<>(docsResult.size());
+        for (QuerySol querySol : docsResult) {
+            ArrayList<String> docRes = querySol.getSols();
+            res.add(docRes);
+        }
+        return res;
+    }
+
+    /**
+     * returns list of QuerySols (containing all the solution info without any filtering)
+     * as result for the queries file/single search
+     *
+     * @return : list result
+     */
+    public ArrayList<QuerySol> getDocsResult() {
         return docsResult;
     }
 
+    /**
+     * reading the docs entities from a saved file in the relevant path
+     * depending on the path the master will give (from properties file)
+     */
+    public void readEntities() {
+        // TODO: 31/12/2018 : finish the implementation
+        File file = new File(getDicsPath() + "\\Entities");
+        try {
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            for (QuerySol querySol : docsResult) {
+                ArrayList<String> docRes = querySol.getSols();
+                for (String doc : docRes) {
+                    String pointer = master_of_puppets.getEntitiesPointerFromDocNum(doc);
+                    int jumpInBytes = Integer.parseInt(pointer, 36);
+                    raf.seek(jumpInBytes);
+                    String line = raf.readLine();
+                    String[] entitiesAndTF = split(line, '|');
+                    String[] entities = new String[entitiesAndTF.length / 2];
+                    int j = 0;
+                    for (int i = 0; i < entitiesAndTF.length; i = i + 2) {
+                        entities[j++] = entitiesAndTF[i] + " --> frequency: " + entitiesAndTF[i + 1];
+                    }
+                    docsEntitites.put(doc,entities);
+                }
+            }
+            // for debugging
+            for (String s : docsEntitites.keySet()){
+                String[] value = docsEntitites.get(s);
+                StringBuilder singleValue = new StringBuilder();
+                for (String val : value){
+                    singleValue.append(" , ").append(val);
+                }
+                System.out.println(s + ":   " + singleValue.toString());
+            }
+
+        } catch (IOException e) {
+            System.out.println("problem with reading entities file");
+        }
+    }
+
+    /**
+     * reads Languages file that saved after indexing,
+     * and creating a list containing the languages from the corpus.
+     *
+     * @return : languages list
+     */
+    public ArrayList<String> getLanguages() {
+        File file = new File(getDicsPath() + "\\Languages");
+        ArrayList<String> languages = new ArrayList<>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String st;
+            while ((st = br.readLine()) != null) {
+                languages.add(st);
+            }
+        } catch (IOException e) {
+            System.out.println("Languages file not found");
+        }
+        return languages;
+    }
 }

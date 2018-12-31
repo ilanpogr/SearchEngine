@@ -505,6 +505,18 @@ public class Master {
     }
 
     /**
+     * return the pointer in Entities file of given key from 'docDic'
+     * @param docNum: key in docDic - docID
+     * @return: entities pointer of the given key (doc ID)
+     */
+    public String getEntitiesPointerFromDocNum(String docNum) {
+        //value example: LA123190-0133~5,221,kzfs7
+        String value = docDic.get(docNum);
+        String[] splitted = split(value, ',');
+        return splitted[splitted.length - 1];
+    }
+
+    /**
      * clears memory. returns all states back to the beginning. (except stemmer cache..)
      */
     public void clear() {
