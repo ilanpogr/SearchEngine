@@ -33,15 +33,9 @@ public class Indexer {
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
     private static AtomicInteger tmpFilesCounter = new AtomicInteger(0);
     private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
-//    private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
     private static boolean createdFolder = false;
     private static int termCounter = 0;
-
-    public int appendToFile(StringBuilder content, String fileName) {
-        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
-        return WrieFile.writeToDictionary(content,fileName);
-    }
 
 
     /**
@@ -216,6 +210,17 @@ public class Indexer {
         }
         System.out.println("Size of Posting Files: " + (int) (totalPostingSizeByKB / 1024) + " KB");
         createdFolder = false;
+    }
+
+    /**
+     * appends a given content to a file (by name)
+     * @param content - the content will be written to the file
+     * @param fileName- the name of the file
+     * @return
+     */
+    public int appendToFile(StringBuilder content, String fileName) {
+        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
+        return WrieFile.writeToDictionary(content,fileName);
     }
 
     /**
@@ -577,5 +582,15 @@ public class Indexer {
         createdFolder = false;
         termCounter = 0;
         WrieFile.clear();
+    }
+
+    /**
+     * Writes after indexing the Languages to a file
+     * @param langsContent - the languages
+     * @param fileName - file name
+     */
+    public void writeLanguages(StringBuilder langsContent, String fileName) {
+        targetPath = PropertiesFile.getProperty("save.files.path");
+        appendToFile(langsContent,fileName);
     }
 }

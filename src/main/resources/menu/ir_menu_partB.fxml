@@ -5,10 +5,11 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -17,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="590.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.IR_MenuView">
+<AnchorPane prefHeight="590.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.IR_MenuView">
    <children>
       <HBox prefHeight="570.0" prefWidth="1000.0">
          <children>
@@ -32,7 +33,7 @@
                      </VBox.margin>
                   </Label>
                      <Region prefHeight="10.0" prefWidth="200.0" />
-                     <Button fx:id="start_btn" contentDisplay="CENTER" disable="true" mnemonicParsing="false" onAction="#Start" prefHeight="40.0" prefWidth="290.0" text="START">
+                     <Button fx:id="start_btn" contentDisplay="CENTER" disable="true" mnemonicParsing="false" onAction="#Start" prefHeight="40.0" prefWidth="290.0" text="START INDEXING">
                          <VBox.margin>
                              <Insets left="50.0" />
                          </VBox.margin></Button>
@@ -50,7 +51,7 @@
                          </VBox.margin>
                      </Label>
                      <Region prefHeight="10.0" prefWidth="300.0" />
-                     <Button fx:id="save_btn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#savePostingFilePath_DictionaryFilePath" prefHeight="40.0" prefWidth="280.0" text="Save Posting and Dictionary">
+                     <Button fx:id="save_btn" contentDisplay="CENTER" mnemonicParsing="false" onAction="#savePostingFilePath_DictionaryFilePath" prefHeight="40.0" prefWidth="280.0" text="Target Posting and Dictionary">
                          <VBox.margin>
                              <Insets left="55.0" />
                          </VBox.margin>
@@ -126,7 +127,7 @@
                      <children>
                         <VBox prefHeight="190.0" prefWidth="525.0">
                            <children>
-                              <TextField prefWidth="520.0" promptText="Search query here or insert queries file in the button underneath">
+                              <TextField fx:id="freeSearch_textField" onKeyTyped="#resetSummary" prefWidth="520.0" promptText="Search query here or insert queries file in the button underneath">
                                  <VBox.margin>
                                     <Insets left="5.0" />
                                  </VBox.margin>
@@ -140,19 +141,14 @@
                                     <Insets top="3.0" />
                                  </VBox.margin>
                                  <children>
-                                    <CheckBox fx:id="entities_checkBox" mnemonicParsing="false" onAction="#setEntitiesMode" text="Entities">
-                                       <HBox.margin>
-                                          <Insets left="10.0" top="10.0" />
-                                       </HBox.margin>
-                                    </CheckBox>
                                     <CheckBox fx:id="semantic_checkBox" mnemonicParsing="false" onAction="#setSemantic" text="Semantic treatment">
                                        <HBox.margin>
-                                          <Insets left="20.0" top="10.0" />
+                                          <Insets left="40.0" top="10.0" />
                                        </HBox.margin>
                                     </CheckBox>
                                      <Button fx:id="cities_btn" minHeight="25.0" onAction="#chooseCities" prefHeight="30.0" prefWidth="240.0" text="Please Choose Specific Cities">
                                        <HBox.margin>
-                                          <Insets left="25.0" top="5.0" />
+                                          <Insets left="80.0" top="5.0" />
                                        </HBox.margin>
                                     </Button>
                                  </children>
@@ -180,23 +176,10 @@
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <HBox prefHeight="100.0" prefWidth="200.0">
-                                 <children>
-                                    <CheckBox mnemonicParsing="false">
-                                       <HBox.margin>
-                                          <Insets bottom="7.0" left="15.0" right="7.0" top="7.0" />
-                                       </HBox.margin>
-                                    </CheckBox>
-                                    <ImageView fitHeight="35.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
-                                       <image>
-                                          <Image url="@images/supersearch.png" />
-                                       </image>
-                                       <HBox.margin>
-                                          <Insets />
-                                       </HBox.margin>
-                                    </ImageView>
-                                 </children>
-                              </HBox>
+                              <ToggleButton fx:id="totalRickAll_toggle" onAction="#totalRickall" prefHeight="36.0" prefWidth="44.0">
+                                 <VBox.margin>
+                                    <Insets left="15.0" />
+                                 </VBox.margin></ToggleButton>
                            </children>
                         </VBox>
                      </children>
@@ -211,22 +194,19 @@
                         <Insets />
                      </VBox.margin>
                      <children>
-                        <TreeView fx:id="result_treeView" prefHeight="420.0" visible="false" prefWidth="220.0" />
+                        <TreeView fx:id="result_treeView" prefHeight="420.0" prefWidth="220.0" visible="false" />
                         <VBox prefHeight="408.0" prefWidth="380.0">
                            <children>
-                              <TextArea fx:id="entities_textArea" visible="false" maxHeight="300.0" maxWidth="300.0" minHeight="300.0" minWidth="300.0" prefHeight="300.0" prefWidth="300.0" promptText="Please select a document to see the top 5 entities">
+                              <TextArea fx:id="entities_textArea" maxHeight="300.0" maxWidth="300.0" minHeight="300.0" minWidth="300.0" prefHeight="300.0" prefWidth="300.0" visible="false">
                                  <VBox.margin>
                                     <Insets left="50.0" top="20.0" />
                                  </VBox.margin>
                               </TextArea>
-                              <ImageView fx:id="save_results_img" fitHeight="65.0" fitWidth="65.0" visible="false" onMouseClicked="#saveResults" pickOnBounds="true" preserveRatio="true">
+                              <Button fx:id="save_results_img" onMouseClicked="#saveResults" visible="false">
                                  <VBox.margin>
                                     <Insets left="300.0" top="15.0" />
                                  </VBox.margin>
-                                  <image>
-                                      <Image url="@images/save.png" />
-                                  </image>
-                              </ImageView>
+                              </Button>
                            </children>
                         </VBox>
                      </children>

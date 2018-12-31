@@ -50,7 +50,7 @@ public class Treceval_cmd {
     public void simulateSearch2Treceval(ArrayList<String> queries, ArrayList<String> queryNums, double bm25, double wup, double resnik, double jiang, double lin) {
         Ranker ranker = new Ranker();
         ranker.setWeights(bm25, wup, resnik, jiang,lin);
-        new ControllerMenu().testSearch();
+        new SupremeParameterTests().testSearch();
     }
 
     public void simulateSearch2TrecevalBM25(ArrayList<String> queries, ArrayList<String> queryNums, double k, double b, double delta, double idf) {

@@ -40,12 +40,20 @@ public class QuerySol {
         else return evaluation.right;
     }
 
-
+    /**
+     * Get the number of the most similar query to this one
+     * @return number of other query
+     */
     public int getEvaluationOtherQueryNum(){
         if (evaluation==null) return -1;
         else return evaluation.left;
     }
 
+    /**
+     * Set the Evaluation result.
+     * @param otherQNum - the number of the most similar query to this one
+     * @param rank - the evaluated rank
+     */
     public void setEvaluation(int otherQNum, double rank) {
         if (evaluation == null) evaluation = new MutablePair<>(otherQNum, rank);
         else {
@@ -55,19 +63,15 @@ public class QuerySol {
     }
 
     /**
-     * appends the semantic words to the query title
-     * @param semantics
+     * Ctor
+     * @param query - the query string as read from QueryDic class
      */
-    public void setSemantic(String semantics){
-        //TODO - think about it
-    }
-
     public QuerySol(String query) {
         String[] q = split(query, "|");
         qNum = q[0];
         title = q[1];
-        desc = q[2];
-        narr = q[3];
+        desc = remove(q[2],";");
+        narr = remove(q[3],";");
         if (postingPointer == 0)
             try {
                 postingPointer = Integer.parseInt(q[4], 36);
@@ -77,6 +81,11 @@ public class QuerySol {
         sols = new ArrayList<>();
     }
 
+    /**
+     * Ctor with specified pointer
+     * @param query - the query string as read from QueryDic class
+     * @param pointer - the specified pointer
+     */
     public QuerySol(String query, int pointer) {
         this(query);
         postingPointer = pointer;
@@ -91,6 +100,10 @@ public class QuerySol {
         return new ArrayList<>(sols);
     }
 
+    /**
+     * Copy Ctor
+     * @param other the copied query object
+     */
     public void copySols(QuerySol other){
         StringBuilder stringBuilder = new StringBuilder(qNum);
         stringBuilder.append(",").append(join(other.sols,"|")).append("|");
@@ -130,7 +143,7 @@ public class QuerySol {
     public boolean equals(Object obj) {
         if (obj instanceof QuerySol) {
             QuerySol o = (QuerySol) obj;
-            if (o.title.equals(this.title)) {
+            if (o.title.equalsIgnoreCase(this.title)) {
                 return true;
             }
         }
@@ -149,6 +162,11 @@ public class QuerySol {
         }
     }
 
+    /**
+     * Filter the solutions in this query's solution list by DocNums.
+     *      needs a set of documents that are valid to keep
+     * @param docs - the documents we want to keep
+     */
     public void filterSols(Set<String> docs) {
         if (docs == null || docs.size() == 0) return;
         ArrayList<String> newSols = new ArrayList<>();
@@ -160,22 +178,43 @@ public class QuerySol {
         sols = newSols;
     }
 
+    /**
+     * Trim the size of the solution list
+     * @param i - the size after filtering
+     */
     public void filterSolsNum(int i) {
         while (sols.size() > i) sols.remove(0);
     }
 
-    public void addSingleDoc(String value) {
-        if (postingPointer == -1 && !sols.contains(value)) sols.add(value);
+    /**
+     * add a single Document number to the solution list
+     * @param docNum - the added Document number
+     */
+    public void addSingleDoc(String docNum) {
+        if (postingPointer == -1 && !sols.contains(docNum)) sols.add(docNum);
     }
 
+    /**
+     * get the size of the solution list
+     * @return
+     */
     public int getSolSize() {
         return sols.size();
     }
 
+    /**
+     * get the query as an array
+     * @return String array of the query words
+     */
     public String[] getTitleArray() {
         return split(title, " .,-/");
     }
 
+    /**
+     * get the evaluated rank of a single doc
+     * @param doc - the number of the document
+     * @return double - rank       Range: [0,1]
+     */
     public Double getSolRank(String doc) {
         return sols.contains(doc)? getEvaluationRank(): 0;
     }

@@ -194,15 +194,25 @@ public class Doc {
     public String appendPersonas(StringBuilder stringBuilder) {
         while (entities.size() > 0) {
             ImmutablePair<String, Integer> toPrint = entities.poll();
-            stringBuilder.append(toPrint.getValue()).append(seperator).append(toPrint.left).append(seperator).append(toPrint.right).append("\n");
+            stringBuilder.append(toPrint.left).append(seperator).append(toPrint.right).append("\n");
         }
         return Integer.toString(stringBuilder.toString().getBytes().length + indexer.appendToFile(stringBuilder, "Entities") + 1, 36);
     }
 
+    /**
+     * appends the entities to a string builder (which wont be saved)
+     * and writes the entities into a file
+     *
+     * @return String that represents the pointer to the entity file in the Entities Dictionary (number in radix 36)
+     */
     public String appendPersonas() {
         return appendPersonas(new StringBuilder());
     }
 
+    /**
+     * get all tags of this document to index it
+     * @return String array to parse
+     */
     public String[] getAttributesToIndex() {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;

@@ -7,8 +7,8 @@ import Parser.Parser;
 import ReadFile.ReadFile;
 import Searcher.*;
 import Stemmer.Stemmer;
-import Tests.Treceval_cmd;
 import TextContainers.Doc;
+import TextContainers.LanguagesInfo;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
@@ -34,32 +34,11 @@ public class Master {
     private static ArrayList<Doc> filesList;
     private static boolean isStemMode = setStemMode();
     private static double avrageDocLength = 0;
-
-    public static double getAvrageDocLength() {
-        return avrageDocLength;
-    }
-
-    public static void setAvrageDocLength() {
-        if (docDic == null) avrageDocLength = 0;
-        try {
-            ArrayList<String> vals = new ArrayList<>(docDic.values());
-            double lenSum = 0;
-            int i = 0;
-            for (; i < vals.size(); i++) {
-                lenSum += Integer.parseInt(split(vals.get(i), ",")[1]);
-            }
-            avrageDocLength = lenSum / i;
-        } catch (Exception e) {
-            //nothing
-        }
-    }
-
-    // Part B
-
-    private static HashSet<TreeMap<String, String>> dictionariesCollection;
-
-    private static String currDocName;
     private static DoubleProperty currentStatus = new SimpleDoubleProperty(0);
+    // Part B
+    private static HashSet<TreeMap<String, String>> dictionariesCollection;
+    private static String currDocName;
+
 
     /**
      * sets the stem mode from properties file
@@ -102,7 +81,13 @@ public class Master {
     public static HashMap<String, Integer> makeQueryDic(QuerySol query) {
         //TODO - add Stem and Semantics
         Parser parser = new Parser();
-        return handleQuery(parser.parse(new String[]{query.getTitle()}));
+        return handleQuery(parser.parse(new String[]{query.getTitle()+(PropertiesFile.getPropertyAsInt("semantic.mode") == 0?getSemantics(query):"")}));
+    }
+
+    private static String getSemantics(QuerySol query) {
+        HashMap<String,ArrayList<String>> semanticDic = new ReadFile().readSemantics("semantic_DB_XXL"+(isStemMode?"_stem":""));
+
+        return "";
     }
 
     /**
@@ -136,6 +121,7 @@ public class Master {
         double tmpFileIndex = 0;
         double i = 0;
         try {
+            Indexer indexer = new Indexer();
             ModelMenu.setProgress();
             isStemMode = setStemMode();
             String s = PropertiesFile.getProperty("data.set.path") + "corpus\\";
@@ -144,7 +130,6 @@ public class Master {
             fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
             tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
             double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1), fileNum);
-            Indexer indexer = new Indexer();
             filesList = new ArrayList<>();
             Parser p = new Parser();
             System.out.print("READING, PARSING, ");
@@ -155,7 +140,7 @@ public class Master {
                 filesList = readFile.getFileList();
                 for (Doc aFilesList : filesList) {
                     currDocName = aFilesList.docNum();
-                    HashMap<String, String> map = p.parse(aFilesList.text());
+                    HashMap<String, String> map = p.parse(aFilesList.getAttributesToIndex());
                     handleFile(map);
                 }
                 currentStatus.set(i / fileNum);
@@ -173,7 +158,19 @@ public class Master {
             e.printStackTrace();
         } finally {
             PropertiesFile.putProperty("save.files.path", targetPath);
+            writeLanguagesToFile(new Indexer());
         }
+    }
+
+    /**
+     * Writes all the languages from an indexed corpus into a file
+     *
+     * @param indexer - the indexer which indexed the last corpus
+     */
+    private void writeLanguagesToFile(Indexer indexer) {
+        ArrayList<String> langs = LanguagesInfo.getInstance().getLanguagesAsList();
+        StringBuilder langsContent = new StringBuilder(join(langs, "\n"));
+        indexer.writeLanguages(langsContent,"Languages");
     }
 
     /**
@@ -238,10 +235,9 @@ public class Master {
             } else {
                 stringBuilder.append(isUpperCase ? "1" : "0").append(termSeparator);
             }
-
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
-            if (isUpperCase && isAlphanumericSpace(termKey) && !containsAny(termKey, "1234567890"))
+            if (isUpperCase && Character.isLetter(termKey.charAt(0)))
                 doc.addEntity(termKey, termFrequency);
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
@@ -359,14 +355,8 @@ public class Master {
         termDictionary = treeMaps.remove('1');
         cache = treeMaps.remove('2');
         docDic = treeMaps.remove('3');
-        setAvrageDocLength();
+        setAverageDocLength();
         getCitiesFromDocDic();
-
-        /** for simulations!           delete after  **/
-        new Treceval_cmd().setDics(termDictionary, cache, docDic);
-        /** for simulations!           delete after  **/
-
-
         return (termDictionary != null && cache != null && docDic != null);
     }
 
@@ -393,30 +383,32 @@ public class Master {
     public void freeLangSearch(QuerySol query, ArrayList<String> cities) {
         Searcher searcher = new Searcher();
         if (cities.size() > 0) {
-            searcher.freeLangSearch( query, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall")!=0);
+            searcher.freeLangSearch(query, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall") != 0);
         } else {
-            searcher.freeLangSearch( query, termDictionary, cache, docDic, PropertiesFile.getPropertyAsInt("total.rickall")!=0);
+            searcher.freeLangSearch(query, termDictionary, cache, docDic, PropertiesFile.getPropertyAsInt("total.rickall") != 0);
         }
     }
 
     /**
      * Search multiple queries (in the format as given in the Report)
+     *
      * @param querySols - list of solved queries
-     * @param cities - list of cities to filter the documents by
+     * @param cities    - list of cities to filter the documents by
      */
     public void multiSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {
         Searcher searcher = new Searcher();
         if (cities.size() > 0) {
-            searcher.multiSearch( querySols, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall")!=0);
+            searcher.multiSearch(querySols, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall") != 0);
         } else {
-            searcher.multiSearch( querySols, termDictionary, cache, docDic, PropertiesFile.getPropertyAsInt("total.rickall")!=0);
+            searcher.multiSearch(querySols, termDictionary, cache, docDic, PropertiesFile.getPropertyAsInt("total.rickall") != 0);
         }
     }
 
     /**
      * creates a mini Documents Dictionary.
      * meaning: all the Documents which contain either one of the given cities will be added to the
-     *          mini Dictionary.
+     * mini Dictionary.
+     *
      * @param cities - a list of cities we want to filter by
      * @return mini Document Dictionary
      */
@@ -463,10 +455,35 @@ public class Master {
     }
 
     /**
+     * get the List of cities from the Corpus "F" tag's attribute "p=104"
      *
-     * @return
+     * @return list of strings, city names
      */
     public ArrayList<String> getCitiesList() {
         return new ArrayList<>(cityTags.keySet());
+    }
+
+    /**
+     * get the average document length
+     *
+     * @return
+     */
+    public static double getAvrageDocLength() {
+        return avrageDocLength;
+    }
+
+    public static void setAverageDocLength() {
+        if (docDic == null) avrageDocLength = 0;
+        try {
+            ArrayList<String> vals = new ArrayList<>(docDic.values());
+            double lenSum = 0;
+            int i = 0;
+            for (; i < vals.size(); i++) {
+                lenSum += Integer.parseInt(split(vals.get(i), ",")[1]);
+            }
+            avrageDocLength = lenSum / i;
+        } catch (Exception e) {
+            //nothing
+        }
     }
 }

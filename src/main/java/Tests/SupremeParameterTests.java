@@ -165,7 +165,7 @@ public class SupremeParameterTests {
         ArrayList<String> cities = new ArrayList<>();
 //        loadQueriesFile();
         PropertiesFile.putProperty("queries.file.path", "C:\\Users\\User\\Documents\\SearchEngineTests\\queries.txt");
-        ArrayList<QuerySol> querySols = modelMenu.multiSearch(cities);
+//        ArrayList<QuerySol> querySols = modelMenu.multiSearch(cities);
 //        for (QuerySol querySol : querySols) {
 //            System.out.print("\n" + querySol.getqNum() + ": " + querySol.getTitle() + ": ");
 //            for (String s : querySol.getSols()) {

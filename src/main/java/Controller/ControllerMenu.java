@@ -3,8 +3,6 @@ package Controller;
 import Indexer.WrieFile;
 import Model.ModelMenu;
 import Searcher.QuerySol;
-import Tests.Treceval_cmd;
-import TextContainers.LanguagesInfo;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -12,16 +10,12 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import View.IR_MenuView;
 
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -30,24 +24,17 @@ import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
-import static org.apache.commons.lang3.StringUtils.*;
-import static org.apache.commons.lang3.StringUtils.substring;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 /**
  * Controller
@@ -69,15 +56,11 @@ public class ControllerMenu implements Observer {
 
     private boolean savePath = false;
     private boolean dataPath = false;
+    private boolean searchQueriesLoaded = false;
 
 
     private ArrayList<String> selectedCities = new ArrayList<>();
     private ArrayList<String> citiesList = null;
-
-
-    private final Node rootIcon = new ImageView(new Image(getClass().getResourceAsStream("images/morty.png")));
-    private final Node queryIcon = new ImageView(new Image(getClass().getResourceAsStream("images/searchQuery.png")));
-    private final Image docIcon = new Image(getClass().getResourceAsStream("doc.png"));
 
 
     /**
@@ -95,16 +78,31 @@ public class ControllerMenu implements Observer {
             alert.setContentText("try to run the app again");
             alert.showAndWait();
         }
-        treeViewForResultHandle();
         Scene scene = new Scene(root);
         scene.getStylesheets().add("menu/style_menu.css");
         stage.setScene(scene);
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/menu/images/logo.png")));
+        stage.setTitle("The Search Engine that Hits the Spot");
         ir_menuView = fxmlLoader.getController();
-        ir_menuView.summary_lbl.setText("Summary:");
         ir_modelMenu = new ModelMenu();
         ir_modelMenu.addObserver(this);
         ir_menuView.addObserver(this);
         progress = new SimpleDoubleProperty(0);
+        treeViewForResultHandle();
+        setPartBState(true);
+    }
+
+    /**
+     * changing the Disable state for all initial GUI widgets as the argument the function receive
+     * @param state - the state the Disable state to change to
+     */
+    private void setPartBState(boolean state) {
+        ir_menuView.semantic_checkBox.setDisable(state);
+        ir_menuView.freeSearch_textField.setDisable(state);
+        ir_menuView.browse_queries_btn.setDisable(state);
+        ir_menuView.cities_btn.setDisable(state);
+        ir_menuView.totalRickAll_toggle.setDisable(state);
+        ir_menuView.search_btn.setDisable(state);
     }
 
     /**
@@ -131,9 +129,10 @@ public class ControllerMenu implements Observer {
                             }
                             ir_menuView.entities_textArea.setText(text.toString());
                         }
+                        ir_menuView.entities_textArea.setEditable(false);
+
                     }
                 });
-        ir_menuView.entities_textArea.setEditable(false);
     }
 
     /**
@@ -191,7 +190,10 @@ public class ControllerMenu implements Observer {
         File selectedDirectory = directoryChooser.showDialog(stage);
         if (selectedDirectory != null) {
             if (operation == 0) loadCorpusPath(selectedDirectory.getAbsolutePath());
-            else loadTargetPath(selectedDirectory.getAbsolutePath());
+            else {
+                loadTargetPath(selectedDirectory.getAbsolutePath());
+                ir_menuView.read_dict_btn.setDisable(false);
+            }
         }
     }
 
@@ -204,6 +206,9 @@ public class ControllerMenu implements Observer {
         if (selectedFile != null) {
             String path = selectedFile.getAbsolutePath();
             PropertiesFile.putProperty("queries.file.path", path);
+            searchQueriesLoaded = true;
+        } else {
+            searchQueriesLoaded = false;
         }
     }
 
@@ -234,18 +239,20 @@ public class ControllerMenu implements Observer {
     @Override
     public void update(Observable o, Object arg) {
         if (o.equals(ir_menuView)) {
-            if (arg.equals("stem")) {
+            if (arg.equals("resetLabel")) {
+                clearSummary();
+            } else if (arg.equals("stem")) {
                 if (ir_menuView.stemmer_checkBox.isSelected()) {
                     PropertiesFile.putProperty("stem.mode", "1");
                 } else PropertiesFile.putProperty("stem.mode", "0");
-            } else if (arg.equals("entities")) {
-                if (ir_menuView.stemmer_checkBox.isSelected()) {
-                    PropertiesFile.putProperty("entities.mode", "1");
-                } else PropertiesFile.putProperty("entities.mode", "0");
             } else if (arg.equals("semantic")) {
-                if (ir_menuView.stemmer_checkBox.isSelected()) {
+                if (ir_menuView.semantic_checkBox.isSelected()) {
                     PropertiesFile.putProperty("semantic.mode", "1");
                 } else PropertiesFile.putProperty("semantic.mode", "0");
+            } else if (arg.equals("totalRickall")) {
+                if (ir_menuView.totalRickAll_toggle.isSelected()) {
+                    PropertiesFile.putProperty("total.rickall", "1");
+                } else PropertiesFile.putProperty("total.rickall", "0");
             } else if (arg.equals("cities")) {
                 dealWithCities();
             } else if (arg.equals("start")) {
@@ -259,52 +266,98 @@ public class ControllerMenu implements Observer {
                 loadPathFromDirectoryChooser(0);
             } else if (arg.equals("target")) {
                 loadPathFromDirectoryChooser(1);
-            } else if (arg.equals("save")) {
-
             } else if (arg.equals("reset")) {
                 ir_modelMenu.reset();
             } else if (arg.equals("show")) {
-                //TODO - give the content to save
-//                saveResults(null);
                 showDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
-                loadTargetPath("C:\\Users\\User\\Documents\\SearchEngineTests");
-                loadCorpusPath("C:\\Users\\User\\Documents\\SearchEngineTests");
                 readDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
-            } else if (arg.equals("freeLangSearch")) {
-                ArrayList<String> languages = new ArrayList<>();
-                // todo - implement
-                ir_modelMenu.search("query", languages);
-//            } else if (arg.equals("search_single")) {
-//                ir_modelMenu.search(citiesList);
+            } else if (arg.equals("search_single")) {
+                String query = setQueryForSearch();
+                if (!query.isEmpty()) {
+                    setSummaryForSearch(true);
+                    Thread thread = new Thread(() -> ir_modelMenu.search(query, selectedCities));
+                    thread.setDaemon(true);
+                    thread.start();
+                } else {
+                    setSummaryForSearch(false);
+                }
             } else if (arg.equals("queryFile")) {
-                // todo - implement
-            }else if (arg.equals("save_results")) {
-                // todo - save the results to file
+                setSceneForResults(false);
+                loadQueriesFile();
+                if (searchQueriesLoaded) {
+                    setSummaryForSearch(true);
+                    Thread thread = new Thread(() -> ir_modelMenu.multiSearch(selectedCities));
+                    thread.setDaemon(true);
+                    thread.start();
+                }
+            } else if (arg.equals("save_results")) {
+                saveResults();
             }
         } else if (o.equals(ir_modelMenu)) {
-            if (arg.equals("done")) {
+            if (arg.equals("index_done")) {
                 ir_menuView.summary_lbl.setVisible(true);
                 ir_menuView.stemmer_checkBox.setDisable(false);
                 end = System.currentTimeMillis();
                 Platform.runLater(this::addSummaryToLabel);
             } else if (arg.equals("search_done")) {
-                showResultView();
+                Platform.runLater(this::clearSummary);
+                Platform.runLater(this::showResultView);
             }
         }
     }
 
     /**
+     * updating the languages list: docs_language, by requesting the collection from the model
+     */
+    private void addLanguages() {
+        ir_menuView.docs_language.getItems().clear();
+        ir_menuView.docs_language.setDisable(false);
+        ir_menuView.docs_language.getItems().addAll(ir_modelMenu.getLanguages());
+        if (!ir_menuView.docs_language.getItems().isEmpty())
+            ir_menuView.docs_language.setPromptText("Please Choose Language");
+    }
+
+    /**
+     * setting the entered single query for search
+     * @return
+     */
+    private String setQueryForSearch() {
+        String query = ir_menuView.freeSearch_textField.getText();
+        query = trim(query);
+        return query;
+    }
+
+    /**
+     *
+     * @param start
+     */
+    private void setSummaryForSearch(boolean start) {
+        ir_menuView.summary_lbl.setVisible(true);
+        if (start)
+            ir_menuView.summary_lbl.setText("\n\n\t\t\tPlease wait while Searching");
+        else
+            ir_menuView.summary_lbl.setText("\n\n\t\t\tPlease type something to search...");
+    }
+
+    private void clearSummary() {
+        ir_menuView.summary_lbl.setText("");
+    }
+
+    /**
      * making all the Objects that connected to showing the search result
      * visible or not visible.
+     *
      * @param status the state of visibility
      */
-    private void setSceneForResults(boolean status){
+    private void setSceneForResults(boolean status) {
         ir_menuView.result_lbl.setVisible(status);
         ir_menuView.result_treeView.setVisible(status);
         ir_menuView.save_results_img.setVisible(status);
+        ir_menuView.entities_textArea.setVisible(status);
+        ir_menuView.entities_textArea.setPromptText("Please select a document to see the most frequent entities");
     }
 
     /**
@@ -313,23 +366,23 @@ public class ControllerMenu implements Observer {
      */
     private void showResultView() {
         setSceneForResults(true);
-        if (!PropertiesFile.getProperty("entities.mode").equals("0")) {
-            ir_menuView.entities_textArea.setVisible(true);
-            ir_menuView.entities_textArea.setEditable(true);
-        }
         // init the result list
-        TreeItem<String> rootItem = new TreeItem<String>("Results", rootIcon);
+        TreeItem<String> rootItem = new TreeItem<String>("Results");
         rootItem.setExpanded(true);
         int i = 1;
-        for (ArrayList<String> result : ir_modelMenu.getDocsResults()) {
-            TreeItem<String> queryItem = new TreeItem<String>("Query " + i++);
+        ArrayList<ArrayList<String>> docsResult = ir_modelMenu.getDocsResultsAsArray();
+        for (ArrayList<String> result : docsResult) {
+            Node queryIcon = new ImageView(new Image(getClass().getResourceAsStream("/menu/images/searchQuery.png"), 15, 15, false, false));
+            TreeItem<String> queryItem = new TreeItem<String>("Query " + i++, queryIcon);
             queryItem.setExpanded(true);
             rootItem.getChildren().add(queryItem);
             for (String s : result) {
-                TreeItem<String> docItem = new TreeItem<String>(s);
-                queryItem.getChildren().add(queryItem);
+                Node docIcon = new ImageView(new Image(getClass().getResourceAsStream("/menu/images/doc.png"), 15, 15, false, false));
+                TreeItem<String> docItem = new TreeItem<String>(s, docIcon);
+                queryItem.getChildren().add(docItem);
             }
         }
+        ir_menuView.result_treeView.setRoot(rootItem);
     }
 
     /**
@@ -337,7 +390,7 @@ public class ControllerMenu implements Observer {
      * multi selection enabled and after confirm button pressed:
      * selectedCities updated and containing all the selectedCities in the list.
      */
-    private void dealWithCities () {
+    private void dealWithCities() {
         selectedCities.clear();
         ListView<String> listView = new ListView<>();
         for (String city : this.citiesList) {
@@ -372,9 +425,6 @@ public class ControllerMenu implements Observer {
     }
 
 
-
-
-
     /**
      * Read Dictionary to RAM
      */
@@ -384,11 +434,14 @@ public class ControllerMenu implements Observer {
             File file = new File(dicPath);
             if (file.isDirectory()) {
                 if (ir_modelMenu.readDictionaries(dicPath)) {
-                    this.citiesList = ir_modelMenu.getCitiesList();
+                    this.citiesList = ir_modelMenu.getCitiesList(); // todo: check how to receive cities
+                    addLanguages();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Read Dictionaries");
                     alert.setHeaderText("Dictionaries are read and now available to use");
                     alert.showAndWait();
+                    setPartBState(false);
+//                    ir_modelMenu.readEntities();
                 } else throw new Exception();
             } else throw new Exception();
         } catch (Exception e) {
@@ -399,14 +452,12 @@ public class ControllerMenu implements Observer {
         }
     }
 
-
-    //TODO- fix function and all the derived functions
-
     /**
-     * save the results to the Disk
+     * save the search results to the Disk in required format for treceval use
      */
-    public void saveResults(ArrayList<QuerySol> results) {
+    public void saveResults() {
         try {
+            ArrayList<QuerySol> results = ir_modelMenu.getDocsResult();
             FileChooser fileChooser = new FileChooser();
             File file = null;
             try {
@@ -414,9 +465,13 @@ public class ControllerMenu implements Observer {
             } catch (Exception e) {
                 file = new File(PropertiesFile.getProperty("save.files.path"));
             }
-            fileChooser.setInitialDirectory(file);
+            if (!file.isDirectory()) {
+                fileChooser.setInitialDirectory(new File(file.getParent()));
+            } else {
+                fileChooser.setInitialDirectory(new File(file.getAbsolutePath()));
+            }
             fileChooser.setInitialFileName("results");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text", ".txt", ".post"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text", ".txt"));
             file = fileChooser.showSaveDialog(stage);
             if (file != null) {
                 try {
@@ -489,7 +544,7 @@ public class ControllerMenu implements Observer {
 
 
     /**
-     * Sets the stage to be "blocked" fro use before starting indexing
+     * Sets the stage to be "blocked" from use before starting indexing
      */
     private void setSceneBeforeStart() {
         ir_menuView.summary_lbl.setAlignment(Pos.CENTER);
@@ -544,11 +599,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.summary_lbl.setText(summary);
         ir_menuView.progressbar.setVisible(false);
         ir_menuView.progress_lbl.setVisible(false);
-        ir_menuView.docs_language.setDisable(false);
-        ir_menuView.docs_language.getItems().addAll(LanguagesInfo.getInstance().getLanguagesAsList());
-        if (!ir_menuView.docs_language.getItems().isEmpty())
-            ir_menuView.docs_language.setPromptText("Please Choose Language");
-        ir_menuView.docs_language.setDisable(false);
+        addLanguages();
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
     }
@@ -559,5 +610,4 @@ public class ControllerMenu implements Observer {
     public void showStage() {
         stage.show();
     }
-
 }
