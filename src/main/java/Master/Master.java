@@ -81,11 +81,11 @@ public class Master {
     public static HashMap<String, Integer> makeQueryDic(QuerySol query) {
         //TODO - add Stem and Semantics
         Parser parser = new Parser();
-        return handleQuery(parser.parse(new String[]{query.getTitle()+(PropertiesFile.getPropertyAsInt("semantic.mode") == 0?getSemantics(query):"")}));
+        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? getSemantics(query) : "")}));
     }
 
     private static String getSemantics(QuerySol query) {
-        HashMap<String,ArrayList<String>> semanticDic = new ReadFile().readSemantics("semantic_DB_XXL"+(isStemMode?"_stem":""));
+        HashMap<String, ArrayList<String>> semanticDic = new ReadFile().readSemantics("semantic_DB_XXL" + (isStemMode ? "_stem" : ""));
 
         return "";
     }
@@ -170,7 +170,7 @@ public class Master {
     private void writeLanguagesToFile(Indexer indexer) {
         ArrayList<String> langs = LanguagesInfo.getInstance().getLanguagesAsList();
         StringBuilder langsContent = new StringBuilder(join(langs, "\n"));
-        indexer.writeLanguages(langsContent,"Languages");
+        indexer.writeLanguages(langsContent, "Languages");
     }
 
     /**
@@ -485,5 +485,17 @@ public class Master {
         } catch (Exception e) {
             //nothing
         }
+    }
+
+    /**
+     * return the pointer in Entities file of given key from 'docDic'
+     * @param docNum: key in docDic - docID
+     * @return: entities pointer of the given key (doc ID)
+     */
+    public String getEntitiesPointerFromDocNum(String docNum) {
+        //value example: LA123190-0133~5,221,kzfs7
+        String value = docDic.get(docNum);
+        String[] splitted = split(value, ',');
+        return splitted[splitted.length - 1];
     }
 }

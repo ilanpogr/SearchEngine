@@ -7,13 +7,12 @@ import Searcher.QuerySol;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Observable;
+
+import static org.apache.commons.lang3.StringUtils.split;
 
 /**
  * This class is linking between the controller and the brain of this project (Master Class)
@@ -113,7 +112,8 @@ public class ModelMenu extends Observable {
      * search a single query (only title), preparing the query as the master need to the input.
      * saving the search results to docResult class's object.
      * notifies the observer when search is finished
-     * @param query - the query title
+     *
+     * @param query  - the query title
      * @param cities - an Array containing the cities the user chose
      *               - if the user didn't chose any, the Array is empty
      */
@@ -133,6 +133,7 @@ public class ModelMenu extends Observable {
      * preparing the queries file as the master need to the input.
      * saving the search results to docResult class's object.
      * notifies the observer when search is finished
+     *
      * @param cities - an Array containing the cities the user chose
      *               - if the user didn't chose any, the Array is empty
      */
@@ -147,6 +148,7 @@ public class ModelMenu extends Observable {
 
     /**
      * returns HashMap- key: docNum, value: string array containing the entities.
+     *
      * @return : docsEntities containing the entities info
      */
     public HashMap<String, String[]> getDocsEntities() {
@@ -155,6 +157,7 @@ public class ModelMenu extends Observable {
 
     /**
      * returns a list of all the corpus documents's cities representation
+     *
      * @return : list of the cities
      */
     public ArrayList<String> getCitiesList() {
@@ -163,6 +166,7 @@ public class ModelMenu extends Observable {
 
     /**
      * creates a list representing the query as first index that containing list of relevant docs as the result
+     *
      * @return : the list of lists
      */
     public ArrayList<ArrayList<String>> getDocsResultsAsArray() {
@@ -177,6 +181,7 @@ public class ModelMenu extends Observable {
     /**
      * returns list of QuerySols (containing all the solution info without any filtering)
      * as result for the queries file/single search
+     *
      * @return : list result
      */
     public ArrayList<QuerySol> getDocsResult() {
@@ -188,23 +193,45 @@ public class ModelMenu extends Observable {
      * depending on the path the master will give (from properties file)
      */
     public void readEntities() {
-        String path = ""; // TODO: change the path for the file after shawn will create it
-        File file = new File(path);
+        // TODO: 31/12/2018 : finish the implementation
+        File file = new File(getDicsPath() + "\\Entities");
         try {
-            // work with docsEntitites
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String st;
-            while ((st = br.readLine()) != null) {
-                System.out.println("implement ModelMenu.readEntities");
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            for (QuerySol querySol : docsResult) {
+                ArrayList<String> docRes = querySol.getSols();
+                for (String doc : docRes) {
+                    String pointer = master_of_puppets.getEntitiesPointerFromDocNum(doc);
+                    int jumpInBytes = Integer.parseInt(pointer, 36);
+                    raf.seek(jumpInBytes);
+                    String line = raf.readLine();
+                    String[] entitiesAndTF = split(line, '|');
+                    String[] entities = new String[entitiesAndTF.length / 2];
+                    int j = 0;
+                    for (int i = 0; i < entitiesAndTF.length; i = i + 2) {
+                        entities[j++] = entitiesAndTF[i] + " --> frequency: " + entitiesAndTF[i + 1];
+                    }
+                    docsEntitites.put(doc,entities);
+                }
             }
+            // for debugging
+            for (String s : docsEntitites.keySet()){
+                String[] value = docsEntitites.get(s);
+                StringBuilder singleValue = new StringBuilder();
+                for (String val : value){
+                    singleValue.append(" , ").append(val);
+                }
+                System.out.println(s + ":   " + singleValue.toString());
+            }
+
         } catch (IOException e) {
-            System.out.println("Entities file not found");
+            System.out.println("problem with reading entities file");
         }
     }
 
     /**
      * reads Languages file that saved after indexing,
      * and creating a list containing the languages from the corpus.
+     *
      * @return : languages list
      */
     public ArrayList<String> getLanguages() {

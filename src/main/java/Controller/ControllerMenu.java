@@ -441,7 +441,7 @@ public class ControllerMenu implements Observer {
                     alert.setHeaderText("Dictionaries are read and now available to use");
                     alert.showAndWait();
                     setPartBState(false);
-//                    ir_modelMenu.readEntities();
+                    ir_modelMenu.readEntities();
                 } else throw new Exception();
             } else throw new Exception();
         } catch (Exception e) {
