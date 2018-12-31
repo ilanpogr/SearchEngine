@@ -189,9 +189,9 @@ public class Master {
         try {
             File file1 = new File("C:\\Users\\User\\Documents\\SearchEngineTests\\Dictionaries with stemming\\Entities");
             RandomAccessFile file = new RandomAccessFile(file1, "r");
-            file.seek(Integer.parseInt("kzfu0", 36));
+            file.seek(Integer.parseInt("hvjj7", 36));
             System.out.println(file.readLine());
-            System.out.println(Integer.parseInt("kzfu0",36));
+            System.out.println(Integer.parseInt("hvjj7",36));
         } catch (Exception e) {
 
         }

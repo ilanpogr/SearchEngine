@@ -3,20 +3,19 @@ package TextContainers;
 import Controller.PropertiesFile;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import sun.invoke.util.Wrapper;
 
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
 /**
- * class representing a doc in file.
+ * class representing a Document in file.
  */
 public class Doc {
 
     private static StringBuilder entitiesPrinter = new StringBuilder();
-    private static long entitiesPointer = 0;
-    private static String seperator = PropertiesFile.getProperty("file.posting.delimiter");
+    private static int entitiesPointer = 0;
+    private static String separator = PropertiesFile.getProperty("file.posting.delimiter");
     private static int numberOfPersonalNames = PropertiesFile.getPropertyAsInt("number.of.person.names");
     private String fileName;
     private String city;
@@ -106,7 +105,7 @@ public class Doc {
     }
 
     /**
-     * returns all the tags contained in the doc's text in the file.
+     * returns all the tags contained in the Document's text in the file.
      *
      * @return: an String array containing the tags.
      */
@@ -148,8 +147,8 @@ public class Doc {
     }
 
     /**
-     * add an Attributes. if it representing the doc's city name,
-     * the doc has a flag that this docs have a city.
+     * add an Attributes. if it representing the Document's city name,
+     * the Document has a flag that this Documents have a city.
      *
      * @param tags: the tags..
      */
@@ -166,8 +165,8 @@ public class Doc {
     }
 
     /**
-     * add an Attributes. if it representing the doc's city name,
-     * the doc has a flag that this docs have a city.
+     * add an Attributes. if it representing the Document's city name,
+     * the Document has a flag that this Documents have a city.
      *
      * @param tags: the tags.. now as ArrayList
      */
@@ -184,7 +183,7 @@ public class Doc {
     }
 
     /**
-     * does this doc has a city mentioned?
+     * does this Document has a city mentioned?
      *
      * @return yes or no (true or false)
      */
@@ -219,13 +218,13 @@ public class Doc {
     public String appendEntities(StringBuilder stringBuilder) {
         while (entities.size() > 0) {
             ImmutablePair<String, Integer> toPrint = entities.pollLast();
-            stringBuilder.append(toPrint.left).append(seperator).append(toPrint.right).append(seperator);
+            stringBuilder.append(toPrint.left).append(separator).append(toPrint.right).append(separator);
         }
-        stringBuilder.append(docNum()).append("\n");
+        stringBuilder.append("\n");
         entitiesPrinter.append(stringBuilder);
-        long point = entitiesPointer;
+        int point = entitiesPointer;
         entitiesPointer+=stringBuilder.toString().getBytes().length;
-        return Long.toString(point, 36);
+        return Integer.toString(point, 36);
     }
 
     /**
@@ -239,7 +238,7 @@ public class Doc {
     }
 
     /**
-     * get all tags of this document to index it
+     * get all tags of this Documentument to index it
      *
      * @return String array to parse
      */
