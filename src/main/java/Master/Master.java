@@ -185,19 +185,6 @@ public class Master {
         }
     }
 
-    public static void main(String[] args) {
-        try {
-            File file1 = new File("C:\\Users\\User\\Documents\\SearchEngineTests\\Dictionaries with stemming\\Entities");
-            RandomAccessFile file = new RandomAccessFile(file1, "r");
-            file.seek(Integer.parseInt("hvjj7", 36));
-            System.out.println(file.readLine());
-            System.out.println(Integer.parseInt("hvjj7",36));
-        } catch (Exception e) {
-
-        }
-
-    }
-
     /**
      * Writes all the languages from an indexed corpus into a file
      *
@@ -248,7 +235,7 @@ public class Master {
      * Merging the Dictionary of a single Document into the Main Dictionaries
      *
      * @param map      - the Dictionary that will be merged
-     * @param docCount
+     * @param docCount - counter to iterate on filesList
      */
     private static void mergeDicts(HashMap<String, String> map, int docCount) {
         int maxTf = 0, length = 0;
@@ -275,7 +262,7 @@ public class Master {
             }
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
-            if (isUpperCase && isAlphaSpace(termKey))
+            if (isUpperCase && isAlpha(termKey))
                 doc.addEntity(upperCase(termKey), termFrequency);//doc - append entities
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
@@ -404,7 +391,12 @@ public class Master {
         }
     }
 
-
+    /**
+     * Search multiple queries (in the format as given in the Report)
+     *
+     * @param query     - single solved query
+     * @param cities    - list of cities to filter the documents by
+     */
     public void freeLangSearch(QuerySol query, ArrayList<String> cities) {//doc
         Searcher searcher = new Searcher();
         if (cities.size() > 0) {
@@ -491,9 +483,9 @@ public class Master {
     /**
      * get the average document length
      *
-     * @return
+     * @return the average Document length
      */
-    public static double getAvrageDocLength() {
+    public static double getAverageDocLength() {
         return avrageDocLength;
     }
 

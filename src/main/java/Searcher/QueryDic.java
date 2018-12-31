@@ -63,7 +63,7 @@ public class QueryDic {//doc - whole class
                 q = bufferedReader.readLine();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("You Messed-Up With Our Files, Didn't you?\nIt's OK.. We're NOT Mad...\nJust Download Every thing again");
         }
     }
 
@@ -184,7 +184,6 @@ public class QueryDic {//doc - whole class
         }
         QuerySol querySol = qmap.get(potentialQueries.get(maxCount).getqNumAsInt());
         query.copySols(querySol);
-//        System.out.println(querySol.getqNum() + "," + maxEvaluated + ", " + querySol.getTitle() + " , " + query.getTitle());
         query.setEvaluation(querySol.getqNumAsInt(), maxEvaluated);
 
     }

@@ -26,7 +26,7 @@ import java.util.TreeMap;
 public class Ranker {
 
     private static String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
-    private double averageDocLength = Master.getAvrageDocLength();
+    private double averageDocLength = Master.getAverageDocLength();
     private double BM25__b;
     private double BM25__k;
     private double BM25__idf;
