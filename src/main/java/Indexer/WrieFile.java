@@ -67,7 +67,7 @@ public class WrieFile {
      * @param fileName      - file name
      * @return the number of bytes to skip to get to this content
      */
-    public static int writeToDictionary(StringBuilder stringBuilder, String fileName) {
+    public static Integer writeToDictionary(StringBuilder stringBuilder, String fileName) {
         targetPath = PropertiesFile.getProperty("save.files.path");
         int pointer = 0;
         if (pointers.putIfAbsent(fileName, 0) != null)
@@ -90,7 +90,7 @@ public class WrieFile {
      * @param fileName - the name of the file
      * @return int - pointer
      */
-    public static int putAndGetPointer(StringBuilder stringBuilder, String fileName) {
+    public static Integer putAndGetPointer(StringBuilder stringBuilder, String fileName) {
         Integer pointer = pointers.put(fileName, 0);
         if (pointer == null)
             pointer = 0;

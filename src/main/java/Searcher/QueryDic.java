@@ -9,7 +9,7 @@ import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
-public class QueryDic {
+public class QueryDic {//doc - whole class
     private static QueryDic yoda = null;
     private static TreeMap<Integer, QuerySol> qmap = null;
     private static HashMap<String, Integer> inv_qmap = null;
@@ -33,13 +33,11 @@ public class QueryDic {
     private QueryDic() {
         try {
             String dicName = "tested.queries";
-            String postings = "queries.postings";
-//            ClassLoader classLoader = getClass().getClassLoader();
-//            File dic = new File(classLoader.getResource(dicName).getFile());
+            String postings = "sols.post";
             File dic = new File("src\\main\\resources", dicName);
-            File post = new File("src\\main\\resources", "sols.post");
-//            dic.setWritable(false);
-//            post.setWritable(false);
+            File post = new File("src\\main\\resources", postings);
+            dic.setWritable(false);
+            post.setWritable(false);
             BufferedReader bufferedReader = new BufferedReader(new FileReader(dic.getCanonicalFile()));
             String q = bufferedReader.readLine();
             qmap = new TreeMap<>();

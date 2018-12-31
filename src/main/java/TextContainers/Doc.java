@@ -1,10 +1,9 @@
 package TextContainers;
 
 import Controller.PropertiesFile;
-import Indexer.Indexer;
-import Indexer.WrieFile;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import sun.invoke.util.Wrapper;
 
 import java.util.*;
 
@@ -16,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 public class Doc {
 
     private static StringBuilder entitiesPrinter = new StringBuilder();
-    private static int entitiesPointer = 0;
+    private static long entitiesPointer = 0;
     private static String seperator = PropertiesFile.getProperty("file.posting.delimiter");
     private static int numberOfPersonalNames = PropertiesFile.getPropertyAsInt("number.of.person.names");
     private String fileName;
@@ -46,6 +45,13 @@ public class Doc {
                 return res;
             }
         });
+    }
+
+    /**
+     * sets entities pointer to zero
+     */
+    public static void zeroEntitiesPointer() {
+        entitiesPointer=0;
     }
 
     /**
@@ -210,14 +216,16 @@ public class Doc {
      * @param stringBuilder - will append the entities as |<Entity>|<Frequency>|*
      * @return String that represents the pointer to the entity file in the Entities Dictionary (number in radix 36)
      */
-    public String appendPersonas(StringBuilder stringBuilder) {
+    public String appendEntities(StringBuilder stringBuilder) {
         while (entities.size() > 0) {
             ImmutablePair<String, Integer> toPrint = entities.pollLast();
-            stringBuilder.append(toPrint.left).append(seperator).append(toPrint.right).append("|");
+            stringBuilder.append(toPrint.left).append(seperator).append(toPrint.right).append(seperator);
         }
-        entitiesPrinter.append(stringBuilder.append("\n"));
-        entitiesPointer+=stringBuilder.toString().getBytes().length + 1;
-        return Integer.toString(entitiesPointer, 36);
+        stringBuilder.append(docNum()).append("\n");
+        entitiesPrinter.append(stringBuilder);
+        long point = entitiesPointer;
+        entitiesPointer+=stringBuilder.toString().getBytes().length;
+        return Long.toString(point, 36);
     }
 
     /**
@@ -226,8 +234,8 @@ public class Doc {
      *
      * @return String that represents the pointer to the entity file in the Entities Dictionary (number in radix 36)
      */
-    public String appendPersonas() {
-        return appendPersonas(new StringBuilder());
+    public String appendEntities() {
+        return appendEntities(new StringBuilder());
     }
 
     /**

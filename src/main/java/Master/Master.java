@@ -12,6 +12,8 @@ import TextContainers.LanguagesInfo;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
+import java.io.File;
+import java.io.RandomAccessFile;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -87,6 +89,7 @@ public class Master {
 
     /**
      * gets the semantics to a given query
+     *
      * @param query - the query we want semantics for
      * @return String of words with semantic contents to the query words
      */
@@ -144,7 +147,7 @@ public class Master {
             Indexer indexer = new Indexer();
             fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
             tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
-            double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1), fileNum);
+            double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1), fileNum);//doc - function to choose size
             filesList = new ArrayList<>();
             Parser p = new Parser();
             System.out.print("READING, PARSING, ");
@@ -156,16 +159,13 @@ public class Master {
                 int docCount = 0;
                 for (Doc aFilesList : filesList) {
                     currDocName = aFilesList.docNum();
-                    HashMap<String, String> map = p.parse(aFilesList.getAttributesToIndex());
+                    HashMap<String, String> map = p.parse(aFilesList.getAttributesToIndex());//doc - indexing whole text (not only text tag)
                     handleFile(map, docCount++);
                 }
                 currentStatus.set(i / fileNum);
                 if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
-                    Thread t = new Thread(() -> {
-                        indexer.appendToFile(Doc.getEntitiesPrinter(), "Entities");
-                        Doc.getEntitiesPrinter().setLength(0);
-                    });
-                    t.start();
+                    indexer.appendToFile(Doc.getEntitiesPrinter(), "Entities");//doc - append entities
+                    Doc.getEntitiesPrinter().setLength(0);
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
                     tmpFileIndex++;
@@ -179,9 +179,23 @@ public class Master {
             e.printStackTrace();
         } finally {
             PropertiesFile.putProperty("save.files.path", targetPath);
-            writeLanguagesToFile(new Indexer());
+            writeLanguagesToFile(new Indexer());//doc  -  writing languges to file
+            Doc.zeroEntitiesPointer();
             PropertiesFile.putProperty("save.files.path", targetPath);
         }
+    }
+
+    public static void main(String[] args) {
+        try {
+            File file1 = new File("C:\\Users\\User\\Documents\\SearchEngineTests\\Dictionaries with stemming\\Entities");
+            RandomAccessFile file = new RandomAccessFile(file1, "r");
+            file.seek(Integer.parseInt("kzfu0", 36));
+            System.out.println(file.readLine());
+            System.out.println(Integer.parseInt("kzfu0",36));
+        } catch (Exception e) {
+
+        }
+
     }
 
     /**
@@ -261,8 +275,8 @@ public class Master {
             }
             stringBuilder.append(currDocName).append(fileDelimiter).append(term.getValue());
             tmpTermDic.put(termKey, stringBuilder.toString());
-            if (isUpperCase && Character.isLetter(termKey.charAt(0)))
-                doc.addEntity(termKey, termFrequency);
+            if (isUpperCase && isAlphaSpace(termKey))
+                doc.addEntity(upperCase(termKey), termFrequency);//doc - append entities
             maxTf = Integer.max(termFrequency, maxTf);
             length += termFrequency;
         }
@@ -271,8 +285,8 @@ public class Master {
         doc.setLength(length);
         stringBuilder.setLength(0);
         stringBuilder.append(maxTf).append(",").append(length);
-        stringBuilder.append(",").append(doc.appendPersonas());
-        if (doc.hasCity()) stringBuilder.append(",*").append(doc.getCity());
+        stringBuilder.append(",").append(doc.appendEntities());
+        if (doc.hasCity()) stringBuilder.append(",*").append(doc.getCity());//doc - append cities
         docDic.put(currDocName, stringBuilder.toString());
         map.clear();
     }
@@ -366,8 +380,8 @@ public class Master {
         termDictionary = treeMaps.remove('1');
         cache = treeMaps.remove('2');
         docDic = treeMaps.remove('3');
-        setAverageDocLength();
-        getCitiesFromDocDic();
+        setAverageDocLength();//doc
+        getCitiesFromDocDic();//doc
         return (termDictionary != null && cache != null && docDic != null);
     }
 
@@ -375,7 +389,7 @@ public class Master {
      * creates the dictionary "cityTags" where the key is a city name and the value is a StringBuilder
      * which describes a list of Documents.
      */
-    private static void getCitiesFromDocDic() {
+    private static void getCitiesFromDocDic() {//doc
         for (Map.Entry<String, String> entry : docDic.entrySet()) {
             String doc = entry.getKey();
             String post = entry.getValue();
@@ -391,7 +405,7 @@ public class Master {
     }
 
 
-    public void freeLangSearch(QuerySol query, ArrayList<String> cities) {
+    public void freeLangSearch(QuerySol query, ArrayList<String> cities) {//doc
         Searcher searcher = new Searcher();
         if (cities.size() > 0) {
             searcher.freeLangSearch(query, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall") != 0);
@@ -406,7 +420,7 @@ public class Master {
      * @param querySols - list of solved queries
      * @param cities    - list of cities to filter the documents by
      */
-    public void multiSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {
+    public void multiSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {//doc
         Searcher searcher = new Searcher();
         if (cities.size() > 0) {
             searcher.multiSearch(querySols, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall") != 0);
@@ -423,7 +437,7 @@ public class Master {
      * @param cities - a list of cities we want to filter by
      * @return mini Document Dictionary
      */
-    private TreeMap<String, String> createFilteredDocDic(ArrayList<String> cities) {
+    private TreeMap<String, String> createFilteredDocDic(ArrayList<String> cities) {//doc
         TreeMap<String, String> tmpDocDic = new TreeMap<>(String::compareToIgnoreCase);
         String skip = "";
         for (int i = 0; i < cities.size(); i++) {
@@ -483,7 +497,7 @@ public class Master {
         return avrageDocLength;
     }
 
-    public static void setAverageDocLength() {
+    public static void setAverageDocLength() {//doc
         if (docDic == null) avrageDocLength = 0;
         try {
             ArrayList<String> vals = new ArrayList<>(docDic.values());
@@ -509,6 +523,8 @@ public class Master {
         tmpTermDic = new LinkedHashMap<>();
         isStemMode = setStemMode();
         currentStatus.set(0);
+        Doc.getEntitiesPrinter().setLength(0);
+        Doc.zeroEntitiesPointer();
         Indexer.clear();
         ReadFile.clear();
     }

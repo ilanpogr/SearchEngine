@@ -223,7 +223,7 @@ public class ControllerMenu implements Observer {
      * @param information - info
      * @param content     - Alert content
      */
-    public void showAlert(String title, String information, String content) {
+    public void showAlert(String title, String information, String content) { 
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
         alert.setHeaderText(information);

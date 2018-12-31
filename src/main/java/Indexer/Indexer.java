@@ -6,7 +6,6 @@ import Parser.Parser;
 import Stemmer.Stemmer;
 import TextContainers.City;
 import TextContainers.CityInfo;
-import com.sun.xml.internal.fastinfoset.util.CharArray;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -24,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Indexer {
 
     private static double totalPostingSizeByKB = 0;
-    private static final int minNumberOfTf = StrictMath.min(PropertiesFile.getPropertyAsInt("min.tf.to.save"),Master.getDocCount()/50);
+    private static final int minNumberOfTf = StrictMath.min(PropertiesFile.getPropertyAsInt("min.tf.to.save"),Master.getDocCount()/50); //doc - min tf to save
     private static final double maxIdfForCache = PropertiesFile.getPropertyAsDouble("max.idf.for.cache");
     private static final int cacheSlice = PropertiesFile.getPropertyAsInt("one.part.to.cache.from");
     private static final String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
@@ -98,7 +97,7 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "tuvwxyz");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("1. Term Dictionary"));
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("Cities"));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("Cities"));//doc - no more Cities Dictionary
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
         double logN = StrictMath.log10(Master.getDocCount());
