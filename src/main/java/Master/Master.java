@@ -136,12 +136,12 @@ public class Master {
         double tmpFileIndex = 0;
         double i = 0;
         try {
-            Indexer indexer = new Indexer();
             ModelMenu.setProgress();
             isStemMode = setStemMode();
-            String s = PropertiesFile.getProperty("data.set.path") + "corpus\\";
+            String corpusPath = PropertiesFile.getProperty("data.set.path") + "corpus\\";
             targetPath = PropertiesFile.getProperty("save.files.path");
-            ReadFile readFile = new ReadFile(s);
+            ReadFile readFile = new ReadFile(corpusPath);
+            Indexer indexer = new Indexer();
             fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
             tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
             double tmpChunkSize = Double.min(Integer.max(fileNum / tmpFileNum, 1), fileNum);
@@ -161,8 +161,6 @@ public class Master {
                 }
                 currentStatus.set(i / fileNum);
                 if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
-                    indexer.appendToFile(Doc.getEntitiesPrinter(), "Entities");
-                    Doc.getEntitiesPrinter().setLength(0);
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
                     tmpFileIndex++;
@@ -271,7 +269,7 @@ public class Master {
         doc.setMax_tf(maxTf);
         doc.setLength(length);
         stringBuilder.setLength(0);
-        stringBuilder.append(maxTf).append(",").append(length).append(",").append(doc.getFileName());
+        stringBuilder.append(maxTf).append(",").append(length);
         stringBuilder.append(",").append(doc.appendPersonas());
         if (doc.hasCity()) stringBuilder.append(",*").append(doc.getCity());
         docDic.put(currDocName, stringBuilder.toString());
