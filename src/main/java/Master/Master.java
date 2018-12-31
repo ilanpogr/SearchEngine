@@ -161,6 +161,11 @@ public class Master {
                 }
                 currentStatus.set(i / fileNum);
                 if ((i == nextTmpFileIndex && tmpFileIndex < tmpFileNum) || i == fileNum) {
+                    Thread t = new Thread(() -> {
+                        indexer.appendToFile(Doc.getEntitiesPrinter(), "Entities");
+                        Doc.getEntitiesPrinter().setLength(0);
+                    });
+                    t.start();
                     indexer.indexTempFile(new TreeMap<>(tmpTermDic));
                     tmpTermDic.clear();
                     tmpFileIndex++;
@@ -168,11 +173,6 @@ public class Master {
                 }
             }
             System.out.println("MERGING");
-            Thread t = new Thread(() -> {
-                indexer.appendToFile(Doc.getEntitiesPrinter(), "Entities");
-                Doc.getEntitiesPrinter().setLength(0);
-            });
-            t.start();
             indexer.mergePostingTempFiles();
             indexer.writeToDictionary(docDic, "3. Documents Dictionary");
         } catch (Exception e) {
@@ -180,6 +180,7 @@ public class Master {
         } finally {
             PropertiesFile.putProperty("save.files.path", targetPath);
             writeLanguagesToFile(new Indexer());
+            PropertiesFile.putProperty("save.files.path", targetPath);
         }
     }
 

@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 public class Doc {
 
     private static StringBuilder entitiesPrinter = new StringBuilder();
+    private static int entitiesPointer = 0;
     private static String seperator = PropertiesFile.getProperty("file.posting.delimiter");
     private static int numberOfPersonalNames = PropertiesFile.getPropertyAsInt("number.of.person.names");
     private String fileName;
@@ -215,8 +216,8 @@ public class Doc {
             stringBuilder.append(toPrint.left).append(seperator).append(toPrint.right).append("|");
         }
         entitiesPrinter.append(stringBuilder.append("\n"));
-
-        return Integer.toString(entitiesPrinter.toString().getBytes().length + 1, 36);
+        entitiesPointer+=stringBuilder.toString().getBytes().length + 1;
+        return Integer.toString(entitiesPointer, 36);
     }
 
     /**

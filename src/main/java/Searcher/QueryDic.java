@@ -46,6 +46,7 @@ public class QueryDic {
             inv_qmap = new HashMap<>();
             wordsToQueries = new HashMap<>();
             while (q != null) {
+                //todo - can remove few queries to test weights and relevance (like in class)
                 QuerySol querySol = new QuerySol(q);
                 RandomAccessFile posting = new RandomAccessFile(post, "r");
                 posting.skipBytes(querySol.getPostingPointer());
