@@ -220,8 +220,6 @@ public class QuerySol {
     }
 
     public void removeSuggestedSols() {
-        if (qNum.equalsIgnoreCase("000") && sols.size()>0){
             sols=new ArrayList<>();
-        }
     }
 }

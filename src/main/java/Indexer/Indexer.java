@@ -544,7 +544,7 @@ public class Indexer {
      * deletes the folder of last run (depends on stem mode)
      * @return true if deleted
      */
-    public boolean removeAllFiles() {
+    public boolean removeDicsDir() {
         return delete(getFileOrDirName(targetPath + "Dictionaries"));
     }
 

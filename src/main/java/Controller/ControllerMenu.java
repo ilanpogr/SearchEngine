@@ -18,19 +18,20 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import javafx.util.Pair;
 
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -51,6 +52,7 @@ public class ControllerMenu implements Observer {
     private String[] propertyKeys = {"data.set.path", "save.files.path"};
 
     private DoubleProperty progress;
+    private String stemModeAfterLoadDics = "";
 
     private long start;
     private long end;
@@ -62,7 +64,6 @@ public class ControllerMenu implements Observer {
 
     private ArrayList<String> selectedCities = new ArrayList<>();
     private ArrayList<String> citiesList = null;
-
 
     /**
      * ctor
@@ -89,8 +90,15 @@ public class ControllerMenu implements Observer {
         ir_modelMenu.addObserver(this);
         ir_menuView.addObserver(this);
         progress = new SimpleDoubleProperty(0);
+
+        // doc - easter egg
+        ir_menuView.partA_lbl.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.isShiftDown())
+                easterEgg();
+        });
+
         treeViewForResultHandle();
-        setPartBState(true);
+        setPartBStateDisable(true);
     }
 
     /**
@@ -98,7 +106,7 @@ public class ControllerMenu implements Observer {
      *
      * @param state - the state the Disable state to change to
      */
-    private void setPartBState(boolean state) {
+    private void setPartBStateDisable(boolean state) {
         ir_menuView.semantic_checkBox.setDisable(state);
         ir_menuView.freeSearch_textField.setDisable(state);
         ir_menuView.browse_queries_btn.setDisable(state);
@@ -120,18 +128,20 @@ public class ControllerMenu implements Observer {
                     public void changed(
                             ObservableValue<? extends TreeItem<String>> observable,
                             TreeItem<String> old_val, TreeItem<String> new_val) {
-                        TreeItem<String> selectedItem = new_val;
-                        ir_menuView.entities_textArea.setEditable(true);
-                        ir_menuView.entities_textArea.clear();
-                        String[] entities = ir_modelMenu.getDocsEntities().get(selectedItem.getValue());
-                        if (entities != null) {
-                            StringBuilder text = new StringBuilder();
-                            int i = 1;
-                            for (String s : entities) {
-                                text.append(i++).append(". ").append(s).append("\n");
+                        if (new_val != null) {
+                            TreeItem<String> selectedItem = new_val;
+                            ir_menuView.entities_textArea.setEditable(true);
+                            ir_menuView.entities_textArea.clear();
+                            String[] entities = ir_modelMenu.getDocsEntities().get(selectedItem.getValue());
+                            if (entities != null) {
+                                StringBuilder text = new StringBuilder();
+                                int i = 1;
+                                for (String s : entities) {
+                                    text.append(i++).append(". ").append(s).append("\n");
+                                }
+                                ir_menuView.entities_textArea.setText(text.toString());
+                                ir_menuView.entities_textArea.setEditable(false);
                             }
-                            ir_menuView.entities_textArea.setText(text.toString());
-                            ir_menuView.entities_textArea.setEditable(false);
                         }
                     }
                 });
@@ -247,11 +257,16 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("stem")) {
                 if (ir_menuView.stemmer_checkBox.isSelected()) {
                     PropertiesFile.putProperty("stem.mode", "1");
-                } else PropertiesFile.putProperty("stem.mode", "0");
+                } else {
+                    PropertiesFile.putProperty("stem.mode", "0");
+                }
+                checkIfCanSearchAfterStemChanged();
             } else if (arg.equals("semantic")) {
                 if (ir_menuView.semantic_checkBox.isSelected()) {
-                    PropertiesFile.putProperty("semantic.mode", "1");
-                } else PropertiesFile.putProperty("semantic.mode", "0");
+                    PropertiesFile.putProperty("semantic.mode", "2");
+                } else {
+                    PropertiesFile.putProperty("semantic.mode", "0");
+                }
             } else if (arg.equals("totalRickall")) {
                 if (ir_menuView.totalRickAll_toggle.isSelected()) {
                     PropertiesFile.putProperty("total.rickall", "1");
@@ -262,11 +277,11 @@ public class ControllerMenu implements Observer {
                     ir_menuView.summary_lbl.setText("");
                 }
             } else if (arg.equals("cities")) {
-                // TODO: 31/12/2018 deal with cities so it will work!
                 dealWithCities();
             } else if (arg.equals("start")) {
                 this.update(o, "stem");
                 setSceneBeforeStart();
+                root.setDisable(true);
                 Thread thread = new Thread(() -> ir_modelMenu.start());
                 start = System.currentTimeMillis();
                 thread.setDaemon(true);
@@ -281,10 +296,12 @@ public class ControllerMenu implements Observer {
                 showDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
+                stemModeAfterLoadDics = PropertiesFile.getProperty("stem.mode");
                 ir_menuView.summary_lbl.setText("Please wait while the dictionaries read to memory");
-                readDictionary();
-                ir_menuView.summary_lbl.setText("");
-                ir_menuView.summary_lbl.setVisible(false);
+                Thread thread = new Thread(this::readDictionary);
+                thread.setDaemon(true);
+                thread.start();
+                root.setDisable(true);
             } else if (arg.equals("search_single")) {
                 String query = setQueryForSearch();
                 if (!query.isEmpty()) {
@@ -292,6 +309,7 @@ public class ControllerMenu implements Observer {
                     Thread thread = new Thread(() -> ir_modelMenu.search(query, selectedCities));
                     thread.setDaemon(true);
                     thread.start();
+                    root.setDisable(true);
                 } else {
                     setSummaryForSearch(false);
                 }
@@ -303,6 +321,7 @@ public class ControllerMenu implements Observer {
                     Thread thread = new Thread(() -> ir_modelMenu.multiSearch(selectedCities));
                     thread.setDaemon(true);
                     thread.start();
+                    root.setDisable(true);
                 }
             } else if (arg.equals("save_results")) {
                 saveResults();
@@ -312,12 +331,77 @@ public class ControllerMenu implements Observer {
                 ir_menuView.summary_lbl.setVisible(true);
                 ir_menuView.stemmer_checkBox.setDisable(false);
                 end = System.currentTimeMillis();
-                Platform.runLater(this::addSummaryToLabel);
+                Platform.runLater(() -> {
+                    root.setDisable(false);
+                    addSummaryToLabel();
+                });
             } else if (arg.equals("search_done")) {
-                Platform.runLater(this::clearSummary);
-                Platform.runLater(this::showResultView);
+                Platform.runLater(() -> {
+                    root.setDisable(false);
+                    clearSummary();
+                    showResultView();
+                });
+            } else if (arg.equals("read_done")) {
+//                Platform.runLater(() -> readingDic(false));
+                Platform.runLater(() -> {
+                    ir_menuView.summary_lbl.setText("");
+                    root.setDisable(false);
+                    readDone();
+                    checkLanguages();
+                });
+            } else if (arg.equals("read_fail")) {
+                Platform.runLater(() -> {
+                    ir_menuView.summary_lbl.setText("");
+                    root.setDisable(false);
+                    readFail();
+                });
             }
         }
+    }
+
+    /**
+     * if dictionaries loaded and stem mode changed
+     * cancel search option and set label to: cant search until correct dictionaries load
+     */
+    private void checkIfCanSearchAfterStemChanged() {
+        if (!stemModeAfterLoadDics.equals("")) {
+            if (!stemModeAfterLoadDics.equals(PropertiesFile.getProperty("stem.mode"))) {
+                setPartBStateDisable(true);
+                ir_menuView.summary_lbl.setText("Please load the dictionaries again if you wish to search");
+            } else {
+                setPartBStateDisable(false);
+                ir_menuView.summary_lbl.setText("");
+            }
+        }
+    }
+
+    /**
+     * if languages not empty change prompt text in languages section
+     */
+    private void checkLanguages() {
+        if (!ir_menuView.docs_language.getItems().isEmpty())
+            ir_menuView.docs_language.setPromptText("Please Choose Language");
+    }
+
+    /**
+     * set scene after reading dictionaries done
+     */
+    private void readDone() {
+        setPartBStateDisable(false);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Read Dictionaries");
+        alert.setHeaderText("Dictionaries are read and now available to use");
+        alert.showAndWait();
+    }
+
+    /**
+     * set scene after reading dictionaries failed
+     */
+    private void readFail() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("OMG!");
+        alert.setHeaderText("Couldn't read Dictionaries. try showing them");
+        alert.showAndWait();
     }
 
     /**
@@ -327,11 +411,9 @@ public class ControllerMenu implements Observer {
         ir_menuView.docs_language.getItems().clear();
         ir_menuView.docs_language.setDisable(false);
         TreeSet<String> languages = ir_modelMenu.getLanguages();
-        while (!languages.isEmpty()){
+        while (!languages.isEmpty()) {
             ir_menuView.docs_language.getItems().addAll(languages.pollFirst());
         }
-        if (!ir_menuView.docs_language.getItems().isEmpty())
-            ir_menuView.docs_language.setPromptText("Please Choose Language");
     }
 
     /**
@@ -346,7 +428,9 @@ public class ControllerMenu implements Observer {
     }
 
     /**
-     * @param start
+     * Search single query by title can't search an empty query
+     *
+     * @param start: set scene for searching (without disabling everything)
      */
     private void setSummaryForSearch(boolean start) {
         ir_menuView.summary_lbl.setVisible(true);
@@ -356,6 +440,9 @@ public class ControllerMenu implements Observer {
             ir_menuView.summary_lbl.setText("\n\n\t\t\tPlease type something to search...");
     }
 
+    /**
+     * clean summary
+     */
     private void clearSummary() {
         ir_menuView.summary_lbl.setText("");
     }
@@ -414,7 +501,7 @@ public class ControllerMenu implements Observer {
             CityItem item = new CityItem(city, false);
 
             item.onProperty().addListener((obs, wasOn, isNowOn) -> {
-                if (isNowOn){
+                if (isNowOn) {
                     selectedCities.add(item.getName());
                 } else {
                     selectedCities.remove(item.getName());
@@ -452,21 +539,15 @@ public class ControllerMenu implements Observer {
         try {
             File file = new File(dicPath);
             if (file.isDirectory()) {
-                if (ir_modelMenu.readDictionaries(dicPath)) {
+                boolean flag = ir_modelMenu.readDictionaries(dicPath);
+                if (flag) {
                     this.citiesList = ir_modelMenu.getCitiesList();
                     addLanguages();
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Read Dictionaries");
-                    alert.setHeaderText("Dictionaries are read and now available to use");
-                    alert.showAndWait();
-                    setPartBState(false);
+                    ir_modelMenu.readFailed();
                 } else throw new Exception();
             } else throw new Exception();
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("OMG!");
-            alert.setHeaderText("Couldn't read Dictionaries. try showing them");
-            alert.showAndWait();
+            ir_modelMenu.readDone();
         }
     }
 
@@ -621,6 +702,19 @@ public class ControllerMenu implements Observer {
         addLanguages();
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
+    }
+
+    /**
+     * opens totalRickall option
+     */
+    private void easterEgg() {
+        if (!ir_menuView.totalRickAll_toggle.isVisible()) {
+            ir_menuView.totalRickAll_toggle.setVisible(true);
+            ir_menuView.totalRickall_lbl.setVisible(true);
+        } else {
+            ir_menuView.totalRickAll_toggle.setVisible(false);
+            ir_menuView.totalRickall_lbl.setVisible(false);
+        }
     }
 
     /**

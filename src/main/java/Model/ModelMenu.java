@@ -46,7 +46,7 @@ public class ModelMenu extends Observable {
      * Start indexing the corpus
      */
     public void start() {
-        removeAllFiles();
+        removeDicsDir();
         master_of_puppets.indexCorpus();
         setChanged();
         notifyObservers("index_done");
@@ -57,8 +57,8 @@ public class ModelMenu extends Observable {
      *
      * @return true if removed
      */
-    private boolean removeAllFiles() {
-        return master_of_puppets.removeAllFiles();
+    private boolean removeDicsDir() {
+        return master_of_puppets.removeDicsDir();
     }
 
     /**
@@ -248,5 +248,15 @@ public class ModelMenu extends Observable {
             System.out.println("Languages file not found");
         }
         return languages;
+    }
+
+    public void readFailed() {
+        setChanged();
+        notifyObservers("read_done");
+    }
+
+    public void readDone() {
+        setChanged();
+        notifyObservers("read_fail");
     }
 }

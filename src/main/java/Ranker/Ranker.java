@@ -86,7 +86,7 @@ public class Ranker {
         docsRank = new TreeMap<>();
         relationDic = new TreeMap<>();
         orderedPosting = new TreeMap<>();
-        reArrangePostingForQuery(termDic, cache, docDic, Master.makeQueryDic(query));
+        reArrangePostingForQuery(termDic, cache, docDic, Master.makeQueryDic(query,this));
         arrangeDictionaryForCalculations();
         //todo - Wiq and CosSim
         calculateBM25(termDic, docDic);

@@ -4,6 +4,7 @@ import Controller.PropertiesFile;
 import Indexer.Indexer;
 import Model.ModelMenu;
 import Parser.Parser;
+import Ranker.Ranker;
 import ReadFile.ReadFile;
 import Searcher.*;
 import Stemmer.Stemmer;
@@ -12,8 +13,6 @@ import TextContainers.LanguagesInfo;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
-import java.io.File;
-import java.io.RandomAccessFile;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -28,7 +27,7 @@ public class Master {
     private static String termSeparator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static String targetPath;
     private static StringBuilder stringBuilder = new StringBuilder();
-    private static TreeMap<String, String> docDic = new TreeMap<>();
+    private static TreeMap<String, String> docDic = new TreeMap<>(String::compareToIgnoreCase);
     private static LinkedHashMap<String, String> tmpTermDic = new LinkedHashMap<>();
     private static TreeMap<String, String> termDictionary = new TreeMap<>(String::compareToIgnoreCase);
     private static TreeMap<String, String> cache = new TreeMap<>(String::compareToIgnoreCase);
@@ -38,7 +37,6 @@ public class Master {
     private static double avrageDocLength = 0;
     private static DoubleProperty currentStatus = new SimpleDoubleProperty(0);
     // Part B
-    private static HashSet<TreeMap<String, String>> dictionariesCollection;
     private static HashMap<String, ArrayList<String>> semanticDic = null;
     private static String currDocName;
 
@@ -79,28 +77,31 @@ public class Master {
      * after Parsing and (maybe) Stemming each term in the query.
      *
      * @param query - the given single query
+     * @param ranker
      * @return the mentioned above dictionary
      */
-    public static HashMap<String, Integer> makeQueryDic(QuerySol query) {
+    public static HashMap<String, Integer> makeQueryDic(QuerySol query, Ranker ranker) {
         Parser parser = new Parser();
-        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? "" : getSemantics(query))}));
+        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? "" : getSemantics(query,ranker))}));
     }
 
     /**
      * gets the semantics to a given query
      *
      * @param query - the query we want semantics for
+     * @param ranker
      * @return String of words with semantic contents to the query words
      */
-    private static String getSemantics(QuerySol query) {
+    private static String getSemantics(QuerySol query, Ranker ranker) {
         if (semanticDic == null)
-            semanticDic = new ReadFile().readSemantics("semantic_DB_XXL" + (isStemMode ? "_stem" : ""));
+            semanticDic = new ReadFile().readSemantics("semantic_DB_XXL");
         StringBuilder stringBuilder = new StringBuilder();
         int semantic = PropertiesFile.getPropertyAsInt("semantic.mode");
+        ranker.setWeights(0.16,0.33,0.17,0.09,0.25);
         String[] q = query.getTitleArray();
         for (int i = 0; i < q.length; i++) {
-            ArrayList<String> semantics = semanticDic.get(q[i]);
-            for (int j = semantic, k = 0; j >= 0 && k < semantics.size(); j--, k++) {
+            ArrayList<String> semantics = semanticDic.get(lowerCase(q[i]));
+            for (int j = semantic, k = 0; j >= 0 && semantics!=null && k < semantics.size(); j--, k++) {
                 stringBuilder.append(" ").append(semantics.get(k));
             }
         }
@@ -329,9 +330,9 @@ public class Master {
      *
      * @return true iff deleted the directory
      */
-    public boolean removeAllFiles() {
+    public boolean removeDicsDir() {
         clear();
-        return new Indexer().removeAllFiles();
+        return new Indexer().removeDicsDir();
     }
 
     /**
@@ -339,10 +340,6 @@ public class Master {
      */
     public void reset() { // TODO: 01/01/2019 if somewhere else files are deleted. check and double check
         clear();
-        termDictionary = new TreeMap<>(String::compareToIgnoreCase);
-        cache = new TreeMap<>(String::compareToIgnoreCase);
-        cityTags = new TreeMap<>(String::compareToIgnoreCase);
-        semanticDic = new HashMap<>();
         Indexer.reset();
     }
 
@@ -368,6 +365,7 @@ public class Master {
         docDic = treeMaps.remove('3');
         setAverageDocLength();//doc
         getCitiesFromDocDic();//doc
+        QueryDic.getInstance();
         return (termDictionary != null && cache != null && docDic != null);
     }
 
@@ -506,11 +504,16 @@ public class Master {
     public void clear() {
         fileNum = PropertiesFile.getPropertyAsInt("number.of.files");
         tmpFileNum = PropertiesFile.getPropertyAsInt("number.of.temp.files");
+        termDictionary = new TreeMap<>(String::compareToIgnoreCase);
+        cache = new TreeMap<>(String::compareToIgnoreCase);
+        cityTags = new TreeMap<>(String::compareToIgnoreCase);
+        semanticDic = new HashMap<>();
         stringBuilder = new StringBuilder();
-        docDic = new TreeMap<>();
+        docDic = new TreeMap<>(String::compareToIgnoreCase);
         tmpTermDic = new LinkedHashMap<>();
         isStemMode = setStemMode();
         currentStatus.set(0);
+        avrageDocLength=0;
         Doc.getEntitiesPrinter().setLength(0);
         Doc.zeroEntitiesPointer();
         Indexer.clear();

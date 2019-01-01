@@ -24,7 +24,7 @@
          <children>
              <VBox prefHeight="590.0" prefWidth="400.0">
                  <children>
-                  <Label text="Part A" textAlignment="CENTER" underline="true">
+                  <Label fx:id="partA_lbl" text="Part A" textAlignment="CENTER" underline="true">
                      <font>
                         <Font size="20.0" />
                      </font>
@@ -168,7 +168,7 @@
                                     <Insets left="10.0" />
                                  </VBox.margin>
                               </ImageView>
-                              <Label text="Total Rickall:">
+                              <Label fx:id="totalRickall_lbl" text="Total Rickall:" visible="false">
                                  <VBox.margin>
                                     <Insets top="10.0" />
                                  </VBox.margin>
@@ -176,7 +176,7 @@
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <ToggleButton fx:id="totalRickAll_toggle" onAction="#totalRickall" prefHeight="36.0" prefWidth="44.0">
+                              <ToggleButton fx:id="totalRickAll_toggle" onAction="#totalRickall" prefHeight="36.0" prefWidth="44.0" visible="false">
                                  <VBox.margin>
                                     <Insets left="15.0" />
                                  </VBox.margin></ToggleButton>

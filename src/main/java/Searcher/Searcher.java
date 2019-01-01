@@ -24,10 +24,8 @@ public class Searcher {
             return;
         for (int i = 0; i < queryList.size(); i++) {
             QuerySol query = queryList.get(i);
-            if (QueryDic.getInstance().queryEvaluator(query) == 2) {
+            if (QueryDic.getInstance().queryEvaluator(query) == 2 && totalRickAll) {
                 query.filterSols(docs.keySet());
-                if (!totalRickAll)
-                    query.filterSolsNum(50);
                 continue;
             }
             //TODO - add nerrative here
