@@ -249,4 +249,14 @@ public class ModelMenu extends Observable {
         }
         return languages;
     }
+
+    public void readFailed() {
+        setChanged();
+        notifyObservers("read_done");
+    }
+
+    public void readDone() {
+        setChanged();
+        notifyObservers("read_fail");
+    }
 }

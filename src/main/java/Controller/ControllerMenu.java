@@ -246,7 +246,7 @@ public class ControllerMenu implements Observer {
                 clearSummary();
             } else if (arg.equals("stem")) {
                 if (ir_menuView.stemmer_checkBox.isSelected()) {
-                    PropertiesFile.putProperty("stem.mode", "1");
+                    PropertiesFile.putProperty("stem.mode", "2");
                 } else PropertiesFile.putProperty("stem.mode", "0");
             } else if (arg.equals("semantic")) {
                 if (ir_menuView.semantic_checkBox.isSelected()) {
@@ -282,9 +282,11 @@ public class ControllerMenu implements Observer {
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
                 ir_menuView.summary_lbl.setText("Please wait while the dictionaries read to memory");
-                readDictionary();
-                ir_menuView.summary_lbl.setText("");
-                ir_menuView.summary_lbl.setVisible(false);
+                Thread thread = new Thread(this::readDictionary);
+                thread.setDaemon(true);
+                thread.start();
+//                readingDic(true);
+                root.setDisable(true);
             } else if (arg.equals("search_single")) {
                 String query = setQueryForSearch();
                 if (!query.isEmpty()) {
@@ -316,8 +318,49 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("search_done")) {
                 Platform.runLater(this::clearSummary);
                 Platform.runLater(this::showResultView);
+            } else if (arg.equals("read_done")){
+                Platform.runLater(() -> ir_menuView.summary_lbl.setText(""));
+//                Platform.runLater(() -> readingDic(false));
+                root.setDisable(false);
+                Platform.runLater(this::readDone);
+                Platform.runLater(this::checkLanguages);
+            } else if (arg.equals("read_fail")){
+                Platform.runLater(() -> ir_menuView.summary_lbl.setText(""));
+//                Platform.runLater(() -> readingDic(false));
+                root.setDisable(false);
+                Platform.runLater(this::readFail);
             }
         }
+    }
+
+    private void checkLanguages() {
+        if (!ir_menuView.docs_language.getItems().isEmpty())
+            ir_menuView.docs_language.setPromptText("Please Choose Language");
+    }
+
+    private void readingDic(boolean state) {
+        ir_menuView.browse_btn.setDisable(state);
+        ir_menuView.save_btn.setDisable(state);
+        ir_menuView.dict_btn.setDisable(state);
+        ir_menuView.read_dict_btn.setDisable(state);
+        ir_menuView.stemmer_checkBox.setDisable(state);
+        ir_menuView.docs_language.setDisable(state);
+        ir_menuView.reset_btn.setDisable(state);
+    }
+
+    private void readDone(){
+        setPartBState(false);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Read Dictionaries");
+        alert.setHeaderText("Dictionaries are read and now available to use");
+        alert.showAndWait();
+    }
+
+    private void readFail(){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("OMG!");
+        alert.setHeaderText("Couldn't read Dictionaries. try showing them");
+        alert.showAndWait();
     }
 
     /**
@@ -330,8 +373,6 @@ public class ControllerMenu implements Observer {
         while (!languages.isEmpty()){
             ir_menuView.docs_language.getItems().addAll(languages.pollFirst());
         }
-        if (!ir_menuView.docs_language.getItems().isEmpty())
-            ir_menuView.docs_language.setPromptText("Please Choose Language");
     }
 
     /**
@@ -452,21 +493,15 @@ public class ControllerMenu implements Observer {
         try {
             File file = new File(dicPath);
             if (file.isDirectory()) {
-                if (ir_modelMenu.readDictionaries(dicPath)) {
+                boolean flag = ir_modelMenu.readDictionaries(dicPath);
+                if (flag) {
                     this.citiesList = ir_modelMenu.getCitiesList();
                     addLanguages();
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Read Dictionaries");
-                    alert.setHeaderText("Dictionaries are read and now available to use");
-                    alert.showAndWait();
-                    setPartBState(false);
+                    ir_modelMenu.readFailed();
                 } else throw new Exception();
             } else throw new Exception();
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("OMG!");
-            alert.setHeaderText("Couldn't read Dictionaries. try showing them");
-            alert.showAndWait();
+            ir_modelMenu.readDone();
         }
     }
 
