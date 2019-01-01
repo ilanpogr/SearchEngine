@@ -100,8 +100,8 @@ public class Master {
         String[] q = query.getTitleArray();
         for (int i = 0; i < q.length; i++) {
             ArrayList<String> semantics = semanticDic.get(q[i]);
-            for (int j = semantic, k = 0; j > 0 && k < semantics.size(); j--, k++) {
-                stringBuilder.append(semantics.get(k)).append(" ");
+            for (int j = semantic, k = 0; j >= 0 && k < semantics.size(); j--, k++) {
+                stringBuilder.append(" ").append(semantics.get(k));
             }
         }
         return isEmpty(stringBuilder) ? "" : stringBuilder.toString();
