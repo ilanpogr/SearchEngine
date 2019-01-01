@@ -163,6 +163,12 @@ public class ReadFile {
         return stringBuilder.toString();
     }
 
+    /**
+     * Read from the semantics DataBase
+     * @param dbName - the DB name
+     * @return HashMap  - key: term
+     *                  - value: list of similar terms
+     */
     public HashMap<String, ArrayList<String>> readSemantics(String dbName) {
         HashMap<String, ArrayList<String>> res = new HashMap<>();
         try {

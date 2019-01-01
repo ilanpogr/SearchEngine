@@ -82,9 +82,8 @@ public class Master {
      * @return the mentioned above dictionary
      */
     public static HashMap<String, Integer> makeQueryDic(QuerySol query) {
-        //TODO - add Stem and Semantics
         Parser parser = new Parser();
-        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? getSemantics(query) : "")}));
+        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? "" : getSemantics(query))}));
     }
 
     /**
@@ -102,7 +101,7 @@ public class Master {
         for (int i = 0; i < q.length; i++) {
             ArrayList<String> semantics = semanticDic.get(q[i]);
             for (int j = semantic, k = 0; j > 0 && k < semantics.size(); j--, k++) {
-                stringBuilder.append(" ").append(semantics.get(k));
+                stringBuilder.append(semantics.get(k)).append(" ");
             }
         }
         return isEmpty(stringBuilder) ? "" : stringBuilder.toString();
@@ -381,28 +380,13 @@ public class Master {
             String doc = entry.getKey();
             String post = entry.getValue();
             String city = substringAfterLast(post, ",*");
-            if (isEmpty(city)) {
+            if (!isEmpty(city)) {
                 if (cityTags.containsKey(city)) {
                     cityTags.get(city).append(doc).append("|");
                 } else {
                     cityTags.put(city, new StringBuilder(doc));
                 }
             }
-        }
-    }
-
-    /**
-     * Search multiple queries (in the format as given in the Report)
-     *
-     * @param query     - single solved query
-     * @param cities    - list of cities to filter the documents by
-     */
-    public void freeLangSearch(QuerySol query, ArrayList<String> cities) {//doc
-        Searcher searcher = new Searcher();
-        if (cities.size() > 0) {
-            searcher.freeLangSearch(query, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall") != 0);
-        } else {
-            searcher.freeLangSearch(query, termDictionary, cache, docDic, PropertiesFile.getPropertyAsInt("total.rickall") != 0);
         }
     }
 

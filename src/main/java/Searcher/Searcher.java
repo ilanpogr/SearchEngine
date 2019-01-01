@@ -31,19 +31,18 @@ public class Searcher {
                 continue;
             }
             //TODO - add nerrative here
-            freeLangSearch(query,dict,cache,docs,totalRickAll);
+            freeLangSearch(query, dict, cache, docs);
         }
 
     }
 
-    public void freeLangSearch(QuerySol query, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs, boolean totalRickAll) {
-        ArrayList<String> res = rankQuery(query, dict, cache, docs, totalRickAll);
-        for (int j = 0; j < res.size() && (query.getSolSize() < 50 || totalRickAll); j++) { //todo - check if insertion of new docnums will help
+    public void freeLangSearch(QuerySol query, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs) {
+        ArrayList<String> res = rankQuery(query, dict, cache, docs, false);
+        query.removeSuggestedSols();
+        for (int j = 0; j < res.size() && query.getSolSize() < 50; j++) {
             query.addSingleDoc(res.get(j));
         }
         query.filterSols(docs.keySet());
-        if (!totalRickAll) {
-            query.filterSolsNum(50);
-        }
+        query.filterSolsNum(50);
     }
 }

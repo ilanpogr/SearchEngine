@@ -121,8 +121,9 @@ public class ModelMenu extends Observable {
         ArrayList<QuerySol> querySols = new ArrayList<>();
         StringBuilder q = new StringBuilder("000|");
         q.append(query).append("|s|s|");
-        querySols.add(new QuerySol(q.toString()));
-        master_of_puppets.freeLangSearch(querySols.get(0), cities);
+        querySols.add(new QuerySol(q.toString(),-1));
+        master_of_puppets.multiSearch(querySols, cities);
+//        master_of_puppets.freeLangSearch(querySols.get(0), cities);
         docsResult = querySols;
         setChanged();
         notifyObservers("search_done");

@@ -218,4 +218,10 @@ public class QuerySol {
     public Double getSolRank(String doc) {
         return sols.contains(doc)? getEvaluationRank(): 0;
     }
+
+    public void removeSuggestedSols() {
+        if (qNum.equalsIgnoreCase("000") && sols.size()>0){
+            sols=new ArrayList<>();
+        }
+    }
 }

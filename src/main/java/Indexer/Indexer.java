@@ -214,7 +214,7 @@ public class Indexer {
      * appends a given content to a file (by name)
      * @param content - the content will be written to the file
      * @param fileName- the name of the file
-     * @return
+     * @return int - pointer to the appended line
      */
     public int appendToFile(StringBuilder content, String fileName) {
         checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
@@ -291,7 +291,7 @@ public class Indexer {
         int sliceIndex = forCache.length / cacheSlice;
         if (sliceIndex % 2 == 1) {
             sliceIndex = Integer.max(--sliceIndex, 2);
-        }
+        } if (sliceIndex==0) sliceIndex=2;
         return new String[]{join(forCache, fileDelimiter, 0, sliceIndex), join(forCache, fileDelimiter, sliceIndex, forCache.length)};
 
     }
