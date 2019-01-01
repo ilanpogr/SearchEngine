@@ -124,8 +124,11 @@ public class QueryDic {//doc - whole class
         if (query==null) return;
         if (inv_qmap.containsKey(query.getTitle())) {
             QuerySol querySol = qmap.get(query.getqNumAsInt());
-            if (querySol.equals(query))
-                query.setEvaluation(querySol.getqNumAsInt(),2);
+            if (querySol.equals(query)) {
+                query.setEvaluation(querySol.getqNumAsInt(), 2);
+                query.copySols(querySol);
+                return;
+            }
         }
         String[] wordsTmp = split(query.getTitle(), " ,.-");
         TreeSet<String> antiDuplicator = new TreeSet<>(String::compareToIgnoreCase);

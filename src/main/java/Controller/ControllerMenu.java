@@ -3,11 +3,9 @@ package Controller;
 import Indexer.WrieFile;
 import Model.ModelMenu;
 import Searcher.QuerySol;
+import View.CityItem;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -23,12 +21,15 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -94,6 +95,7 @@ public class ControllerMenu implements Observer {
 
     /**
      * changing the Disable state for all initial GUI widgets as the argument the function receive
+     *
      * @param state - the state the Disable state to change to
      */
     private void setPartBState(boolean state) {
@@ -119,21 +121,22 @@ public class ControllerMenu implements Observer {
                             ObservableValue<? extends TreeItem<String>> observable,
                             TreeItem<String> old_val, TreeItem<String> new_val) {
                         TreeItem<String> selectedItem = new_val;
-                        if (selectedItem.isLeaf()) {
-                            ir_menuView.entities_textArea.clear();
-                            String[] entities = ir_modelMenu.getDocsEntities().get(selectedItem.getValue());
+                        ir_menuView.entities_textArea.setEditable(true);
+                        ir_menuView.entities_textArea.clear();
+                        String[] entities = ir_modelMenu.getDocsEntities().get(selectedItem.getValue());
+                        if (entities != null) {
                             StringBuilder text = new StringBuilder();
-                            int i = 0;
+                            int i = 1;
                             for (String s : entities) {
-                                text.append(i).append(". ").append(s).append("\n");
+                                text.append(i++).append(". ").append(s).append("\n");
                             }
                             ir_menuView.entities_textArea.setText(text.toString());
+                            ir_menuView.entities_textArea.setEditable(false);
                         }
-                        ir_menuView.entities_textArea.setEditable(false);
-
                     }
                 });
     }
+
 
     /**
      * @param selectedDirectoryPath the path from the FileChooser
@@ -252,8 +255,14 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("totalRickall")) {
                 if (ir_menuView.totalRickAll_toggle.isSelected()) {
                     PropertiesFile.putProperty("total.rickall", "1");
-                } else PropertiesFile.putProperty("total.rickall", "0");
+                    ir_menuView.summary_lbl.setVisible(true);
+                    ir_menuView.summary_lbl.setText("\n\tPlease pay attention that TotalRickall\n\toption works only with query files.");
+                } else {
+                    PropertiesFile.putProperty("total.rickall", "0");
+                    ir_menuView.summary_lbl.setText("");
+                }
             } else if (arg.equals("cities")) {
+                // TODO: 31/12/2018 deal with cities so it will work!
                 dealWithCities();
             } else if (arg.equals("start")) {
                 this.update(o, "stem");
@@ -272,7 +281,9 @@ public class ControllerMenu implements Observer {
                 showDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
+                ir_menuView.summary_lbl.setText("Please wait while the dictionaries read to memory");
                 readDictionary();
+                ir_menuView.summary_lbl.setText("");
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("search_single")) {
                 String query = setQueryForSearch();
@@ -315,13 +326,17 @@ public class ControllerMenu implements Observer {
     private void addLanguages() {
         ir_menuView.docs_language.getItems().clear();
         ir_menuView.docs_language.setDisable(false);
-        ir_menuView.docs_language.getItems().addAll(ir_modelMenu.getLanguages());
+        TreeSet<String> languages = ir_modelMenu.getLanguages();
+        while (!languages.isEmpty()){
+            ir_menuView.docs_language.getItems().addAll(languages.pollFirst());
+        }
         if (!ir_menuView.docs_language.getItems().isEmpty())
             ir_menuView.docs_language.setPromptText("Please Choose Language");
     }
 
     /**
      * setting the entered single query for search
+     *
      * @return
      */
     private String setQueryForSearch() {
@@ -331,7 +346,6 @@ public class ControllerMenu implements Observer {
     }
 
     /**
-     *
      * @param start
      */
     private void setSummaryForSearch(boolean start) {
@@ -353,7 +367,9 @@ public class ControllerMenu implements Observer {
      * @param status the state of visibility
      */
     private void setSceneForResults(boolean status) {
+        ir_menuView.entities_textArea.setEditable(false);
         ir_menuView.result_lbl.setVisible(status);
+        ir_menuView.save_lbl.setVisible(status);
         ir_menuView.result_treeView.setVisible(status);
         ir_menuView.save_results_img.setVisible(status);
         ir_menuView.entities_textArea.setVisible(status);
@@ -385,6 +401,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.result_treeView.setRoot(rootItem);
     }
 
+
     /**
      * opens new stage with a list containing all the cities that received from master.
      * multi selection enabled and after confirm button pressed:
@@ -392,34 +409,36 @@ public class ControllerMenu implements Observer {
      */
     private void dealWithCities() {
         selectedCities.clear();
-        ListView<String> listView = new ListView<>();
+        ListView<CityItem> listView = new ListView<>();
         for (String city : this.citiesList) {
-            listView.getItems().add(city);
+            CityItem item = new CityItem(city, false);
+
+            item.onProperty().addListener((obs, wasOn, isNowOn) -> {
+                if (isNowOn){
+                    selectedCities.add(item.getName());
+                } else {
+                    selectedCities.remove(item.getName());
+                }
+            });
+            listView.getItems().add(item);
         }
-        listView.setCellFactory(CheckBoxListCell.forListView(new Callback<String, ObservableValue<Boolean>>() {
+        listView.setCellFactory(CheckBoxListCell.forListView(new Callback<CityItem, ObservableValue<Boolean>>() {
             @Override
-            public ObservableValue<Boolean> call(String item) {
-                BooleanProperty observable = new SimpleBooleanProperty();
-                observable.addListener((obs, wasSelected, isNowSelected) -> {
-                    if (isNowSelected)
-                        selectedCities.add(item);
-                    else
-                        selectedCities.remove(item);
-                });
-                return observable;
+            public ObservableValue<Boolean> call(CityItem item) {
+                return item.onProperty();
             }
         }));
         Stage citiesStage = new Stage();
         Button confirm = new Button("Confirm");
-        BorderPane root = new BorderPane(listView, null, null, confirm, null);
-        Scene scene = new Scene(root, 250, 400);
-
         confirm.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
                 citiesStage.close();
             }
         });
+        BorderPane root = new BorderPane(listView, null, null, confirm, null);
+        Scene scene = new Scene(root, 250, 400);
+
         citiesStage.setScene(scene);
         citiesStage.showAndWait();
     }
@@ -428,20 +447,19 @@ public class ControllerMenu implements Observer {
     /**
      * Read Dictionary to RAM
      */
-    private void readDictionary() {
+    private void readDictionary() { // TODO: 01/01/2019 check that really all the dectionaries are read as needed!!!
         String dicPath = ir_modelMenu.getDicsPath();
         try {
             File file = new File(dicPath);
             if (file.isDirectory()) {
                 if (ir_modelMenu.readDictionaries(dicPath)) {
-                    this.citiesList = ir_modelMenu.getCitiesList(); // todo: check how to receive cities
+                    this.citiesList = ir_modelMenu.getCitiesList();
                     addLanguages();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Read Dictionaries");
                     alert.setHeaderText("Dictionaries are read and now available to use");
                     alert.showAndWait();
                     setPartBState(false);
-                    ir_modelMenu.readEntities();
                 } else throw new Exception();
             } else throw new Exception();
         } catch (Exception e) {
@@ -470,11 +488,12 @@ public class ControllerMenu implements Observer {
             } else {
                 fileChooser.setInitialDirectory(new File(file.getAbsolutePath()));
             }
-            fileChooser.setInitialFileName("results");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text", ".txt"));
+            fileChooser.setInitialFileName("results.txt");
+//            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("text (*.txt)", ".txt"));
             file = fileChooser.showSaveDialog(stage);
             if (file != null) {
                 try {
+                    file.delete();
                     WrieFile.writeQueryResults(results, file.getParent(), file.getName());
                 } catch (Exception e) {
                     e.printStackTrace();

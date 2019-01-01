@@ -36,6 +36,7 @@ public class IR_MenuView extends Observable {
     public TextArea entities_textArea;
     public TextField freeSearch_textField;
     public ToggleButton totalRickAll_toggle;
+    public Label save_lbl;
 
     /**
      * when start button is clicked

@@ -116,9 +116,9 @@ public class Ranker {
             if (endsWith(termVal, "*")) { //it's in cache
                 termVal = substringBeforeLast(termVal, ",");
                 String[] postPoint = split(cache.get(word), ",");
-                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"), "\\")), word, postPoint[1]));
+                fromPosting.append(postPoint[0]).append(fileDelimiter).append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("save.files.path"), "\\")), word, postPoint[1]));
             } else {
-                fromPosting.append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("queries.file.path"), "\\")), word, substringAfterLast(termVal, ",")));
+                fromPosting.append(ReadFile.getTermLine(new StringBuilder(substringBeforeLast(PropertiesFile.getProperty("save.files.path"), "\\")), word, substringAfterLast(termVal, ",")));
             }
             fromPosting.trimToSize();
             if (fromPosting.length() != 0) {

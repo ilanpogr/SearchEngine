@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="590.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.IR_MenuView">
+<AnchorPane prefHeight="590.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.IR_MenuView">
    <children>
       <HBox prefHeight="570.0" prefWidth="1000.0">
          <children>
@@ -194,19 +194,28 @@
                         <Insets />
                      </VBox.margin>
                      <children>
-                        <TreeView fx:id="result_treeView" prefHeight="420.0" prefWidth="220.0" visible="false" />
+                        <TreeView fx:id="result_treeView" prefHeight="408.0" prefWidth="294.0" visible="false" />
                         <VBox prefHeight="408.0" prefWidth="380.0">
                            <children>
-                              <TextArea fx:id="entities_textArea" maxHeight="300.0" maxWidth="300.0" minHeight="300.0" minWidth="300.0" prefHeight="300.0" prefWidth="300.0" visible="false">
+                              <TextArea fx:id="entities_textArea" maxHeight="260.0" maxWidth="280.0" minHeight="260.0" minWidth="280.0" prefHeight="260.0" prefWidth="280.0" visible="false">
                                  <VBox.margin>
-                                    <Insets left="50.0" top="20.0" />
+                                    <Insets left="30.0" top="40.0" />
                                  </VBox.margin>
                               </TextArea>
-                              <Button fx:id="save_results_img" onMouseClicked="#saveResults" visible="false">
-                                 <VBox.margin>
-                                    <Insets left="300.0" top="15.0" />
-                                 </VBox.margin>
-                              </Button>
+                              <HBox prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Label fx:id="save_lbl" prefHeight="17.0" prefWidth="75.0" text="Save results:" visible="false">
+                                       <HBox.margin>
+                                          <Insets left="150.0" top="80.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <Button fx:id="save_results_img" onMouseClicked="#saveResults" visible="false">
+                                       <HBox.margin>
+                                          <Insets top="40.0" />
+                                       </HBox.margin>
+                                    </Button>
+                                 </children>
+                              </HBox>
                            </children>
                         </VBox>
                      </children>

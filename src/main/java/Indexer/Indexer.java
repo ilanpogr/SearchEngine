@@ -291,7 +291,7 @@ public class Indexer {
         int sliceIndex = forCache.length / cacheSlice;
         if (sliceIndex % 2 == 1) {
             sliceIndex = Integer.max(--sliceIndex, 2);
-        }
+        }if (sliceIndex==0) sliceIndex=2;
         return new String[]{join(forCache, fileDelimiter, 0, sliceIndex), join(forCache, fileDelimiter, sliceIndex, forCache.length)};
 
     }

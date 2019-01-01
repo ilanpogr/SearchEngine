@@ -338,7 +338,7 @@ public class Master {
     /**
      * deletes all of the saved files by the Master
      */
-    public void reset() {
+    public void reset() { // TODO: 01/01/2019 if somewhere else files are deleted. check and double check
         clear();
         termDictionary = new TreeMap<>(String::compareToIgnoreCase);
         cache = new TreeMap<>(String::compareToIgnoreCase);
@@ -381,7 +381,7 @@ public class Master {
             String doc = entry.getKey();
             String post = entry.getValue();
             String city = substringAfterLast(post, ",*");
-            if (isEmpty(city)) {
+            if (!isEmpty(city)) {
                 if (cityTags.containsKey(city)) {
                     cityTags.get(city).append(doc).append("|");
                 } else {
@@ -513,7 +513,7 @@ public class Master {
         //value example: LA123190-0133~5,221,kzfs7
         String value = docDic.get(docNum);
         String[] splitted = split(value, ',');
-        return splitted[splitted.length - 1];
+        return splitted[2];
     }
 
     /**
