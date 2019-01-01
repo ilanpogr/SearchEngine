@@ -21,15 +21,12 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -51,6 +48,7 @@ public class ControllerMenu implements Observer {
     private String[] propertyKeys = {"data.set.path", "save.files.path"};
 
     private DoubleProperty progress;
+    private String stemModeAfterLoadDics = "";
 
     private long start;
     private long end;
@@ -90,7 +88,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.addObserver(this);
         progress = new SimpleDoubleProperty(0);
         treeViewForResultHandle();
-        setPartBState(true);
+        setPartBStateDisable(true);
     }
 
     /**
@@ -98,7 +96,7 @@ public class ControllerMenu implements Observer {
      *
      * @param state - the state the Disable state to change to
      */
-    private void setPartBState(boolean state) {
+    private void setPartBStateDisable(boolean state) {
         ir_menuView.semantic_checkBox.setDisable(state);
         ir_menuView.freeSearch_textField.setDisable(state);
         ir_menuView.browse_queries_btn.setDisable(state);
@@ -120,18 +118,20 @@ public class ControllerMenu implements Observer {
                     public void changed(
                             ObservableValue<? extends TreeItem<String>> observable,
                             TreeItem<String> old_val, TreeItem<String> new_val) {
-                        TreeItem<String> selectedItem = new_val;
-                        ir_menuView.entities_textArea.setEditable(true);
-                        ir_menuView.entities_textArea.clear();
-                        String[] entities = ir_modelMenu.getDocsEntities().get(selectedItem.getValue());
-                        if (entities != null) {
-                            StringBuilder text = new StringBuilder();
-                            int i = 1;
-                            for (String s : entities) {
-                                text.append(i++).append(". ").append(s).append("\n");
+                        if (new_val != null) {
+                            TreeItem<String> selectedItem = new_val;
+                            ir_menuView.entities_textArea.setEditable(true);
+                            ir_menuView.entities_textArea.clear();
+                            String[] entities = ir_modelMenu.getDocsEntities().get(selectedItem.getValue());
+                            if (entities != null) {
+                                StringBuilder text = new StringBuilder();
+                                int i = 1;
+                                for (String s : entities) {
+                                    text.append(i++).append(". ").append(s).append("\n");
+                                }
+                                ir_menuView.entities_textArea.setText(text.toString());
+                                ir_menuView.entities_textArea.setEditable(false);
                             }
-                            ir_menuView.entities_textArea.setText(text.toString());
-                            ir_menuView.entities_textArea.setEditable(false);
                         }
                     }
                 });
@@ -246,12 +246,17 @@ public class ControllerMenu implements Observer {
                 clearSummary();
             } else if (arg.equals("stem")) {
                 if (ir_menuView.stemmer_checkBox.isSelected()) {
-                    PropertiesFile.putProperty("stem.mode", "2");
-                } else PropertiesFile.putProperty("stem.mode", "0");
+                    PropertiesFile.putProperty("stem.mode", "1");
+                } else {
+                    PropertiesFile.putProperty("stem.mode", "0");
+                }
+                checkIfCanSearchAfterStemChanged();
             } else if (arg.equals("semantic")) {
                 if (ir_menuView.semantic_checkBox.isSelected()) {
-                    PropertiesFile.putProperty("semantic.mode", "1");
-                } else PropertiesFile.putProperty("semantic.mode", "0");
+                    PropertiesFile.putProperty("semantic.mode", "2");
+                } else {
+                    PropertiesFile.putProperty("semantic.mode", "0");
+                }
             } else if (arg.equals("totalRickall")) {
                 if (ir_menuView.totalRickAll_toggle.isSelected()) {
                     PropertiesFile.putProperty("total.rickall", "1");
@@ -267,6 +272,7 @@ public class ControllerMenu implements Observer {
             } else if (arg.equals("start")) {
                 this.update(o, "stem");
                 setSceneBeforeStart();
+                root.setDisable(true);
                 Thread thread = new Thread(() -> ir_modelMenu.start());
                 start = System.currentTimeMillis();
                 thread.setDaemon(true);
@@ -281,11 +287,11 @@ public class ControllerMenu implements Observer {
                 showDictionary();
                 ir_menuView.summary_lbl.setVisible(false);
             } else if (arg.equals("read")) {
+                stemModeAfterLoadDics = PropertiesFile.getProperty("stem.mode");
                 ir_menuView.summary_lbl.setText("Please wait while the dictionaries read to memory");
                 Thread thread = new Thread(this::readDictionary);
                 thread.setDaemon(true);
                 thread.start();
-//                readingDic(true);
                 root.setDisable(true);
             } else if (arg.equals("search_single")) {
                 String query = setQueryForSearch();
@@ -294,6 +300,7 @@ public class ControllerMenu implements Observer {
                     Thread thread = new Thread(() -> ir_modelMenu.search(query, selectedCities));
                     thread.setDaemon(true);
                     thread.start();
+                    root.setDisable(true);
                 } else {
                     setSummaryForSearch(false);
                 }
@@ -305,6 +312,7 @@ public class ControllerMenu implements Observer {
                     Thread thread = new Thread(() -> ir_modelMenu.multiSearch(selectedCities));
                     thread.setDaemon(true);
                     thread.start();
+                    root.setDisable(true);
                 }
             } else if (arg.equals("save_results")) {
                 saveResults();
@@ -314,21 +322,42 @@ public class ControllerMenu implements Observer {
                 ir_menuView.summary_lbl.setVisible(true);
                 ir_menuView.stemmer_checkBox.setDisable(false);
                 end = System.currentTimeMillis();
-                Platform.runLater(this::addSummaryToLabel);
+                Platform.runLater(() -> {
+                    root.setDisable(false);
+                    addSummaryToLabel();
+                });
             } else if (arg.equals("search_done")) {
-                Platform.runLater(this::clearSummary);
-                Platform.runLater(this::showResultView);
-            } else if (arg.equals("read_done")){
-                Platform.runLater(() -> ir_menuView.summary_lbl.setText(""));
+                Platform.runLater(() -> {
+                    root.setDisable(false);
+                    clearSummary();
+                    showResultView();
+                });
+            } else if (arg.equals("read_done")) {
 //                Platform.runLater(() -> readingDic(false));
-                root.setDisable(false);
-                Platform.runLater(this::readDone);
-                Platform.runLater(this::checkLanguages);
-            } else if (arg.equals("read_fail")){
-                Platform.runLater(() -> ir_menuView.summary_lbl.setText(""));
-//                Platform.runLater(() -> readingDic(false));
-                root.setDisable(false);
-                Platform.runLater(this::readFail);
+                Platform.runLater(() -> {
+                    ir_menuView.summary_lbl.setText("");
+                    root.setDisable(false);
+                    readDone();
+                    checkLanguages();
+                });
+            } else if (arg.equals("read_fail")) {
+                Platform.runLater(() -> {
+                    ir_menuView.summary_lbl.setText("");
+                    root.setDisable(false);
+                    readFail();
+                });
+            }
+        }
+    }
+
+    private void checkIfCanSearchAfterStemChanged() {
+        if (!stemModeAfterLoadDics.equals("")) {
+            if (!stemModeAfterLoadDics.equals(PropertiesFile.getProperty("stem.mode"))) {
+                setPartBStateDisable(true);
+                ir_menuView.summary_lbl.setText("Please load the dictionaries again if you wish to search");
+            } else {
+                setPartBStateDisable(false);
+                ir_menuView.summary_lbl.setText("");
             }
         }
     }
@@ -338,25 +367,15 @@ public class ControllerMenu implements Observer {
             ir_menuView.docs_language.setPromptText("Please Choose Language");
     }
 
-    private void readingDic(boolean state) {
-        ir_menuView.browse_btn.setDisable(state);
-        ir_menuView.save_btn.setDisable(state);
-        ir_menuView.dict_btn.setDisable(state);
-        ir_menuView.read_dict_btn.setDisable(state);
-        ir_menuView.stemmer_checkBox.setDisable(state);
-        ir_menuView.docs_language.setDisable(state);
-        ir_menuView.reset_btn.setDisable(state);
-    }
-
-    private void readDone(){
-        setPartBState(false);
+    private void readDone() {
+        setPartBStateDisable(false);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Read Dictionaries");
         alert.setHeaderText("Dictionaries are read and now available to use");
         alert.showAndWait();
     }
 
-    private void readFail(){
+    private void readFail() {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("OMG!");
         alert.setHeaderText("Couldn't read Dictionaries. try showing them");
@@ -370,7 +389,7 @@ public class ControllerMenu implements Observer {
         ir_menuView.docs_language.getItems().clear();
         ir_menuView.docs_language.setDisable(false);
         TreeSet<String> languages = ir_modelMenu.getLanguages();
-        while (!languages.isEmpty()){
+        while (!languages.isEmpty()) {
             ir_menuView.docs_language.getItems().addAll(languages.pollFirst());
         }
     }
@@ -455,7 +474,7 @@ public class ControllerMenu implements Observer {
             CityItem item = new CityItem(city, false);
 
             item.onProperty().addListener((obs, wasOn, isNowOn) -> {
-                if (isNowOn){
+                if (isNowOn) {
                     selectedCities.add(item.getName());
                 } else {
                     selectedCities.remove(item.getName());
