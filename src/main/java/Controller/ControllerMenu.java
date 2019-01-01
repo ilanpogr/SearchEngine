@@ -18,9 +18,12 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
@@ -28,6 +31,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -61,7 +65,6 @@ public class ControllerMenu implements Observer {
     private ArrayList<String> selectedCities = new ArrayList<>();
     private ArrayList<String> citiesList = null;
 
-
     /**
      * ctor
      */
@@ -77,6 +80,7 @@ public class ControllerMenu implements Observer {
             alert.setContentText("try to run the app again");
             alert.showAndWait();
         }
+
         Scene scene = new Scene(root);
         scene.getStylesheets().add("menu/style_menu.css");
         stage.setScene(scene);
@@ -87,6 +91,13 @@ public class ControllerMenu implements Observer {
         ir_modelMenu.addObserver(this);
         ir_menuView.addObserver(this);
         progress = new SimpleDoubleProperty(0);
+
+        // easter egg
+        ir_menuView.partA_lbl.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.isShiftDown())
+                easterEgg();
+        });
+
         treeViewForResultHandle();
         setPartBStateDisable(true);
     }
@@ -267,7 +278,6 @@ public class ControllerMenu implements Observer {
                     ir_menuView.summary_lbl.setText("");
                 }
             } else if (arg.equals("cities")) {
-                // TODO: 31/12/2018 deal with cities so it will work!
                 dealWithCities();
             } else if (arg.equals("start")) {
                 this.update(o, "stem");
@@ -350,6 +360,10 @@ public class ControllerMenu implements Observer {
         }
     }
 
+    /**
+     * if dictionaries loaded and stem mode changed
+     * cancel search option and set label to: cant search until correct dictionaries load
+     */
     private void checkIfCanSearchAfterStemChanged() {
         if (!stemModeAfterLoadDics.equals("")) {
             if (!stemModeAfterLoadDics.equals(PropertiesFile.getProperty("stem.mode"))) {
@@ -362,11 +376,17 @@ public class ControllerMenu implements Observer {
         }
     }
 
+    /**
+     * if languages not empty change prompt text in languages section
+     */
     private void checkLanguages() {
         if (!ir_menuView.docs_language.getItems().isEmpty())
             ir_menuView.docs_language.setPromptText("Please Choose Language");
     }
 
+    /**
+     * set scene after reading dictionaries done
+     */
     private void readDone() {
         setPartBStateDisable(false);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -375,6 +395,9 @@ public class ControllerMenu implements Observer {
         alert.showAndWait();
     }
 
+    /**
+     * set scene after reading dictionaries failed
+     */
     private void readFail() {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("OMG!");
@@ -406,7 +429,9 @@ public class ControllerMenu implements Observer {
     }
 
     /**
-     * @param start
+     * Search single query by title can't search an empty query
+     *
+     * @param start: set scene for searching (without disabling everything)
      */
     private void setSummaryForSearch(boolean start) {
         ir_menuView.summary_lbl.setVisible(true);
@@ -416,6 +441,9 @@ public class ControllerMenu implements Observer {
             ir_menuView.summary_lbl.setText("\n\n\t\t\tPlease type something to search...");
     }
 
+    /**
+     * clean summary
+     */
     private void clearSummary() {
         ir_menuView.summary_lbl.setText("");
     }
@@ -675,6 +703,14 @@ public class ControllerMenu implements Observer {
         addLanguages();
         loadCorpusPath(PropertiesFile.getProperty("data.set.path"));
         loadTargetPath(PropertiesFile.getProperty("save.files.path"));
+    }
+
+    /**
+     * opens totalRickall option
+     */
+    private void easterEgg() {
+        ir_menuView.totalRickAll_toggle.setVisible(true);
+        ir_menuView.totalRickall_lbl.setVisible(true);
     }
 
     /**
