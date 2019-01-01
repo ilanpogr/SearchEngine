@@ -18,7 +18,6 @@ public class QueryDic {//doc - whole class
 
     /**
      * get the QueryDic Single Instance
-     *
      * @return the QueryDic
      */
     public static QueryDic getInstance() {
@@ -69,7 +68,6 @@ public class QueryDic {//doc - whole class
 
     /**
      * does the dictionary has the query
-     *
      * @param num - the number of the query
      * @return T/F
      */
@@ -80,7 +78,6 @@ public class QueryDic {//doc - whole class
 
     /**
      * does the dictionary has the query
-     *
      * @param query - the title of the query
      * @return T/F
      */
@@ -196,7 +193,6 @@ public class QueryDic {//doc - whole class
 
     /**
      * by a given path, read the query file and make a list of QuerySol objects
-     *
      * @param path - the path of the file containing the queries
      * @return ArrayList of QuerySols
      */
@@ -227,7 +223,6 @@ public class QueryDic {//doc - whole class
 
     /**
      * Returns the solution of a given query (number or title)
-     *
      * @param query (number or title)
      * @return ArrayList of DocNums
      */
@@ -298,7 +293,6 @@ public class QueryDic {//doc - whole class
 
     /**
      * Get the current pointer
-     *
      * @return int - number of bytes to skip
      */
     public static int getPointer() {
@@ -307,9 +301,8 @@ public class QueryDic {//doc - whole class
 
     /**
      * Save the solutions to the disk
-     *
      * @param solutionsPath - path of the solutions
-     * @param targetPath    - the path to the target directory
+     * @param targetPath - the path to the target directory
      */
     public static void saveSolutions(String solutionsPath, String targetPath) {
         try {
@@ -388,7 +381,7 @@ public class QueryDic {//doc - whole class
     /**
      * Inner function to append multi lines
      */
-    private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line) {
+    private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line){
         try {
 
             line = trim(line);
@@ -397,7 +390,7 @@ public class QueryDic {//doc - whole class
                 stringBuilder.append(line).append("; ");
             }
             return bufferedReader.readLine();
-        } catch (Exception e) {
+        }catch (Exception e){
             return "";
         }
     }

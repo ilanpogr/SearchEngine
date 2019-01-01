@@ -8,10 +8,9 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Observable;
+import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.isAlpha;
 import static org.apache.commons.lang3.StringUtils.split;
 
 /**
@@ -65,7 +64,7 @@ public class ModelMenu extends Observable {
     /**
      * Removes all files created by this program
      */
-    public void reset() {
+    public void reset() { // TODO: 01/01/2019 check that all files are deleted as needed
         master_of_puppets.reset();
     }
 
@@ -123,8 +122,8 @@ public class ModelMenu extends Observable {
         q.append(query).append("|s|s|");
         querySols.add(new QuerySol(q.toString(),-1));
         master_of_puppets.multiSearch(querySols, cities);
-//        master_of_puppets.freeLangSearch(querySols.get(0), cities);
         docsResult = querySols;
+        readEntities();
         setChanged();
         notifyObservers("search_done");
     }
@@ -143,6 +142,7 @@ public class ModelMenu extends Observable {
         ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(file.getAbsolutePath());
         master_of_puppets.multiSearch(querySols, cities);
         docsResult = querySols;
+        readEntities();
         setChanged();
         notifyObservers("search_done");
     }
@@ -162,7 +162,17 @@ public class ModelMenu extends Observable {
      * @return : list of the cities
      */
     public ArrayList<String> getCitiesList() {
-        return master_of_puppets.getCitiesList();
+        ArrayList<String> cities =  master_of_puppets.getCitiesList();
+        ArrayList<String> citiesToRemove = new ArrayList<>();
+        for (String s : cities){
+            if (!isAlpha(String.valueOf(s.charAt(0)))){
+                citiesToRemove.add(s);
+            }
+        }
+        for (String s: citiesToRemove){
+            cities.remove(s);
+        }
+        return cities;
     }
 
     /**
@@ -193,7 +203,7 @@ public class ModelMenu extends Observable {
      * reading the docs entities from a saved file in the relevant path
      * depending on the path the master will give (from properties file)
      */
-    public void readEntities() {
+    private void readEntities() {
         // TODO: 31/12/2018 : finish the implementation
         File file = new File(getDicsPath() + "\\Entities");
         try {
@@ -214,16 +224,6 @@ public class ModelMenu extends Observable {
                     docsEntitites.put(doc,entities);
                 }
             }
-            // for debugging
-            for (String s : docsEntitites.keySet()){
-                String[] value = docsEntitites.get(s);
-                StringBuilder singleValue = new StringBuilder();
-                for (String val : value){
-                    singleValue.append(" , ").append(val);
-                }
-                System.out.println(s + ":   " + singleValue.toString());
-            }
-
         } catch (IOException e) {
             System.out.println("problem with reading entities file");
         }
@@ -235,9 +235,9 @@ public class ModelMenu extends Observable {
      *
      * @return : languages list
      */
-    public ArrayList<String> getLanguages() {
+    public TreeSet<String> getLanguages() {
         File file = new File(getDicsPath() + "\\Languages");
-        ArrayList<String> languages = new ArrayList<>();
+        TreeSet<String> languages = new TreeSet<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             String st;
