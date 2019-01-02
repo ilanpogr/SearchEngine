@@ -78,7 +78,7 @@ public class Master {
      * after Parsing and (maybe) Stemming each term in the query.
      *
      * @param query - the given single query
-     * @param ranker
+     * @param ranker -the ranker which is going to rank the query
      * @return the mentioned above dictionary
      */
     public static HashMap<String, Integer> makeQueryDic(QuerySol query, Ranker ranker) {
@@ -90,7 +90,7 @@ public class Master {
      * gets the semantics to a given query
      *
      * @param query - the query we want semantics for
-     * @param ranker
+     * @param ranker -the ranker which is going to rank the query
      * @return String of words with semantic contents to the query words
      */
     private static String getSemantics(QuerySol query, Ranker ranker) {
@@ -112,7 +112,7 @@ public class Master {
      * cleaning the query after parsing and returns the Query-Dictionary.
      *
      * @param parsed - the map after parsing the query.
-     * @param ranker
+     * @param ranker -the ranker which is going to rank the query
      * @return the cleaned dictionary mentioned above.
      */
     private static HashMap<String, Integer> handleQuery(HashMap<String, String> parsed, Ranker ranker) {
@@ -237,6 +237,12 @@ public class Master {
         return getFrequencyFromPosting(term.getValue());
     }
 
+
+    /**
+     * calculates the amount of time of the term appearing from the posting
+     * @param positions - string of positions with gaps
+     * @return number of occurrences (frequency)
+     */
     public static int getFrequencyFromPosting(String positions) {
         int termFrequency = countMatches(positions, Stemmer.getStemDelimiter().charAt(0));
         if (termFrequency == 0)
