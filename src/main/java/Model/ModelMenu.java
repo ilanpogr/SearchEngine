@@ -117,6 +117,7 @@ public class ModelMenu extends Observable {
      *               - if the user didn't chose any, the Array is empty
      */
     public void search(String query, ArrayList<String> cities) {
+        docsResult.clear();
         ArrayList<QuerySol> querySols = new ArrayList<>();
         StringBuilder q = new StringBuilder("000|");
         q.append(query).append("|s|s|");
@@ -138,6 +139,7 @@ public class ModelMenu extends Observable {
      *               - if the user didn't chose any, the Array is empty
      */
     public void multiSearch(ArrayList<String> cities) {
+        docsResult.clear();
         File file = new File(PropertiesFile.getProperty("queries.file.path"));
         ArrayList<QuerySol> querySols = QueryDic.getInstance().readQueries(file.getAbsolutePath());
         master_of_puppets.multiSearch(querySols, cities);

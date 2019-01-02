@@ -1,6 +1,7 @@
 package Parser;
 
 import Controller.PropertiesFile;
+import Ranker.Ranker;
 
 import java.io.*;
 import java.util.*;
@@ -43,22 +44,25 @@ public class Parser {
      */
     private static HashSet<String> initStopWords() {
 //        String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
-        String filesPath;
+        String filesPath = null;
         try {
             filesPath = PropertiesFile.getProperty("data.set.path") + "\\stop_words.txt";
         } catch (Exception e){
-            filesPath = "src\\main\\resources\\stop_words.txt";
-        }
-        stopWords = new HashSet<>();
-        Scanner s = null;
-        try {
-            s = new Scanner(new File(filesPath));
-            while (s!=null && s.hasNext()) stopWords.add(s.nextLine());
-            stopWords.remove("between");
-            stopWords.remove("may");
-        } catch (FileNotFoundException e) {
-            System.out.println("couldn't fine file");
-            return null;
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(Parser.class.getResourceAsStream("/tested.queries")));
+            try{
+                stopWords = new HashSet<>();
+                String s = bufferedReader.readLine();
+                while (s!=null){
+                    stopWords.add(s);
+                    s = bufferedReader.readLine();
+                }
+                stopWords.remove("between");
+                stopWords.remove("may");
+                return stopWords;
+            } catch (Exception e1){
+                System.out.println("couldn't fine file");
+                return null;
+            }
         }
         return stopWords;
     }

@@ -37,8 +37,6 @@ public class Ranker {
     private TreeMap<String, ImmutablePair<ArrayList<String>, ArrayList<String>>> orderedPosting;
     private TreeMap<String, ArrayList<ImmutablePair<String, String>>> relationDic;
     private TreeMap<String, Double> docsRank;
-    private static TreeMap<String, ArrayList<String>> solDict = new TreeMap<>(String::compareToIgnoreCase);
-
 
     /**
      * similarity functions weights
@@ -88,8 +86,9 @@ public class Ranker {
         orderedPosting = new TreeMap<>();
         reArrangePostingForQuery(termDic, cache, docDic, Master.makeQueryDic(query,this));
         arrangeDictionaryForCalculations();
-        //todo - Wiq and CosSim
+        orderedPosting.clear();
         calculateBM25(termDic, docDic);
+        relationDic.clear();
         return getBestDocs(query, solSize);
     }
 

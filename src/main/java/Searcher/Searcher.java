@@ -9,7 +9,7 @@ import java.util.TreeMap;
 public class Searcher {
 
 
-    private static Ranker ranker = new Ranker();
+    private Ranker ranker = new Ranker();
 
     private ArrayList<String> rankQuery(QuerySol query, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs, boolean totalRickAll) {
         if (dict == null || cache == null || docs == null) return new ArrayList<>();
@@ -34,7 +34,7 @@ public class Searcher {
 
     }
 
-    public void freeLangSearch(QuerySol query, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs) {
+    private void freeLangSearch(QuerySol query, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs) {
         ArrayList<String> res = rankQuery(query, dict, cache, docs, false);
         query.removeSuggestedSols();
         for (int j = 0; j < res.size() && query.getSolSize() < 50; j++) {

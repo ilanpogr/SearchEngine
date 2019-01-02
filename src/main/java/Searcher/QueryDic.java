@@ -18,6 +18,7 @@ public class QueryDic {//doc - whole class
 
     /**
      * get the QueryDic Single Instance
+     *
      * @return the QueryDic
      */
     public static QueryDic getInstance() {
@@ -32,34 +33,39 @@ public class QueryDic {//doc - whole class
      */
     private QueryDic() {
         try {
-            String dicName = "tested.queries";
-            String postings = "sols.post";
-            File dic = new File("src\\main\\resources", dicName);
-            File post = new File("src\\main\\resources", postings);
-            dic.setWritable(false);
-            post.setWritable(false);
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(dic.getCanonicalFile()));
+//            String dicName = "tested.queries";
+//            String postings = "sols.post";
+//            File dic = new File("src\\main\\resources", dicName);
+//            File post = new File("src\\main\\resources", postings);
+//            dic.setWritable(false);
+//            post.setWritable(false);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/tested.queries")));
+            BufferedReader posting = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/sols.post")));
             String q = bufferedReader.readLine();
+            String s = posting.readLine();
             qmap = new TreeMap<>();
             inv_qmap = new HashMap<>();
             wordsToQueries = new HashMap<>();
             while (q != null) {
                 QuerySol querySol = new QuerySol(q);
-                RandomAccessFile posting = new RandomAccessFile(post, "r");
-                posting.skipBytes(querySol.getPostingPointer());
-                querySol.addPosting(posting.readLine());
-                qmap.put(querySol.getqNumAsInt(), querySol);
-                inv_qmap.put(querySol.getTitle(), querySol.getqNumAsInt());
-                if (containsAny(querySol.getTitle(), " ,.-")) {
-                    String[] words = split(querySol.getTitle(), " ,.-");
-                    for (int i = 0; i < words.length; i++) {
-                        if (!wordsToQueries.containsKey(lowerCase(words[i]))) {
-                            wordsToQueries.put(lowerCase(words[i]), new ArrayList<>());
+//                RandomAccessFile posting = new RandomAccessFile(post, "r");
+//                posting.skipBytes(querySol.getPostingPointer());
+                if (s != null) {
+                    querySol.addPosting(s);
+                    qmap.put(querySol.getqNumAsInt(), querySol);
+                    inv_qmap.put(querySol.getTitle(), querySol.getqNumAsInt());
+                    if (containsAny(querySol.getTitle(), " ,.-")) {
+                        String[] words = split(querySol.getTitle(), " ,.-");
+                        for (int i = 0; i < words.length; i++) {
+                            if (!wordsToQueries.containsKey(lowerCase(words[i]))) {
+                                wordsToQueries.put(lowerCase(words[i]), new ArrayList<>());
+                            }
+                            wordsToQueries.get(lowerCase(words[i])).add(querySol.getqNumAsInt());
                         }
-                        wordsToQueries.get(lowerCase(words[i])).add(querySol.getqNumAsInt());
                     }
                 }
                 q = bufferedReader.readLine();
+                s = posting.readLine();
             }
         } catch (Exception e) {
             System.out.println("You Messed-Up With Our Files, Didn't you?\nIt's OK.. We're NOT Mad...\nJust Download Every thing again");
@@ -68,6 +74,7 @@ public class QueryDic {//doc - whole class
 
     /**
      * does the dictionary has the query
+     *
      * @param num - the number of the query
      * @return T/F
      */
@@ -78,6 +85,7 @@ public class QueryDic {//doc - whole class
 
     /**
      * does the dictionary has the query
+     *
      * @param query - the title of the query
      * @return T/F
      */
@@ -184,7 +192,7 @@ public class QueryDic {//doc - whole class
                 maxCount = i;
             }
         }
-        if (potentialQueries.size()>0) {
+        if (potentialQueries.size() > 0) {
             QuerySol querySol = qmap.get(potentialQueries.get(maxCount).getqNumAsInt());
             query.copySols(querySol);
             query.setEvaluation(querySol.getqNumAsInt(), maxEvaluated);
@@ -193,6 +201,7 @@ public class QueryDic {//doc - whole class
 
     /**
      * by a given path, read the query file and make a list of QuerySol objects
+     *
      * @param path - the path of the file containing the queries
      * @return ArrayList of QuerySols
      */
@@ -223,6 +232,7 @@ public class QueryDic {//doc - whole class
 
     /**
      * Returns the solution of a given query (number or title)
+     *
      * @param query (number or title)
      * @return ArrayList of DocNums
      */
@@ -293,6 +303,7 @@ public class QueryDic {//doc - whole class
 
     /**
      * Get the current pointer
+     *
      * @return int - number of bytes to skip
      */
     public static int getPointer() {
@@ -301,8 +312,9 @@ public class QueryDic {//doc - whole class
 
     /**
      * Save the solutions to the disk
+     *
      * @param solutionsPath - path of the solutions
-     * @param targetPath - the path to the target directory
+     * @param targetPath    - the path to the target directory
      */
     public static void saveSolutions(String solutionsPath, String targetPath) {
         try {
@@ -381,7 +393,7 @@ public class QueryDic {//doc - whole class
     /**
      * Inner function to append multi lines
      */
-    private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line){
+    private static String checkAndAddline(BufferedReader bufferedReader, StringBuilder stringBuilder, String line) {
         try {
 
             line = trim(line);
@@ -390,7 +402,7 @@ public class QueryDic {//doc - whole class
                 stringBuilder.append(line).append("; ");
             }
             return bufferedReader.readLine();
-        }catch (Exception e){
+        } catch (Exception e) {
             return "";
         }
     }
