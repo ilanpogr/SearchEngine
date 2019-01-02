@@ -1,11 +1,33 @@
 /*#actiontarget {*/
-    /*-fx-fill: FIREBRICK;*/
-    /*-fx-font-weight: bold;*/
-    /*-fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.5), 0, 0, 0, 1);*/
+/*-fx-fill: FIREBRICK;*/
+/*-fx-font-weight: bold;*/
+/*-fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.5), 0, 0, 0, 1);*/
 /*}*/
 
 #region_delimiter {
     -fx-background-color: #ffffff;
+}
+
+.toggle-button {
+    -fx-background-image: url('/menu/images/supersearch_pressed.png');
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+}
+
+.toggle-button:selected {
+    -fx-background-image: url('/menu/images/supersearch.png');
+}
+
+#save_results_img {
+    -fx-min-height: 90px;
+    -fx-min-width: 90px;
+    -fx-background-image: url("/menu/images/save.png");
+    -fx-background-size: 80px 80px;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+
 }
 
 .label {

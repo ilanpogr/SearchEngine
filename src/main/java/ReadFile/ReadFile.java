@@ -1,9 +1,10 @@
 package ReadFile;
 
 import Controller.PropertiesFile;
+import Indexer.Indexer;
+import Master.Master;
 import TextContainers.*;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.jsoup.Jsoup;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -13,10 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -25,8 +23,6 @@ import java.util.stream.Stream;
  * the class that reads the corpus
  */
 public class ReadFile {
-
-    //TODO- return all Tags as Atributes from a Doc
 
     private ArrayList<String> unInstancedDocList;   //a list of documents which haven't been instanced yet
     private ArrayList<Doc> docList; //a list of Docs, from a single File
@@ -40,6 +36,7 @@ public class ReadFile {
         this.unInstancedDocList = new ArrayList<>();
         this.docList = new ArrayList<>();
     }
+
 
     /**
      * Ctor
@@ -86,32 +83,115 @@ public class ReadFile {
     }
 
     /**
-     * reads a dictionary and makes a Map out of it to keep in the memory
+     * reads dictionaries and makes a Map of Maps out of it to keep in the memory
      *
      * @param dicPath   - the path to the dictionary
      * @param delimiter - the delimiter of whats a key and whats a value
      * @return a Map or null
      */
-    public static TreeMap<String, String> readDictionary(String dicPath, String delimiter) {
+    public static TreeMap<Character, TreeMap<String, String>> readDictionaries(String dicPath, String delimiter) {
+        TreeMap<Character, TreeMap<String, String>> dicSet = new TreeMap<>();
         TreeMap<String, String> dic = null;
         BufferedReader bufferedReader = null;
         try {
-            bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dicPath), StandardCharsets.UTF_8));
-            String s = bufferedReader.readLine();
-            dic = new TreeMap<>(String::compareToIgnoreCase);
-            while (s != null) {
-                String[] term = split(s, delimiter, 2);
-                dic.put(term[0], term[1]);
-                s = bufferedReader.readLine();
+            File dicDir = new File(dicPath);
+            if (dicDir.isDirectory()) {
+                File[] dics = dicDir.listFiles();
+                for (int i = 0; i < dics.length; i++) {
+                    if (!isNumeric(dics[i].getName().substring(0, 1))) continue;
+                    bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(dics[i].getPath()), StandardCharsets.UTF_8));
+                    String s = bufferedReader.readLine();
+                    dic = new TreeMap<>(String::compareToIgnoreCase);
+                    while (s != null) {
+                        String[] term = split(s, delimiter, 2);
+                        dic.put(term[0], term[1]);
+                        s = bufferedReader.readLine();
+                    }
+                    bufferedReader.close();
+                    dicSet.put(dics[i].getName().charAt(0), dic);
+                }
             }
-            bufferedReader.close();
-            return dic;
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("wrong path, look at the instructions!");
         }
 
-        return dic;
+        return dicSet;
     }
+
+    /**
+     * Getter for the posting of a given term and path to posting file
+     *
+     * @param postingPath - the path to the posting directory
+     * @param term        - the term we seek
+     * @param skip        - the number of bytes before this line
+     * @return posting line (String)
+     */
+    public static String getTermLine(StringBuilder postingPath, String term, String skip) {
+        if (isEmpty(skip)) return "";
+        postingPath.append("\\Dictionaries with").append(Master.isStemMode() ? " " : "out ").append("stemming\\").append(Indexer.getFileName(lowerCase(term).charAt(0))).append(".post");
+        try {
+            RandomAccessFile file = new RandomAccessFile(postingPath.toString(), "r");
+            file.seek(Integer.parseInt(skip, 36));
+            String res = file.readLine();
+            file.close();
+            return res;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+//    public static void main(String[] args) {
+//        System.out.println(getTermLine(new StringBuilder("C:\\Users\\User\\Documents\\SearchEngineTests"),"Exploration",));
+//    }
+
+    public static String saveSolution(String path) {
+        File file = new File(path);
+        StringBuilder stringBuilder = new StringBuilder();
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(substringBeforeLast(path, "\\") + "\\tmpsols.txt", true));
+            String line = bufferedReader.readLine().trim();
+            while (line != null) {
+                if (!endsWith(line, "0")) {
+                    bufferedWriter.write(line + "\n");
+                    stringBuilder.append(line).append("\n");
+                }
+                line = bufferedReader.readLine();
+            }
+            bufferedWriter.flush();
+            bufferedReader.close();
+            bufferedWriter.close();
+        } catch (Exception e) {
+            return "";
+        }
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Read from the semantics DataBase
+     *
+     * @param dbName - the DB name
+     * @return HashMap  - key: term
+     * - value: list of similar terms
+     */
+    public HashMap<String, ArrayList<String>> readSemantics(String dbName) {
+        HashMap<String, ArrayList<String>> res = new HashMap<>();
+        try {
+            BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/semanticDB/" + dbName)));
+            for (String line; (line = inputStreamReader.readLine()) != null; ) {
+                String[] splitLine = split(line, "~");
+                String[] values = split(splitLine[1], "|");
+                ArrayList<String> valuesArrayList = new ArrayList<>(Arrays.asList(values));
+                res.put(splitLine[0], valuesArrayList);
+            }
+            inputStreamReader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
 
     /**
      * clears the documents lists
@@ -139,8 +219,9 @@ public class ReadFile {
             createDocList();
             stringBuilder.setLength(0);
             unInstancedDocList.clear();
+            bufferedReader.close();
             return docList;
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             //skip this file.
         }
         return null;
@@ -218,9 +299,12 @@ public class ReadFile {
      */
     private void createAndUpdateCity(Doc doc, StringBuilder stringBuilder) {
         String tag = trim(substringBetween(stringBuilder.toString(), ">", "<"));
-        if (tag != null && !tag.equals("")) {
+        if (!isEmpty(tag) && !tag.equalsIgnoreCase("null")) {
+            if (tag.charAt(0) == '(') tag = substringBetween(tag, "(", ")");
             CityInfo cityInfo = CityInfo.getInstance();
             cityInfo.setInfo(tag, doc);
+        } else {
+            doc.setCity("");
         }
     }
 

@@ -2,6 +2,8 @@ package View;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 
 import java.util.Observable;
 
@@ -22,8 +24,21 @@ public class IR_MenuView extends Observable {
     public Button browse_btn;
     public Button reset_btn;
     public ProgressBar progressbar;
-    public ComboBox docs_language;
     public Button read_dict_btn;
+    public CheckBox semantic_checkBox;
+    public ImageView search_btn;
+    public Button browse_queries_btn;
+    public Button cities_btn;
+    public ComboBox docs_language;
+    public Label result_lbl;
+    public Button save_results_img;
+    public TreeView result_treeView;
+    public TextArea entities_textArea;
+    public TextField freeSearch_textField;
+    public ToggleButton totalRickAll_toggle;
+    public Label save_lbl;
+    public Label totalRickall_lbl;
+    public Label partA_lbl;
 
     /**
      * when start button is clicked
@@ -47,9 +62,9 @@ public class IR_MenuView extends Observable {
      * when Save button is clicked
      * @param actionEvent - Save button is clicked
      */
-    public void savePostingFile_DictionaryFile(ActionEvent actionEvent) {
+    public void savePostingFilePath_DictionaryFilePath(ActionEvent actionEvent) {
         setChanged();
-        notifyObservers("save");
+        notifyObservers("target");
     }
 
     /**
@@ -86,5 +101,67 @@ public class IR_MenuView extends Observable {
     public void loadDictToMemory(ActionEvent actionEvent) {
         setChanged();
         notifyObservers("read");
+    }
+
+    /**
+     * when Semantic CheckBox is clicked
+     * @param actionEvent - Semantic CheckBox is clicked
+     */
+    public void setSemantic(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("semantic");
+    }
+
+    /**
+     * when Choose Specific Cities Button is clicked
+     * @param actionEvent - Choose Specific Cities Button is clicked
+     */
+    public void chooseCities(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("cities");
+    }
+
+    /**
+     * when Search Image is clicked
+     * @param mouseEvent - Search Image is clicked
+     */
+    public void searchSingleQuery(MouseEvent mouseEvent) {
+        setChanged();
+        notifyObservers("search_single");
+    }
+
+    /**
+     * when Save Image is clicked for saving the search results
+     * @param mouseEvent - Save Image is clicked
+     */
+    public void saveResults(MouseEvent mouseEvent) {
+        setChanged();
+        notifyObservers("save_results");
+    }
+
+    /**
+     * when BrowseQueriesFile button is clicked for loading the queries file and start the multiSearch
+     * @param actionEvent - BrowseQueriesFile button is clicked
+     */
+    public void BrowseQueriesFileAndSearch(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("queryFile");
+    }
+
+    /**
+     * Empty Summary Label
+     */
+    public void resetSummary() {
+        setChanged();
+        notifyObservers("resetLabel");
+    }
+
+    /**
+     * when totalRickall toggle is clicked for activating the total recall option (more that 50 documents for queries)
+     * @param actionEvent - TotalRickAll toggle is clicked
+     */
+    public void totalRickall(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("totalRickall");
     }
 }

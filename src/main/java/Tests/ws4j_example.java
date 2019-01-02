@@ -1,26 +1,38 @@
+package Tests;
+
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.impl.*;
 import edu.cmu.lti.ws4j.util.WS4JConfiguration;
 
+import java.io.File;
+
 public class ws4j_example {
 
     /**
-     * EXAMPLES THAT DIDNT UNDERSTAND:
+     * THIS CLASS DEMONSTRATES AND EXAMPLE WHILE WE WERE TESTING HOW TO USE SIMILARITY FOR WORDS.
+     * additional examples
      *  https://www.programcreek.com/java-api-examples/?api=edu.cmu.lti.ws4j.RelatednessCalculator
      *  DEMO: http://ws4jdemo.appspot.com/?mode=w&s1=&w1=car&s2=&w2=car
      *
      */
 
     private static ILexicalDatabase db = new NictWordNet();
-//    available options of metrics
+    // available options of metrics
     private static RelatednessCalculator[] rcs = {new WuPalmer(db),
             new Resnik(db), new JiangConrath(db), new Lin(db)};
 
     // names:
     private static String[] names = {"WuPalmer","Resnik","JiangConrath", "Lin"};
 
+    /**
+     *
+     * @param word1 - first word to compute similarity
+     * @param word2 - second word to compute similarity
+     * @param rc - RelatednessCalculator Object
+     * @return - Double that representing
+     */
     private static double compute(String word1, String word2, RelatednessCalculator rc) {
         WS4JConfiguration.getInstance().setMFS(true);
 //        double s = new WuPalmer(db).calcRelatednessOfWords(word1, word2);

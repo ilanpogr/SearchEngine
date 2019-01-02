@@ -1,6 +1,7 @@
 package Parser;
 
 import Controller.PropertiesFile;
+import Ranker.Ranker;
 
 import java.io.*;
 import java.util.*;
@@ -12,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.*;
  * by a set of rules pre decided, parsing the text and cerating a dictionary of
  * all the terms inside this specific text.
  */
-public class Parse {
+public class Parser {
 
     private static String parametersDelimiter = PropertiesFile.getProperty("token.parameters.delimiter");
     private static String gapDelimiter = PropertiesFile.getProperty("gaps.delimiter");
@@ -25,22 +26,43 @@ public class Parse {
     private int stopWordsCounter = 0;
 
     /**
+     * A wrapper function that starting the whole process.
+     *
+     * @param str : an Array containing 1 cell of the whole text.
+     * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
+     */
+    public HashMap<String, String> parse(String[] str) {
+        HashMap<String, String> termsDict = new HashMap<>();
+        parseTokens(termsDict, str);
+        return termsDict;
+    }
+
+    /**
      * Initialize set of all the wanted stop-words.
      *
      * @return : the set of stop-words
      */
     private static HashSet<String> initStopWords() {
-        String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
-        stopWords = new HashSet<>();
-        Scanner s = null;
+//        String filesPath = PropertiesFile.getProperty("data.set.path") + "stop_words.txt";
+        String filesPath = null;
         try {
-            s = new Scanner(new File(filesPath));
-            while (s!=null && s.hasNext()) stopWords.add(s.nextLine());
-            stopWords.remove("between");
-            stopWords.remove("may");
-        } catch (FileNotFoundException e) {
-            System.out.println("couldn't fine file");
-            return null;
+            filesPath = PropertiesFile.getProperty("data.set.path") + "\\stop_words.txt";
+        } catch (Exception e){
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(Parser.class.getResourceAsStream("/tested.queries")));
+            try{
+                stopWords = new HashSet<>();
+                String s = bufferedReader.readLine();
+                while (s!=null){
+                    stopWords.add(s);
+                    s = bufferedReader.readLine();
+                }
+                stopWords.remove("between");
+                stopWords.remove("may");
+                return stopWords;
+            } catch (Exception e1){
+                System.out.println("couldn't fine file");
+                return null;
+            }
         }
         return stopWords;
     }
@@ -99,18 +121,6 @@ public class Parse {
     }
 
     /**
-     * A wrapper function that starting the whole process.
-     *
-     * @param str : an Array containing 1 cell of the whole text.
-     * @return : the dictionary containing all the terms from the text. Key <Term> ; Value <counter,position,isToStem>
-     */
-    public HashMap<String, String> parse(String[] str) {
-        HashMap<String, String> termsDict = new HashMap<>();
-        parseTokens(termsDict, str);
-        return termsDict;
-    }
-
-    /**
      * The main function that splits the single string with text, to an array of words.
      * each word (token) will be checked with multiple rules an be applied as needed.
      * the RULES: you can find than in the project description.
@@ -129,7 +139,7 @@ public class Parse {
             doneWithToken = true;
             String[] token = new String[]{s[i], parametersDelimiter};
             cleanToken(token);
-            if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$') || containsOnly(token[0], '%')) {
+            if (stopWords.contains(token[0].toLowerCase()) || token[0].equals("") || containsOnly(token[0], '$') || containsOnly(token[0], '%') || startsWithIgnoreCase(token[0],"type:")) {
                 stopWordsCounter++;
                 continue;
             }
@@ -152,7 +162,7 @@ public class Parse {
             if (Character.isUpperCase(firstCharOfToken) && !specialCharSet.contains(ourRuleToken[0].charAt(ourRuleToken[0].length() - 1))) {
                 if (i + 1 < s.length) {
                     char firstCharOfNextToken = s[i + 1].charAt(0);
-                    if (Character.isUpperCase(firstCharOfNextToken) || s[i + 1].toLowerCase().equals("of")) {          //    ADDITIONAL RULE: continues expression of upper case words.
+                    if ((Character.isUpperCase(firstCharOfNextToken) || s[i + 1].toLowerCase().equals("of")) && !endsWithIgnoreCase(s[i+1],":bfn")) {  //    ADDITIONAL RULE: continues expression of upper case words.
                         token[0] = replace(token[0], "--", "-");
                         continuesUpperCaseExpression(termsDict, token, s, i);
                         continue;
@@ -310,6 +320,8 @@ public class Parse {
                 i++;
                 nextToken[0] = s[i + 1];
             }
+            if (startsWithIgnoreCase(nextToken[0],"type:"))
+                break;
             if ((Character.isUpperCase(nextToken[0].charAt(0))) && !specialCharSet.contains(nextToken[0].charAt(0))) {
                 if (specialCharSet.contains(nextToken[0].charAt(nextToken[0].length() - 1))) {
                     stopFlag = true;

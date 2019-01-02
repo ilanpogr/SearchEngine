@@ -1,23 +1,31 @@
 package TextContainers;
 
+import Controller.PropertiesFile;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+
 import java.util.*;
 
-import static org.apache.commons.lang3.StringUtils.appendIfMissing;
-import static org.apache.commons.lang3.StringUtils.countMatches;
-import static org.apache.commons.lang3.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
- * class representing a doc in file.
+ * class representing a Document in file.
  */
 public class Doc {
 
+    private static StringBuilder entitiesPrinter = new StringBuilder();
+    private static int entitiesPointer = 0;
+    private static String separator = PropertiesFile.getProperty("file.posting.delimiter");
+    private static int numberOfPersonalNames = PropertiesFile.getPropertyAsInt("number.of.person.names");
     private String fileName;
     private String city;
     private int length;
     private int max_tf;
     private boolean hasCity = false;
     private String language;
-    private Map<String, String> attributes;
+    private HashMap<String, String> attributes;
+    private TreeSet<ImmutablePair<String, Integer>> entities;
+
 
     /**
      * Ctor
@@ -26,6 +34,23 @@ public class Doc {
         this.attributes = new HashMap<>();
         max_tf = -1;
         length = 0;
+        entities = new TreeSet<>(new Comparator<ImmutablePair<String, Integer>>() {
+            @Override
+            public int compare(ImmutablePair<String, Integer> o1, ImmutablePair<String, Integer> o2) {
+                int res = Integer.compare(o1.right, o2.right);
+                if (res == 0) {
+                    res = StringUtils.compareIgnoreCase(o1.left, o2.left);
+                }
+                return res;
+            }
+        });
+    }
+
+    /**
+     * sets entities pointer to zero
+     */
+    public static void zeroEntitiesPointer() {
+        entitiesPointer=0;
     }
 
     /**
@@ -49,6 +74,10 @@ public class Doc {
         for (int i = 0; i < tag.length; i++) {
             tag[i] = attributes.getOrDefault(tag[i], "");
         }
+    }
+
+    public static StringBuilder getEntitiesPrinter() {
+        return entitiesPrinter;
     }
 
     public String getAttribute(String key) {
@@ -76,7 +105,7 @@ public class Doc {
     }
 
     /**
-     * returns all the tags contained in the doc's text in the file.
+     * returns all the tags contained in the Document's text in the file.
      *
      * @return: an String array containing the tags.
      */
@@ -99,13 +128,8 @@ public class Doc {
             this.fileName = fileName;
     }
 
-    public void setLength() {
-        if (length == 0) {
-            for (Map.Entry<String, String> att : attributes.entrySet()
-            ) {
-                length += split(att.getValue(), " ").length + 1;
-            }
-        }
+    public void setLength(int length) {
+        if (this.length == 0) this.length = length;
     }
 
     public void setMax_tf(int max_tf) {
@@ -115,6 +139,7 @@ public class Doc {
 
     public void setCity(String city) {
         this.city = city;
+        if (isEmpty(city)) hasCity = false;
     }
 
     public void setLanguage(String language) {
@@ -122,8 +147,8 @@ public class Doc {
     }
 
     /**
-     * add an Attributes. if it representing the doc's city name,
-     * the doc has a flag that this docs have a city.
+     * add an Attributes. if it representing the Document's city name,
+     * the Document has a flag that this Documents have a city.
      *
      * @param tags: the tags..
      */
@@ -140,8 +165,8 @@ public class Doc {
     }
 
     /**
-     * add an Attributes. if it representing the doc's city name,
-     * the doc has a flag that this docs have a city.
+     * add an Attributes. if it representing the Document's city name,
+     * the Document has a flag that this Documents have a city.
      *
      * @param tags: the tags.. now as ArrayList
      */
@@ -158,11 +183,75 @@ public class Doc {
     }
 
     /**
-     * does this doc has a city mentioned?
+     * does this Document has a city mentioned?
      *
      * @return yes or no (true or false)
      */
     public boolean hasCity() {
         return hasCity;
+    }
+
+    /**
+     * add an Entity to the list
+     *
+     * @param termKey - name
+     * @param freq    - frequency
+     */
+    public void addEntity(String termKey, int freq) {
+        if (entities.size() < numberOfPersonalNames) {
+            entities.add(new ImmutablePair<>(termKey, freq));
+            return;
+        }
+        if (entities.first().right < freq) {
+            entities.pollFirst();
+            entities.add(new ImmutablePair<>(termKey, freq));
+        }
+    }
+
+    /**
+     * appends the entities to a given string builder
+     * and writes the entities into a file
+     *
+     * @param stringBuilder - will append the entities as |<Entity>|<Frequency>|*
+     * @return String that represents the pointer to the entity file in the Entities Dictionary (number in radix 36)
+     */
+    public String appendEntities(StringBuilder stringBuilder) {
+        while (entities.size() > 0) {
+            ImmutablePair<String, Integer> toPrint = entities.pollLast();
+            stringBuilder.append(toPrint.left).append(separator).append(toPrint.right).append(separator);
+        }
+        stringBuilder.append("\n");
+        entitiesPrinter.append(stringBuilder);
+        int point = entitiesPointer;
+        entitiesPointer+=stringBuilder.toString().getBytes().length;
+        return Integer.toString(point, 36);
+    }
+
+    /**
+     * appends the entities to a string builder (which wont be saved)
+     * and writes the entities into a file
+     *
+     * @return String that represents the pointer to the entity file in the Entities Dictionary (number in radix 36)
+     */
+    public String appendEntities() {
+        return appendEntities(new StringBuilder());
+    }
+
+    /**
+     * get all tags of this Documentument to index it
+     *
+     * @return String array to parse
+     */
+    public String[] getAttributesToIndex() {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            String tag = entry.getKey();
+            if (tag.equalsIgnoreCase("DOCNO") || tag.equalsIgnoreCase("DOCID") || !isAlphanumeric(tag)) continue;
+            String val = entry.getValue();
+            stringBuilder.append(val).append(" ");
+        }
+        if (city != null) stringBuilder.append(city);
+        return new String[]{stringBuilder.toString()};
     }
 }

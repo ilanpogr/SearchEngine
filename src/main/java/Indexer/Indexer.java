@@ -2,7 +2,7 @@ package Indexer;
 
 import Controller.PropertiesFile;
 import Master.Master;
-import Parser.Parse;
+import Parser.Parser;
 import Stemmer.Stemmer;
 import TextContainers.City;
 import TextContainers.CityInfo;
@@ -23,36 +23,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Indexer {
 
     private static double totalPostingSizeByKB = 0;
-    private static final int minNumberOfTf = (int) getPropertyAsDouble("min.tf.to.save");
-    private static final double maxIdfForCache = getPropertyAsDouble("max.idf.for.cache");
-    private static final int cacheSlice = (int) getPropertyAsDouble("one.part.to.cache.from");
+    private static final int minNumberOfTf = StrictMath.min(PropertiesFile.getPropertyAsInt("min.tf.to.save"),Master.getDocCount()/50); //doc - min tf to save
+    private static final double maxIdfForCache = PropertiesFile.getPropertyAsDouble("max.idf.for.cache");
+    private static final int cacheSlice = PropertiesFile.getPropertyAsInt("one.part.to.cache.from");
     private static final String cachePointer = PropertiesFile.getProperty("pointer.to.cache");
     private static final String termSeperator = PropertiesFile.getProperty("term.to.posting.delimiter");
     private static final String fileDelimiter = PropertiesFile.getProperty("file.posting.delimiter");
     private static String targetPath = PropertiesFile.getProperty("save.files.path");
     private static AtomicInteger tmpFilesCounter = new AtomicInteger(0);
     private static AtomicInteger mergedFilesCounter = new AtomicInteger(0);
-    private static final double log2 = StrictMath.log10(2);
     private static BufferedWriter inverter = null;
     private static boolean createdFolder = false;
     private static int termCounter = 0;
 
-
-    /**
-     * get a Property from properties file and convert it to double.
-     * if it can't convert to Double, it will return 1.
-     *
-     * @param prop - the value of the property
-     * @return the value of the property
-     */
-    private static double getPropertyAsDouble(String prop) {
-        try {
-            return Double.parseDouble(PropertiesFile.getProperty(prop));
-        } catch (Exception e) {
-            System.out.println("Properties Weren't Set Right. Default Value is set, Errors Might Occur!");
-            return 1;
-        }
-    }
 
     /**
      * creates and writes a temp file
@@ -114,10 +97,10 @@ public class Indexer {
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, "tuvwxyz");
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("1. Term Dictionary"));
         initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("2. Cache Dictionary"));
-        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("4. Cities Dictionary"));
+        initMergedDictionaries(mergedFilesCounterDic, mergedFilesDic, getFileOrDirName("Cities"));//doc - no more Cities Dictionary
         TreeMap<String, ArrayList<Integer>> termsSorter = new TreeMap<>();
         int tmpFilesInitialSize = tmpFiles.size();
-        double logN = StrictMath.log10(Master.getDocCount()) / log2;
+        double logN = StrictMath.log10(Master.getDocCount());
         while (mergedFilesCounter.get() < tmpFilesCounter.get()){
             stringBuilder.setLength(0);
             ArrayList<Integer> minTerms = new ArrayList<>();
@@ -159,26 +142,43 @@ public class Indexer {
                 stringBuilder.append(d.right.left).append(fileDelimiter).append(d.right.right).append(fileDelimiter);
             }
             int df = sortedPosting.size();
-            double idf = logN - (StrictMath.log10(df) / log2);
-
+            double idf = logN - StrictMath.log10(df);
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (isUpperCase == 1) {
                     minTerm = upperCase(minTerm);
                 }
                 City city = CityInfo.getInstance().getValueFromCitiesDictionary(minTerm);
+                StringBuilder toPrint = new StringBuilder(64);
                 if (maxIdfForCache < idf || df == 1) {
-                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
-                    if (city!=null) WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("4. Cities Dictionary"), minTerm + termSeperator + city.getCountryName() + "," + city.getCurrency() + "," + city.getPopulation() + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
-                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, stringBuilder.append("\n").toString());
-                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
+                    toPrint.append(minTerm).append(termSeperator).append(totalTf).append(",").append(df).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");
+                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"),  toPrint.toString());
+                    if (city!=null){
+                        toPrint.delete(minTerm.length()+1,toPrint.length());
+                        toPrint.append(city.getCountryName()).append(",").append(city.getCurrency()).append(",").append(city.getPopulation()).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");
+                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities"), toPrint.toString());
+                    }
+                    String post = stringBuilder.append("\n").toString();
+                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, post);
+                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + post.getBytes().length);
                 } else {
                     String[] cacheSplitedPost = splitToCachePost(stringBuilder);
-                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"), minTerm + termSeperator + totalTf + "," + df + "," + mergedFileName + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
-                    if (city!=null) WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("4. Cities Dictionary"), minTerm + termSeperator + city.getCountryName() + "," + city.getCurrency() + "," + city.getPopulation() + "," + mergedFilesCounterDic.get(mergedFileName) + "," + cachePointer + "\n");
-                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), minTerm + termSeperator + cacheSplitedPost[0] + "," + mergedFilesCounterDic.get(mergedFileName) + "\n");
-                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
-                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + 1);
+                    toPrint.append(minTerm).append(termSeperator).append(totalTf).append(",").append(df).append(",").append(cachePointer).append("\n");
+                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("1. Term Dictionary"),  toPrint.toString());
+                    if (city!=null){
+                        toPrint.delete(minTerm.length()+1,toPrint.length());
+                        toPrint.append(city.getCountryName()).append(",").append(city.getCurrency()).append(",").append(city.getPopulation()).append(",").append(cachePointer).append("\n");
+                        WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities"), toPrint.toString());
+                    }
+                    toPrint = new StringBuilder(cacheSplitedPost[0].length()*2);
+                    toPrint.append(minTerm).append(termSeperator).append(cacheSplitedPost[0]).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");
+                    WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), toPrint.toString());
+                    toPrint.setLength(0);
+                    String post = toPrint.append(cacheSplitedPost[1]).append("|\n").toString();
+                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, post);
+                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + post.getBytes().length);
+//                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
+//                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + cacheSplitedPost[1].getBytes().length);
                 }
                 termCounter++;
                 Master.setCurrentStatus(getIndexStatus(minTerm));
@@ -195,21 +195,26 @@ public class Indexer {
                 //stop indexing
             }
         }
-        try {
-            totalPostingSizeByKB = sizeOf(new File(targetDirPath));
-        } catch (Exception e) {
+        for (Map.Entry<Integer, BufferedReader> mapEntry : tmpFiles.entrySet()) {
+            BufferedReader bufferedReader = mapEntry.getValue();
             try {
-                for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
-                    totalPostingSizeByKB += new File(targetDirPath + entry.getKey() + ".post").length();
-                    entry.getValue().flush();
-                    entry.getValue().close();
-                }
-            } catch (Exception e2) {
-                totalPostingSizeByKB = Master.getTermCount() * 1024;
+                bufferedReader.close();
+            } catch (IOException e) {
+                //stop indexing
             }
         }
-        System.out.println("Size of Posting Files: " + (int) (totalPostingSizeByKB / 1024) + " KB");
         createdFolder = false;
+    }
+
+    /**
+     * appends a given content to a file (by name)
+     * @param content - the content will be written to the file
+     * @param fileName- the name of the file
+     * @return int - pointer to the appended line
+     */
+    public int appendToFile(StringBuilder content, String fileName) {
+        checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
+        return WrieFile.writeToDictionary(content,fileName);
     }
 
     /**
@@ -282,8 +287,8 @@ public class Indexer {
         int sliceIndex = forCache.length / cacheSlice;
         if (sliceIndex % 2 == 1) {
             sliceIndex = Integer.max(--sliceIndex, 2);
-        }
-        return new String[]{join(forCache, fileDelimiter, 0, sliceIndex), join(forCache, fileDelimiter, sliceIndex, forCache.length)};//TODO- Check!!!
+        } if (sliceIndex==0) sliceIndex=2;
+        return new String[]{join(forCache, fileDelimiter, 0, sliceIndex), join(forCache, fileDelimiter, sliceIndex, forCache.length)};
 
     }
 
@@ -293,7 +298,7 @@ public class Indexer {
      * @param first - the first character of a term
      * @return the file's full name
      */
-    private String getFileName(char first) {
+    public static String getFileName(char first) {
         switch (first) {
             case 'a':
                 return "ab";
@@ -363,7 +368,7 @@ public class Indexer {
             frequency = countMatches(pairs[i + 1], Stemmer.getStemDelimiter().charAt(0));
             if (frequency == 0)
                 frequency++;
-            frequency += countMatches(pairs[i + 1], Parse.getGapDelimiter().charAt(0));
+            frequency += countMatches(pairs[i + 1], Parser.getGapDelimiter().charAt(0));
             toSort.add(new ImmutablePair<>(frequency, new ImmutablePair<>(pairs[i++], pairs[i])));
         }
         toSort.sort((o1, o2) -> Integer.compare(o2.left, o1.left));
@@ -379,7 +384,7 @@ public class Indexer {
     private void initMergedDictionaries(LinkedHashMap<String, Integer> mergedFilesCounterDic, LinkedHashMap<String, BufferedWriter> mergedFilesDic, String fileName) {
         checkOrMakeDir(getFileOrDirName(targetPath + "Dictionaries"));
         StringBuilder stringBuilder = new StringBuilder(targetPath);
-        mergedFilesCounterDic.put(fileName, 1);
+        mergedFilesCounterDic.put(fileName, 0);
         stringBuilder.append(fileName).append(contains(fileName, " ") ? "" : ".post");
         addFileToList(mergedFilesDic, stringBuilder, fileName);
     }
@@ -535,7 +540,7 @@ public class Indexer {
      * deletes the folder of last run (depends on stem mode)
      * @return true if deleted
      */
-    public boolean removeAllFiles() {
+    public boolean removeDicsDir() {
         return delete(getFileOrDirName(targetPath + "Dictionaries"));
     }
 
@@ -571,5 +576,15 @@ public class Indexer {
         createdFolder = false;
         termCounter = 0;
         WrieFile.clear();
+    }
+
+    /**
+     * Writes after indexing the Languages to a file
+     * @param langsContent - the languages
+     * @param fileName - file name
+     */
+    public void writeLanguages(StringBuilder langsContent, String fileName) {
+        targetPath = PropertiesFile.getProperty("save.files.path");
+        appendToFile(langsContent,fileName);
     }
 }
