@@ -64,7 +64,7 @@ public class ModelMenu extends Observable {
     /**
      * Removes all files created by this program
      */
-    public void reset() { // TODO: 01/01/2019 check that all files are deleted as needed
+    public void reset() {
         master_of_puppets.reset();
     }
 
@@ -206,7 +206,6 @@ public class ModelMenu extends Observable {
      * depending on the path the master will give (from properties file)
      */
     private void readEntities() {
-        // TODO: 31/12/2018 : finish the implementation
         File file = new File(getDicsPath() + "\\Entities");
         try {
             RandomAccessFile raf = new RandomAccessFile(file, "rw");

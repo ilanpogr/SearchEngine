@@ -11,6 +11,10 @@ public class Searcher {
 
     private Ranker ranker = new Ranker();
 
+    public Ranker getRanker() {
+        return ranker;
+    }
+
     private ArrayList<String> rankQuery(QuerySol query, TreeMap<String, String> dict, TreeMap<String, String> cache, TreeMap<String, String> docs, boolean totalRickAll) {
         if (dict == null || cache == null || docs == null) return new ArrayList<>();
         ranker.setBM25Values(PropertiesFile.getPropertyAsDouble("k"), PropertiesFile.getPropertyAsDouble("b"), PropertiesFile.getPropertyAsDouble("d"), PropertiesFile.getPropertyAsDouble("f"));
@@ -28,7 +32,6 @@ public class Searcher {
                 query.filterSols(docs.keySet());
                 continue;
             }
-            //TODO - add nerrative here
             freeLangSearch(query, dict, cache, docs);
         }
 

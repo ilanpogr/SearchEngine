@@ -534,7 +534,7 @@ public class ControllerMenu implements Observer {
     /**
      * Read Dictionary to RAM
      */
-    private void readDictionary() { // TODO: 01/01/2019 check that really all the dectionaries are read as needed!!!
+    private void readDictionary() {
         String dicPath = ir_modelMenu.getDicsPath();
         try {
             File file = new File(dicPath);

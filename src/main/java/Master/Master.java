@@ -358,7 +358,7 @@ public class Master {
     /**
      * deletes all of the saved files by the Master
      */
-    public void reset() { // TODO: 01/01/2019 if somewhere else files are deleted. check and double check
+    public void reset() {
         clear();
         Indexer.reset();
     }
@@ -416,6 +416,7 @@ public class Master {
      */
     public void multiSearch(ArrayList<QuerySol> querySols, ArrayList<String> cities) {//doc
         Searcher searcher = new Searcher();
+        setSearchWeights(searcher.getRanker());
         if (cities.size() > 0) {
             searcher.multiSearch(querySols, termDictionary, cache, createFilteredDocDic(cities), PropertiesFile.getPropertyAsInt("total.rickall") != 0);
         } else {
