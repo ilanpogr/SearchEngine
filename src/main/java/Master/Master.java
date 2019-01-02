@@ -44,13 +44,14 @@ public class Master {
     /**
      * sets the stem mode from properties file
      */
-    private static boolean setStemMode() {
+    private static boolean setStemMode() {//doc - changed from returns
         String stem = PropertiesFile.getProperty("stem.mode");
         if (stem.equalsIgnoreCase("0")) {
-            return false;
+            isStemMode = false;
         } else {
-            return true;
+            isStemMode = true;
         }
+        return isStemMode;
     }
 
     /**
@@ -82,7 +83,7 @@ public class Master {
      */
     public static HashMap<String, Integer> makeQueryDic(QuerySol query, Ranker ranker) {
         Parser parser = new Parser();
-        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? "" : getSemantics(query,ranker))}));
+        return handleQuery(parser.parse(new String[]{query.getTitle() + (PropertiesFile.getPropertyAsInt("semantic.mode") == 0 ? "" : getSemantics(query,ranker))}),ranker);
     }
 
     /**
@@ -97,7 +98,6 @@ public class Master {
             semanticDic = new ReadFile().readSemantics("semantic_DB_XXL");
         StringBuilder stringBuilder = new StringBuilder();
         int semantic = PropertiesFile.getPropertyAsInt("semantic.mode");
-        ranker.setWeights(0.16,0.33,0.17,0.09,0.25);
         String[] q = query.getTitleArray();
         for (int i = 0; i < q.length; i++) {
             ArrayList<String> semantics = semanticDic.get(lowerCase(q[i]));
@@ -112,10 +112,12 @@ public class Master {
      * cleaning the query after parsing and returns the Query-Dictionary.
      *
      * @param parsed - the map after parsing the query.
+     * @param ranker
      * @return the cleaned dictionary mentioned above.
      */
-    private static HashMap<String, Integer> handleQuery(HashMap<String, String> parsed) {
+    private static HashMap<String, Integer> handleQuery(HashMap<String, String> parsed, Ranker ranker) {
         HashMap<String, Integer> queryDic = new HashMap<>();
+        setSearchWeights(ranker);
         if (isStemMode) {
             Stemmer stemmer = new Stemmer();
             parsed = stemmer.stem(parsed);
@@ -129,6 +131,18 @@ public class Master {
             queryDic.put(word, freq);
         }
         return queryDic;
+    }
+
+    /**
+     * Sets accurate weights to the ranker
+     * @param ranker - the ranker that will be set
+     */
+    private static void setSearchWeights(Ranker ranker) {
+        boolean semanticMode = PropertiesFile.getPropertyAsInt("semantic.mode") != 0;
+        if (setStemMode() && !semanticMode)ranker.setWeights(0.66,0.15,0.06,0.03,0.1);
+        else if (isStemMode && semanticMode)ranker.setWeights(0.24,0.31,0.15,0.07,0.23);
+        else if (semanticMode) ranker.setWeights(0.16, 0.33, 0.17, 0.09, 0.25);
+        else ranker.setWeights(0.46, 0.31, 0.1, 0.05, 0.17);
     }
 
     /**

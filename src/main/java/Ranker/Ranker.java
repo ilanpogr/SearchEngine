@@ -136,6 +136,7 @@ public class Ranker {
         }
     }
 
+
     /**
      * makes a dictionary with document number as a key to make
      * calculations easier
@@ -165,7 +166,7 @@ public class Ranker {
      * @param maxSolSize - max amount of documents in the solution
      * @return TreeMap of the Rank as key and DocNum as value
      */
-    public TreeMap<Double, String> getBestDocs(QuerySol query, int maxSolSize) {
+    private TreeMap<Double, String> getBestDocs(QuerySol query, int maxSolSize) {
         TreeMap<Double, String> res = new TreeMap<>(Double::compareTo);
         for (Map.Entry<String, Double> o : docsRank.entrySet()
         ) {
@@ -187,7 +188,7 @@ public class Ranker {
      * @param termDic - dictionary
      * @param docDic  - docs map
      */
-    public void calculateBM25(TreeMap<String, String> termDic, TreeMap<String, String> docDic) {
+    private void calculateBM25(TreeMap<String, String> termDic, TreeMap<String, String> docDic) {
         for (Map.Entry<String, ArrayList<ImmutablePair<String, String>>> entry : relationDic.entrySet()) {
             double res = 0;
             String docNum = entry.getKey();

@@ -128,17 +128,22 @@ public class ReadFile {
      */
     public static String getTermLine(StringBuilder postingPath, String term, String skip) {
         if (isEmpty(skip)) return "";
-        postingPath.append("\\Dictionaries without stemming\\").append(Indexer.getFileName(lowerCase(term).charAt(0))).append(".post");
+        postingPath.append("\\Dictionaries with").append(Master.isStemMode() ? " " : "out ").append("stemming\\").append(Indexer.getFileName(lowerCase(term).charAt(0))).append(".post");
         try {
             RandomAccessFile file = new RandomAccessFile(postingPath.toString(), "r");
-            file.skipBytes(Integer.parseInt(skip, 36));
-            return file.readLine();
+            file.seek(Integer.parseInt(skip, 36));
+            String res = file.readLine();
+            file.close();
+            return res;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "";
     }
 
+//    public static void main(String[] args) {
+//        System.out.println(getTermLine(new StringBuilder("C:\\Users\\User\\Documents\\SearchEngineTests"),"Exploration",));
+//    }
 
     public static String saveSolution(String path) {
         File file = new File(path);
@@ -165,9 +170,10 @@ public class ReadFile {
 
     /**
      * Read from the semantics DataBase
+     *
      * @param dbName - the DB name
      * @return HashMap  - key: term
-     *                  - value: list of similar terms
+     * - value: list of similar terms
      */
     public HashMap<String, ArrayList<String>> readSemantics(String dbName) {
         HashMap<String, ArrayList<String>> res = new HashMap<>();
@@ -175,10 +181,11 @@ public class ReadFile {
             BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/semanticDB/" + dbName)));
             for (String line; (line = inputStreamReader.readLine()) != null; ) {
                 String[] splitLine = split(line, "~");
-                String[] values = split(splitLine[1],"|");
+                String[] values = split(splitLine[1], "|");
                 ArrayList<String> valuesArrayList = new ArrayList<>(Arrays.asList(values));
                 res.put(splitLine[0], valuesArrayList);
             }
+            inputStreamReader.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -212,8 +219,9 @@ public class ReadFile {
             createDocList();
             stringBuilder.setLength(0);
             unInstancedDocList.clear();
+            bufferedReader.close();
             return docList;
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             //skip this file.
         }
         return null;
@@ -292,7 +300,7 @@ public class ReadFile {
     private void createAndUpdateCity(Doc doc, StringBuilder stringBuilder) {
         String tag = trim(substringBetween(stringBuilder.toString(), ">", "<"));
         if (!isEmpty(tag) && !tag.equalsIgnoreCase("null")) {
-            if (tag.charAt(0)=='(') tag = substringBetween(tag,"(",")");
+            if (tag.charAt(0) == '(') tag = substringBetween(tag, "(", ")");
             CityInfo cityInfo = CityInfo.getInstance();
             cityInfo.setInfo(tag, doc);
         } else {

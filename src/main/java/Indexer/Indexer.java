@@ -143,8 +143,6 @@ public class Indexer {
             }
             int df = sortedPosting.size();
             double idf = logN - StrictMath.log10(df);
-//            double idf = logN - (StrictMath.log10(df) / log2);
-
             if (totalTf > minNumberOfTf || minTerm.contains(" ")) {
                 String mergedFileName = getFileName(minTerm.charAt(0));
                 if (isUpperCase == 1) {
@@ -172,11 +170,15 @@ public class Indexer {
                         toPrint.append(city.getCountryName()).append(",").append(city.getCurrency()).append(",").append(city.getPopulation()).append(",").append(cachePointer).append("\n");
                         WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("Cities"), toPrint.toString());
                     }
-                    toPrint = new StringBuilder(cacheSplitedPost[0].length()+64);
+                    toPrint = new StringBuilder(cacheSplitedPost[0].length()*2);
                     toPrint.append(minTerm).append(termSeperator).append(cacheSplitedPost[0]).append(",").append(Integer.toString(mergedFilesCounterDic.get(mergedFileName),36)).append("\n");
                     WrieFile.addLineToFile(mergedFilesDic, getFileOrDirName("2. Cache Dictionary"), toPrint.toString());
-                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
-                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + cacheSplitedPost[1].getBytes().length + 1);
+                    toPrint.setLength(0);
+                    String post = toPrint.append(cacheSplitedPost[1]).append("|\n").toString();
+                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, post);
+                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + post.getBytes().length);
+//                    WrieFile.addLineToFile(mergedFilesDic, mergedFileName, cacheSplitedPost[1] + "\n");
+//                    mergedFilesCounterDic.replace(mergedFileName, mergedFilesCounterDic.get(mergedFileName) + cacheSplitedPost[1].getBytes().length);
                 }
                 termCounter++;
                 Master.setCurrentStatus(getIndexStatus(minTerm));
@@ -193,20 +195,14 @@ public class Indexer {
                 //stop indexing
             }
         }
-        try {
-            totalPostingSizeByKB = sizeOf(new File(targetDirPath));
-        } catch (Exception e) {
+        for (Map.Entry<Integer, BufferedReader> mapEntry : tmpFiles.entrySet()) {
+            BufferedReader bufferedReader = mapEntry.getValue();
             try {
-                for (Map.Entry<String, BufferedWriter> entry : mergedFilesDic.entrySet()) {
-                    totalPostingSizeByKB += new File(targetDirPath + entry.getKey() + ".post").length();
-                    entry.getValue().flush();
-                    entry.getValue().close();
-                }
-            } catch (Exception e2) {
-                totalPostingSizeByKB = Master.getTermCount() * 1024;
+                bufferedReader.close();
+            } catch (IOException e) {
+                //stop indexing
             }
         }
-        System.out.println("Size of Posting Files: " + (int) (totalPostingSizeByKB / 1024) + " KB");
         createdFolder = false;
     }
 
